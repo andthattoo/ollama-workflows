@@ -31,7 +31,7 @@
         }
       },
       {
-        "name": "store_in_cache",
+        "name": "write",
         "description": "Stores a key-value pair in the cache.",
         "parameters": [
           {
@@ -47,15 +47,9 @@
         ]
       },
       {
-        "name": "store_in_semantic_cache",
+        "name": "upsert",
         "description": "Stores a key-value pair in the semantic cache.",
-        "function": "store_in_semantic_cache",
         "parameters": [
-          {
-            "name": "semantic_cache",
-            "type": "SemanticCache",
-            "description": "A mutable reference to the semantic cache."
-          },
           {
             "name": "key",
             "type": "string",
@@ -69,15 +63,9 @@
         ]
       },
       {
-        "name": "push_to_vec",
+        "name": "push",
         "description": "Pushes a value to a vector associated with a given key in the vec_storage.",
-        "function": "push_to_vec",
         "parameters": [
-          {
-            "name": "vec_storage",
-            "type": "HashMap<String, Vec<String>>",
-            "description": "A mutable reference to the vec_storage."
-          },
           {
             "name": "key",
             "type": "string",
@@ -91,15 +79,9 @@
         ]
       },
       {
-        "name": "search_cache",
+        "name": "read",
         "description": "Searches for a value in the cache based on a given key.",
-        "function": "search_cache",
         "parameters": [
-          {
-            "name": "cache",
-            "type": "HashMap<String, String>",
-            "description": "A reference to the cache."
-          },
           {
             "name": "key",
             "type": "string",
@@ -112,15 +94,10 @@
         }
       },
       {
-        "name": "search_semantic_cache",
+        "name": "search",
         "description": "Searches for values in the semantic cache based on a given query.",
         "function": "search_semantic_cache",
         "parameters": [
-          {
-            "name": "semantic_cache",
-            "type": "SemanticCache",
-            "description": "A reference to the semantic cache."
-          },
           {
             "name": "query",
             "type": "string",
@@ -133,15 +110,10 @@
         }
       },
       {
-        "name": "read_vec",
+        "name": "peek",
         "description": "Reads the last element of a vector associated with a given key in the vec_storage.",
         "function": "read_vec",
         "parameters": [
-          {
-            "name": "vec_storage",
-            "type": "HashMap<String, Vec<String>>",
-            "description": "A reference to the vec_storage."
-          },
           {
             "name": "key",
             "type": "string",
@@ -154,15 +126,10 @@
         }
       },
       {
-        "name": "pop_vec",
+        "name": "pop",
         "description": "Removes and returns the last element of a vector associated with a given key in the vec_storage.",
         "function": "pop_vec",
         "parameters": [
-          {
-            "name": "vec_storage",
-            "type": "HashMap<String, Vec<String>>",
-            "description": "A mutable reference to the vec_storage."
-          },
           {
             "name": "key",
             "type": "string",
@@ -175,14 +142,14 @@
         }
       },
       {
-        "name": "check_result",
+        "name": "check",
         "description": "Checks if a given result matches an expected value.",
         "function": "check_result",
         "parameters": [
           {
-            "name": "result",
+            "name": "input",
             "type": "string",
-            "description": "The result to be checked."
+            "description": "The input to be checked."
           },
           {
             "name": "expected",
@@ -193,6 +160,27 @@
         "returns": {
           "type": "bool",
           "description": "True if the result matches the expected value, false otherwise."
+        }
+      },
+      {
+        "name": "fuzzy_check",
+        "description": "Checks if a given result closely matches an expected value based on Levenshtein distance.",
+        "function": "check_result",
+        "parameters": [
+          {
+            "name": "input",
+            "type": "string",
+            "description": "The input to be checked."
+          },
+          {
+            "name": "expected",
+            "type": "string",
+            "description": "The expected value."
+          }
+        ],
+        "returns": {
+          "type": "bool",
+          "description": "True if the result closely matches the expected value, false otherwise."
         }
       }
     ]
