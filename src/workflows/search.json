@@ -1,0 +1,182 @@
+{
+    "name": "Searching Agent",
+    "description": "Try to answer a given question using data from the web with grounded data.",
+    "config": {
+      "max_steps": 35,
+      "max_time": 600
+    },
+    "tasks": [
+      {
+        "id": "A",
+        "name": "Web Search Query",
+        "description": "Write a web search query to collect useful information for the given question",
+        "prompt": "Write down a web search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n###Query: {query} \n\n ###Previous Questions: {history}",
+        "inputs": [
+          {
+            "type": "read",
+            "key": "query",
+            "required": true
+          },
+          {
+            "type": "read",
+            "key": "history",
+            "required": false
+          }
+        ],
+        "operator": "generation",
+        "outputs": [
+          {
+            "type": "write",
+            "key": "web_search_query",
+            "value": "result"
+          }
+        ]
+      },
+      {
+        "id": "B",
+        "name": "Web Search",
+        "description": "Search the web with the given query",
+        "prompt": "{query}",
+        "inputs": [
+          {
+            "type": "read",
+            "key": "web_search_query"
+          }
+        ],
+        "operator": "function_calling",
+        "outputs": [
+          {
+            "type": "write",
+            "key": "web_search_result",
+            "value": "result"
+          },
+          {
+            "type": "push",
+            "key": "web_search_result",
+            "value": "result"
+          }
+        ]
+      },
+      {
+        "id": "C",
+        "name": "Candidate Website",
+        "description": "Pick the most useful link from web search results for the given query",
+        "prompt": "Pick the most relevant URL from {web_results} to {query}",
+        "inputs": [
+          {
+            "type": "read",
+            "key": "web_search_result"
+          },
+          {
+            "type": "read",
+            "key": "query"
+          }
+        ],
+        "operator": "generation",
+        "outputs": [
+          {
+            "type": "write",
+            "key": "search_url",
+            "value": "result"
+          }
+        ]
+      },
+      {
+        "id": "D",
+        "name": "Scrape Website",
+        "description": "Scrape the selected website",
+        "prompt": "scrape {search_url}",
+        "inputs": [
+          {
+            "type": "read",
+            "key": "search_url"
+          }
+        ],
+        "operator": "function_calling",
+        "outputs": [
+          {
+            "type": "push",
+            "key": "content",
+            "value": "result"
+          }
+        ]
+      },
+      {
+        "id": "E",
+        "name": "Summarize Website",
+        "description": "Summarize website content",
+        "prompt": "summarize given website content concisely {search_url}",
+        "inputs": [
+          {
+            "type": "pop",
+            "key": "content"
+          }
+        ],
+        "operator": "generation",
+        "outputs": [
+          {
+            "type": "push",
+            "key": "result",
+            "value": "result"
+          }
+        ]
+      },
+      {
+        "id": "F",
+        "name": "Evaluate Result",
+        "description": "Evaluate if the result is satisfying",
+        "prompt": "Evaluate the result if it answers the query. Write 'Yes' if valid, 'No' if not, nothing else. query:{query} result:{summary}",
+        "inputs": [
+          {
+            "type": "peek",
+            "key": "result"
+          }
+        ],
+        "operator": "generation",
+        "check": true
+      },
+      {
+        "id": "End",
+        "name": "End State",
+        "description": "Evaluate if the result is satisfying",
+        "prompt": "",
+        "inputs": [
+          {
+            "type": "peek",
+            "key": "result"
+          }
+        ],
+        "operator": "generation",
+        "check": true
+      }
+    ],
+    "edges": [
+      {
+        "source": "A",
+        "target": "B"
+      },
+      {
+        "source": "B",
+        "target": "C"
+      },
+      {
+        "source": "C",
+        "target": "D"
+      },
+      {
+        "source": "D",
+        "target": "E"
+      },
+      {
+        "source": "E",
+        "target": "F"
+      },
+      {
+        "source": "F",
+        "target": "A",
+        "condition": {
+          "value": "No"
+        }
+      }
+    ]
+  }
