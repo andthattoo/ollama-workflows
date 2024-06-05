@@ -183,9 +183,9 @@
             ]
         },
         {
-            "id": "End",
-            "name": "End State",
-            "description": "Evaluate if the result is satisfying",
+            "id": "G",
+            "name": "Check Result",
+            "description": "Check if the result is satisfying",
             "prompt": "",
             "inputs": [
                 {"name": "input", "value":{
@@ -199,16 +199,27 @@
             ],
             "operator": "check",
             "outputs": []
+        },
+        {
+            "id": "H",
+            "name": "End",
+            "description": "End of the task",
+            "prompt": "End of the task",
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
         }
     ],
-    "edges": [
+    "workflow": [
         {
             "source": "A",
-            "target": "B"
+            "target": "B",
+            "fallback": "H"
         },
         {
             "source": "B",
-            "target": "C"
+            "target": "C",
+            "fallback": "A"
         },
         {
             "source": "C",
@@ -223,11 +234,13 @@
             "target": "F"
         },
         {
-            "source": "F",
-            "target": "A",
-            "condition": {
-                "value": "No"
-            }
+          "source": "F",
+          "target": "G"
+        },
+        {
+            "source": "G",
+            "target": "H",
+            "fallback": "A"
         }
     ]
 }

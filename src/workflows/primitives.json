@@ -47,7 +47,7 @@
         ]
       },
       {
-        "name": "upsert",
+        "name": "insert",
         "description": "Stores a key-value pair in the semantic cache.",
         "parameters": [
           {
