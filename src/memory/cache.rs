@@ -1,10 +1,8 @@
 use std::collections::HashMap;
-use super::types::{WorkflowID, CacheEntry};
-
-//implement a simple cache
+use super::types::{ID, Entry};
 
 pub struct Cache{
-    pages: HashMap<WorkflowID, CacheEntry>,
+    pages: HashMap<ID, Entry>,
 }
 
 impl Cache{
@@ -14,11 +12,11 @@ impl Cache{
         }
     }
 
-    pub fn get(&self, key: &str) -> Option<&CacheEntry>{
+    pub fn get(&self, key: &ID) -> Option<&Entry>{
         self.pages.get(key)
     }
 
-    pub fn set(&mut self, key: String, value: CacheEntry){
+    pub fn set(&mut self, key: ID, value: Entry){
         self.pages.insert(key, value);
     }
 

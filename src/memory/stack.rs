@@ -1,8 +1,8 @@
 use std::collections::HashMap; 
-use super::types::{WorkflowID, StackEntry, StackPage};
+use super::types::{ID, Entry, StackPage};
 
 pub struct Stack {
-    pages: HashMap<WorkflowID, StackPage>
+    pages: HashMap<ID, StackPage>
 }
 
 impl Stack {
@@ -12,7 +12,7 @@ impl Stack {
         }
     }
 
-    pub fn peek(&self, key: &str, index: u32) -> Option<&StackEntry> {
+    pub fn peek(&self, key: &str, index: usize) -> Option<&Entry> {
         let vec = self.pages.get(key);
         if let Some(vec) = vec {
             return vec.get(index as usize);
@@ -22,7 +22,7 @@ impl Stack {
         }
     }
 
-    pub fn pop(&mut self, key: &str)-> Option<StackEntry> {
+    pub fn pop(&mut self, key: &str)-> Option<Entry> {
         let page = self.pages.get_mut(key);
         if let Some(page) = page {
             page.pop()
@@ -32,7 +32,7 @@ impl Stack {
         }
     }
 
-    pub fn push(&mut self, key: WorkflowID, value: StackEntry) {
+    pub fn push(&mut self, key: ID, value: Entry) {
         let page = self.pages.get_mut(&key);
         if let Some(page) = page {
             page.push(value);

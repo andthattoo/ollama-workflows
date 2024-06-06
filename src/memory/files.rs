@@ -1,7 +1,7 @@
 use ollama_rs::Ollama;
 use usearch::{Index, IndexOptions, MetricKind, ScalarKind, new_index};
-use crate::core::errors::{SemanticCacheError, EmbeddingError};
-use super::types::SemanticCacheEntry;
+use crate::program::errors::{FileSystemError, EmbeddingError};
+use super::types::Entry;
 
 pub static EMBEDDING_MODEL: &str = "hellord/mxbai-embed-large-v1:f16";
 struct Embedder{
@@ -44,13 +44,13 @@ impl Embedder{
 }
 
 
-pub struct SemanticCache{
+pub struct FileSystem{
     embedder: Embedder,
     index: Index,
     documents: Vec<String>,
 }
 
-impl SemanticCache{
+impl FileSystem{
     pub fn new() -> Self{
 
         let options = IndexOptions {
@@ -63,7 +63,7 @@ impl SemanticCache{
             multi: true,
         };
        
-        SemanticCache{
+        FileSystem{
             embedder: Embedder::new(),
             index:  new_index(&options).unwrap(),
             documents: Vec::new(),
@@ -78,7 +78,12 @@ impl SemanticCache{
         self.index.save("index.usearch").unwrap();
     }
 
-    pub async fn add(&mut self, doc: &SemanticCacheEntry)->Result<(), SemanticCacheError>{
+    pub async fn add(&mut self, entry: &Entry)->Result<(), FileSystemError>{
+        let doc = match entry {
+            Entry::String(s) => s,
+            Entry::Json(j) => j.as_str().unwrap(),
+        };
+
         let embedding = self.embedder.generate_embeddings(doc).await;
         match embedding{
             Ok(embedding) => {
@@ -88,16 +93,16 @@ impl SemanticCache{
                         self.documents.push(doc.to_string());
                         Ok(())
                     },
-                    Err(_) => Err(SemanticCacheError::InsertionFailed(doc.to_string()))
+                    Err(_) => Err(FileSystemError::InsertionFailed(doc.to_string()))
                 }
             },
-            Err(err) => Err(SemanticCacheError::EmbeddingError(err))
+            Err(err) => Err(FileSystemError::EmbeddingError(err))
         }
     }
 
-    pub async fn search(&self, query: &SemanticCacheEntry) -> Result<Vec<SemanticCacheEntry>, SemanticCacheError>
+    pub async fn search(&self, query: &Entry) -> Result<Vec<Entry>, FileSystemError>
     {
-        let embedding = self.embedder.generate_query_embeddings(query).await;
+        let embedding = self.embedder.generate_query_embeddings(&query.to_string()).await;
         match embedding{
             Ok(embedding) => {
                 let results = self.index.search(&embedding, 10);
@@ -109,14 +114,15 @@ impl SemanticCache{
                                 break;
                             };
                             let doc = &self.documents[*key as usize];
-                            passages.push(doc.to_string());
+                            let passage = Entry::from_str(doc);
+                            passages.push(passage);
                         }
                         Ok(passages)
                     },
-                    Err(_) => Err(SemanticCacheError::SearchError)
+                    Err(_) => Err(FileSystemError::SearchError)
                 }
             },
-            Err(err) => Err(SemanticCacheError::EmbeddingError(err))
+            Err(err) => Err(FileSystemError::EmbeddingError(err))
         }
     }
 }

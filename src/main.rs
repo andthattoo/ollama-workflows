@@ -1,10 +1,9 @@
-use ollama_workflows::core::workflow::Workflow;
+use ollama_workflows::{Executor, Workflow, ProgramMemory};
 
 fn main() {
     // JSON workflow definition and deserialization code remains the same
     // ...
 
-    let workflow: Workflow = serde_json::from_str("").unwrap();
-    let mut executor = WorkflowExecutor::new(workflow);
+    let exe = Executor::new();
     executor.execute();
 }

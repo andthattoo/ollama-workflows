@@ -3,30 +3,19 @@ use super::atomics::{Task, Edge, Config};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Workflow {
+    input: Option<String>,
     config: Config,
     tasks: Vec<Task>,
     steps: Vec<Edge>,
 }
 
 impl Workflow {
-    pub fn new(config: Config, tasks: Vec<Task>, steps: Vec<Edge>) -> Self {
+    pub fn new(input: Option<String>, tasks: Vec<Task>, steps: Vec<Edge>, config: Config, ) -> Self {
         Workflow {
+            input,
             config,
             tasks,
             steps,
-        }
-    }
-}
-
-impl Default for Workflow {
-    fn default() -> Self {
-        Workflow {
-            config: Config {
-                max_steps: 100,
-                max_time: 1000,
-            },
-            tasks: Vec::new(),
-            steps: Vec::new(),
         }
     }
 }

@@ -4,7 +4,7 @@ use std::error::Error;
 #[derive(Debug)]
 pub enum CustomError {
     CacheError(CacheError),
-    SemanticCacheError(SemanticCacheError),
+    FileSystemError(FileSystemError),
     StackError(StackError),
     EmbeddingError(EmbeddingError),
     Other(String),
@@ -17,7 +17,7 @@ pub enum CacheError {
 }
 
 #[derive(Debug)]
-pub enum SemanticCacheError {
+pub enum FileSystemError {
     InvalidKey(String),
     InsertionFailed(String),
     SearchError,
@@ -41,7 +41,7 @@ impl fmt::Display for CustomError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             CustomError::CacheError(err) => write!(f, "Cache error: {}", err),
-            CustomError::SemanticCacheError(err) => write!(f, "Semantic cache error: {}", err),
+            CustomError::FileSystemError(err) => write!(f, "File system error: {}", err),
             CustomError::StackError(err) => write!(f, "Stack error: {}", err),
             CustomError::Other(msg) => write!(f, "Other error: {}", msg),
             CustomError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
@@ -58,13 +58,13 @@ impl fmt::Display for CacheError {
     }
 }
 
-impl fmt::Display for SemanticCacheError {
+impl fmt::Display for FileSystemError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            SemanticCacheError::InvalidKey(key) => write!(f, "Invalid key: {}", key),
-            SemanticCacheError::InsertionFailed(doc) => write!(f, "Insertion failed for document: {}", doc),
-            SemanticCacheError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
-            SemanticCacheError::SearchError => write!(f, "Search error"),
+            FileSystemError::InvalidKey(key) => write!(f, "Invalid key: {}", key),
+            FileSystemError::InsertionFailed(doc) => write!(f, "Insertion failed for document: {}", doc),
+            FileSystemError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
+            FileSystemError::SearchError => write!(f, "Search error"),
         }
     }
 }
@@ -90,7 +90,7 @@ impl fmt::Display for EmbeddingError {
 
 impl Error for CustomError {}
 impl Error for CacheError {}
-impl Error for SemanticCacheError {}
+impl Error for FileSystemError {}
 impl Error for StackError {}
 impl Error for EmbeddingError {}
 
@@ -100,9 +100,9 @@ impl From<CacheError> for CustomError {
     }
 }
 
-impl From<SemanticCacheError> for CustomError {
-    fn from(err: SemanticCacheError) -> CustomError {
-        CustomError::SemanticCacheError(err)
+impl From<FileSystemError> for CustomError {
+    fn from(err: FileSystemError) -> CustomError {
+        CustomError::FileSystemError(err)
     }
 }
 

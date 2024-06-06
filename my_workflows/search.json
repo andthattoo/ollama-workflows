@@ -154,7 +154,7 @@
             "id": "F",
             "name": "Evaluate Result",
             "description": "Evaluate if the result is satisfying",
-            "prompt": "Evaluate the result if it answers the query. Write 'Yes' if valid, 'No' if not, nothing else. query:{query} result:{summary}",
+            "prompt": "Evaluate the result if it answers the query. Write 'Yes' if valid, if not 'No'.Write nothing else but strictly 'Yes'|'No'. query:{query} result:{summary}",
             "inputs": [
                 {
                     "name": "summary",
@@ -188,13 +188,13 @@
             "description": "Check if the result is satisfying",
             "prompt": "",
             "inputs": [
-                {"name": "input", "value":{
+                {"name": "output", "value":{
                     "type": "read",
                     "key": "final_result"
                 }, "required": true},
                 {"name": "expected", "value":{
                     "type": "string",
-                    "key": "result"
+                    "key": "Yes"
                 }, "required": true}
             ],
             "operator": "check",
