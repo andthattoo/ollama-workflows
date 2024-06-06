@@ -1,6 +1,6 @@
 mod memory;
-pub mod program;
+mod program;
+mod tools;
 
 pub use memory::ProgramMemory;
-pub use program::executor::Executor;
-pub use program::workflow::Workflow;
+pub use program::{atomics::Model, executor::Executor, workflow::Workflow};

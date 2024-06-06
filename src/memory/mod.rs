@@ -9,7 +9,6 @@ use cache::Cache;
 use files::FileSystem;
 use stack::Stack;
 
-
 pub struct ProgramMemory {
     cache: Cache,
     file_system: FileSystem,
@@ -33,7 +32,6 @@ impl Default for ProgramMemory {
 }
 
 impl ProgramMemory {
-
     pub fn read(&self, key: &types::ID) -> Option<&types::Entry> {
         self.cache.get(key)
     }
@@ -55,7 +53,7 @@ impl ProgramMemory {
     }
 
     pub async fn insert(&mut self, doc: &types::Entry) {
-        self.file_system.add(doc).await;
+        let _ = self.file_system.add(doc).await;
     }
 
     pub async fn search(&self, query: &types::Entry) -> Option<Vec<types::Entry>> {
@@ -65,5 +63,4 @@ impl ProgramMemory {
             Err(_) => None,
         }
     }
-    
 }

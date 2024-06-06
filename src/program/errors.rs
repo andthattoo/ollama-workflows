@@ -1,5 +1,5 @@
-use std::fmt;
 use std::error::Error;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum CustomError {
@@ -62,7 +62,9 @@ impl fmt::Display for FileSystemError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             FileSystemError::InvalidKey(key) => write!(f, "Invalid key: {}", key),
-            FileSystemError::InsertionFailed(doc) => write!(f, "Insertion failed for document: {}", doc),
+            FileSystemError::InsertionFailed(doc) => {
+                write!(f, "Insertion failed for document: {}", doc)
+            }
             FileSystemError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
             FileSystemError::SearchError => write!(f, "Search error"),
         }

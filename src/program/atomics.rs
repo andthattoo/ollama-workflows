@@ -1,4 +1,3 @@
-
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
     pub max_steps: u32,
@@ -72,4 +71,20 @@ pub struct Edge {
     pub source: String,
     pub target: String,
     pub fallback: Option<String>,
+}
+
+pub enum Model {
+    NousTheta,
+    Phi3Medium,
+    Phi3Mini,
+}
+
+impl Model {
+    pub fn to_string(&self) -> String {
+        match self {
+            Model::NousTheta => "NousTheta".to_string(),
+            Model::Phi3Medium => "Phi3Medium".to_string(),
+            Model::Phi3Mini => "Phi3Mini".to_string(),
+        }
+    }
 }

@@ -1,5 +1,4 @@
-use super::atomics::{Task, Edge, Config};
-
+use super::atomics::{Config, Edge, Task};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Workflow {
@@ -10,7 +9,7 @@ pub struct Workflow {
 }
 
 impl Workflow {
-    pub fn new(input: Option<String>, tasks: Vec<Task>, steps: Vec<Edge>, config: Config, ) -> Self {
+    pub fn new(input: Option<String>, tasks: Vec<Task>, steps: Vec<Edge>, config: Config) -> Self {
         Workflow {
             input,
             config,
@@ -18,9 +17,16 @@ impl Workflow {
             steps,
         }
     }
+
+    pub fn new_from_json(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        let file = std::fs::File::open(path)?;
+        let reader = std::io::BufReader::new(file);
+        let workflow: Workflow = serde_json::from_reader(reader)?;
+        Ok(workflow)
+    }
 }
 
-impl Workflow{
+impl Workflow {
     pub fn get_config(&self) -> &Config {
         &self.config
     }
