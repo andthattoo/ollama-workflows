@@ -63,7 +63,7 @@ impl Executor {
     async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory) -> bool {
         let mut input_map: HashMap<String, String> = HashMap::new();
         for input in &task.inputs {
-            //let mut memory_lock = memory.lock();
+
             let value: MemoryReturnType = match input.value.value_type {
                 InputValueType::Read => MemoryReturnType::EntryRef(memory.read(&input.value.key)),
                 InputValueType::Peek => MemoryReturnType::EntryRef(

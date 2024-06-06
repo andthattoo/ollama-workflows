@@ -210,7 +210,7 @@
             "outputs": []
         }
     ],
-    "workflow": [
+    "steps": [
         {
             "source": "A",
             "target": "B",
