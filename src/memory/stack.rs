@@ -12,6 +12,10 @@ impl Stack {
         }
     }
 
+    pub fn get_all(&self, key: &str) -> Option<&StackPage> {
+        self.pages.get(key)
+    }
+
     pub fn peek(&self, key: &str, index: usize) -> Option<&Entry> {
         let vec = self.pages.get(key);
         if let Some(vec) = vec {

@@ -2,16 +2,14 @@ use super::atomics::{Config, Edge, Task};
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Workflow {
-    input: Option<String>,
     config: Config,
     tasks: Vec<Task>,
     steps: Vec<Edge>,
 }
 
 impl Workflow {
-    pub fn new(input: Option<String>, tasks: Vec<Task>, steps: Vec<Edge>, config: Config) -> Self {
+    pub fn new(tasks: Vec<Task>, steps: Vec<Edge>, config: Config) -> Self {
         Workflow {
-            input,
             config,
             tasks,
             steps,

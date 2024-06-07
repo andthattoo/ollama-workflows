@@ -10,13 +10,13 @@
             "id": "A",
             "name": "Web Search Query",
             "description": "Write a web search query to collect useful information for the given question",
-            "prompt": "Write down a web search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n###Query: {query} \n\n ###Previous Questions: {history}",
+            "prompt": "Write down a web search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n###Query: {input} \n\n ###Previous Questions: {history}",
             "inputs": [
                 {
-                    "name": "query",
+                    "name": "input",
                     "value": {
                         "type": "read",
-                        "key": "query"
+                        "key": "input"
                     },
                     "required": true
                 },

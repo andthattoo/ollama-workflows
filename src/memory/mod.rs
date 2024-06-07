@@ -52,6 +52,10 @@ impl ProgramMemory {
         self.stack.peek(key, index)
     }
 
+    pub fn get_all(&self, key: &str) -> Option<&types::StackPage> {
+        self.stack.get_all(key)
+    }
+
     pub async fn insert(&mut self, doc: &types::Entry) {
         let _ = self.file_system.add(doc).await;
     }

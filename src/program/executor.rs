@@ -30,7 +30,7 @@ impl Executor {
         Executor { model, llm }
     }
 
-    pub async fn execute(&self, workflow: Workflow, memory: &mut ProgramMemory) {
+    pub async fn execute(&self, input: &Entry, workflow: Workflow, memory: &mut ProgramMemory) {
         let config = workflow.get_config();
         let max_steps = config.max_steps;
         let max_time = config.max_time;
