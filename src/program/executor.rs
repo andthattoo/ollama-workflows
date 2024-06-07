@@ -1,5 +1,5 @@
 use super::atomics::{
-    in_reserved_keywords, InputValueType, Model, Operator, OutputType, Task, R_INPUT,
+    in_reserved_keywords, InputValueType, Model, Operator, OutputType, Task, R_INPUT, R_OUTPUT,
 };
 use super::workflow::Workflow;
 use crate::memory::types::Entry;
@@ -155,10 +155,15 @@ impl Executor {
 
     async fn handle_output(&self, task: &Task, result: Entry, memory: &mut ProgramMemory) {
         for output in &task.outputs {
+
+            let mut data = result.clone();
+            if &output.value == R_OUTPUT {
+                data = Entry::from_str(&output.value);
+            }
             match output.output_type {
-                OutputType::Write => memory.write(output.key.clone(), result.clone()),
-                OutputType::Insert => memory.insert(&result).await,
-                OutputType::Push => memory.push(output.key.clone(), result.clone()),
+                OutputType::Write => memory.write(output.key.clone(), data.clone()),
+                OutputType::Insert => memory.insert(&data).await,
+                OutputType::Push => memory.push(output.key.clone(), data.clone()),
             }
         }
     }

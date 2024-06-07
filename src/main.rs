@@ -8,7 +8,7 @@ async fn main() {
     )
     .unwrap();
     let mut memory = ProgramMemory::new();
-    let input = Entry::from_str("");
+    let input = Entry::from_str("What are the origins to Mevlana?");
     println!("Executing workflow");
     exe.execute(Some(&input), workflow, &mut memory).await;
 }

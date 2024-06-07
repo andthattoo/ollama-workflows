@@ -15,7 +15,7 @@
                 {
                     "name": "query",
                     "value": {
-                        "type": "__input",
+                        "type": "input",
                         "key": ""
                     },
                     "required": true
@@ -89,7 +89,7 @@
                 {
                     "name": "query",
                     "value": {
-                        "type": "__input"
+                        "type": "input"
                     },
                     "required": true
                 }
@@ -170,7 +170,7 @@
                 {
                     "name": "query",
                     "value": {
-                        "type": "__input"
+                        "type": "input"
                     },
                     "required": true
                 }
