@@ -10,13 +10,12 @@
             "id": "A",
             "name": "Web Search Query",
             "description": "Write a web search query to collect useful information for the given question",
-            "prompt": "Write down a web search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n###Query: {input} \n\n ###Previous Questions: {history}",
+            "prompt": "Write down a web search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n###Query: {query} \n\n ###Previous Questions: {history}",
             "inputs": [
                 {
-                    "name": "input",
+                    "name": "query",
                     "value": {
-                        "type": "read",
-                        "key": "input"
+                        "type": "__input"
                     },
                     "required": true
                 },
@@ -34,7 +33,7 @@
                 {
                     "type": "write",
                     "key": "web_search_query",
-                    "value": "result"
+                    "value": "__result"
                 }
             ]
         },
@@ -58,12 +57,12 @@
                 {
                     "type": "write",
                     "key": "web_search_result",
-                    "value": "result"
+                    "value": "__result"
                 },
                 {
                     "type": "push",
                     "key": "web_search_result",
-                    "value": "result"
+                    "value": "__result"
                 }
             ]
         },
@@ -121,7 +120,7 @@
                 {
                     "type": "push",
                     "key": "content",
-                    "value": "result"
+                    "value": "__result"
                 }
             ]
         },
@@ -146,7 +145,7 @@
                 {
                     "type": "push",
                     "key": "summaries",
-                    "value": "result"
+                    "value": "__result"
                 }
             ]
         },
@@ -178,7 +177,7 @@
                 {
                     "type": "write",
                     "key": "final_result",
-                    "value": "result"
+                    "value": "__result"
                 }
             ]
         },
@@ -188,14 +187,22 @@
             "description": "Check if the result is satisfying",
             "prompt": "",
             "inputs": [
-                {"name": "output", "value":{
-                    "type": "read",
-                    "key": "final_result"
-                }, "required": true},
-                {"name": "expected", "value":{
-                    "type": "string",
-                    "key": "Yes"
-                }, "required": true}
+                {
+                    "name": "__output",
+                    "value": {
+                        "type": "read",
+                        "key": "final_result"
+                    },
+                    "required": true
+                },
+                {
+                    "name": "__expected",
+                    "value": {
+                        "type": "string",
+                        "key": "Yes"
+                    },
+                    "required": true
+                }
             ],
             "operator": "check",
             "outputs": []
@@ -234,8 +241,8 @@
             "target": "F"
         },
         {
-          "source": "F",
-          "target": "G"
+            "source": "F",
+            "target": "G"
         },
         {
             "source": "G",

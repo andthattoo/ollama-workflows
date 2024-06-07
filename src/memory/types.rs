@@ -34,9 +34,9 @@ impl Clone for Entry {
 }
 
 pub enum MemoryReturnType<'a> {
-    EntryRef(Option<&'a Entry>), // Replace with the actual type returned by pop
-    Entry(Option<Entry>),        // Replace with the actual type returned by search
-    EntryVec(Option<Vec<Entry>>), // Replace with the actual type returned by read and peek
+    EntryRef(Option<&'a Entry>),
+    Entry(Option<Entry>),
+    EntryVec(Option<Vec<Entry>>),
 }
 
 impl<'a> MemoryReturnType<'a> {

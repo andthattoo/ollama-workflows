@@ -52,8 +52,12 @@ impl ProgramMemory {
         self.stack.peek(key, index)
     }
 
-    pub fn get_all(&self, key: &str) -> Option<&types::StackPage> {
-        self.stack.get_all(key)
+    pub fn get_all(&self, key: &str) -> Option<Vec<types::Entry>> {
+        let entries = self.stack.get_all(key);
+        match entries {
+            Some(entries) => Some(entries.to_vec()),
+            None => None,
+        }
     }
 
     pub async fn insert(&mut self, doc: &types::Entry) {

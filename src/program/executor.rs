@@ -1,4 +1,6 @@
-use super::atomics::{InputValueType, Model, Operator, OutputType, Task};
+use super::atomics::{
+    in_reserved_keywords, InputValueType, Model, Operator, OutputType, Task, R_INPUT,
+};
 use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
@@ -30,10 +32,19 @@ impl Executor {
         Executor { model, llm }
     }
 
-    pub async fn execute(&self, input: &Entry, workflow: Workflow, memory: &mut ProgramMemory) {
+    pub async fn execute(
+        &self,
+        input: Option<&Entry>,
+        workflow: Workflow,
+        memory: &mut ProgramMemory,
+    ) {
         let config = workflow.get_config();
         let max_steps = config.max_steps;
         let max_time = config.max_time;
+
+        if let Some(input) = input {
+            memory.write(R_INPUT.to_string(), input.clone());
+        }
 
         let mut current_step = 0;
         let start = Instant::now();
@@ -63,12 +74,15 @@ impl Executor {
     async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory) -> bool {
         let mut input_map: HashMap<String, String> = HashMap::new();
         for input in &task.inputs {
-
             let value: MemoryReturnType = match input.value.value_type {
+                InputValueType::Input => MemoryReturnType::EntryRef(memory.read(&R_INPUT.to_string())),
                 InputValueType::Read => MemoryReturnType::EntryRef(memory.read(&input.value.key)),
                 InputValueType::Peek => MemoryReturnType::EntryRef(
                     memory.peek(&input.value.key, input.value.index.unwrap_or(0)),
                 ),
+                InputValueType::GetAll => {
+                    MemoryReturnType::EntryVec(memory.get_all(&input.value.key))
+                }
                 InputValueType::Pop => MemoryReturnType::Entry(memory.pop(&input.value.key)),
                 InputValueType::Search => MemoryReturnType::EntryVec(
                     memory.search(&Entry::from_str(&input.value.key)).await,
