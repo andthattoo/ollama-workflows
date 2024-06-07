@@ -10,9 +10,9 @@ use files::FileSystem;
 use stack::Stack;
 
 pub struct ProgramMemory {
-    cache: Cache,
-    file_system: FileSystem,
-    stack: Stack,
+    cache: Cache, // a->b
+    file_system: FileSystem, // vectordb
+    stack: Stack, //a -> [b,c,d]
 }
 
 impl ProgramMemory {
