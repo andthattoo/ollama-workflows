@@ -1,10 +1,8 @@
-use super::atomics::{
-    in_reserved_keywords, InputValueType, Model, Operator, OutputType, Task, R_INPUT, R_OUTPUT,
-};
+use super::atomics::{InputValueType, Model, Operator, OutputType, Task, R_INPUT, R_OUTPUT};
 use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
-use crate::tools::{Browserless, SearchTool};
+use crate::tools::{Browserless, Jina, SearchTool};
 
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
@@ -75,7 +73,9 @@ impl Executor {
         let mut input_map: HashMap<String, String> = HashMap::new();
         for input in &task.inputs {
             let value: MemoryReturnType = match input.value.value_type {
-                InputValueType::Input => MemoryReturnType::EntryRef(memory.read(&R_INPUT.to_string())),
+                InputValueType::Input => {
+                    MemoryReturnType::EntryRef(memory.read(&R_INPUT.to_string()))
+                }
                 InputValueType::Read => MemoryReturnType::EntryRef(memory.read(&input.value.key)),
                 InputValueType::Peek => MemoryReturnType::EntryRef(
                     memory.peek(&input.value.key, input.value.index.unwrap_or(0)),
@@ -155,7 +155,6 @@ impl Executor {
 
     async fn handle_output(&self, task: &Task, result: Entry, memory: &mut ProgramMemory) {
         for output in &task.outputs {
-
             let mut data = result.clone();
             if &output.value == R_OUTPUT {
                 data = Entry::from_str(&output.value);
@@ -184,25 +183,43 @@ impl Executor {
     }
 
     async fn function_call(&self, prompt: &str) -> Result<String, OllamaError> {
-        let parser = Arc::new(OpenAIFunctionCall {});
+        let oai_parser = Arc::new(OpenAIFunctionCall {});
+        let nous_parser = Arc::new(NousFunctionCall {});
         let scraper_tool = Arc::new(Browserless {});
         let search_tool = Arc::new(SearchTool {});
+        let jina_tool = Arc::new(Jina {});
         let stock_scraper = Arc::new(StockScraper::new());
-        let result = self
-            .llm
-            .send_function_call(
-                FunctionCallRequest::new(
-                    self.model.to_string(),
-                    vec![
-                        stock_scraper.clone(),
-                        search_tool.clone(),
-                        scraper_tool.clone(),
-                    ],
-                    vec![ChatMessage::user(prompt.to_string())],
-                ),
-                parser.clone(),
-            )
-            .await?;
+
+        let result = match self.model {
+            Model::NousTheta => {
+                self.llm
+                    .send_function_call(
+                        FunctionCallRequest::new(
+                            self.model.to_string(),
+                            vec![
+                                stock_scraper.clone(),
+                                search_tool.clone(),
+                                jina_tool.clone(),
+                            ],
+                            vec![ChatMessage::user(prompt.to_string())],
+                        ),
+                        nous_parser.clone(),
+                    )
+                    .await
+            }
+            _ => {
+                self.llm
+                    .send_function_call(
+                        FunctionCallRequest::new(
+                            self.model.to_string(),
+                            vec![jina_tool.clone(), search_tool.clone()],
+                            vec![ChatMessage::user(prompt.to_string())],
+                        ),
+                        oai_parser.clone(),
+                    )
+                    .await
+            }
+        }?;
 
         Ok(result.message.unwrap().content)
     }

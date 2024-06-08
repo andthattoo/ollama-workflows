@@ -95,14 +95,16 @@ pub struct Edge {
 pub enum Model {
     NousTheta,
     Phi3Medium,
+    Phi3Medium128k,
     Phi3Mini,
 }
 
 impl Model {
     pub fn to_string(&self) -> String {
         match self {
-            Model::NousTheta => "NousTheta".to_string(),
-            Model::Phi3Medium => "Phi3Medium".to_string(),
+            Model::NousTheta => "adrienbrault/nous-hermes2theta-llama3-8b:q8_0".to_string(),
+            Model::Phi3Medium => "phi3:14b-medium-4k-instruct-q4_1".to_string(),
+            Model::Phi3Medium128k => "phi3:14b-medium-128k-instruct-q4_1".to_string(),
             Model::Phi3Mini => "Phi3Mini".to_string(),
         }
     }

@@ -1,9 +1,9 @@
+use async_trait::async_trait;
+use ollama_rs::generation::functions::tools::Tool;
 use reqwest::Client;
 use serde_json::{json, Value};
 use std::env;
 use std::error::Error;
-use async_trait::async_trait;
-use ollama_rs::generation::functions::tools::Tool;
 
 pub struct Jina {}
 
@@ -14,7 +14,8 @@ impl Tool for Jina {
     }
 
     fn description(&self) -> String {
-        "Scrapes text content from websites using Jina API and splits it into manageable chunks.".to_string()
+        "Scrapes text content from websites using Jina API and returns in readable format."
+            .to_string()
     }
 
     fn parameters(&self) -> Value {
@@ -37,15 +38,11 @@ impl Tool for Jina {
         if token.is_err() {
             let url = format!("https://r.jina.ai/{}", website);
             let client = Client::new();
-            let response = client
-                .get(&url)
-                .send()
-                .await?;
+            let response = client.get(&url).send().await?;
 
             let result = response.text().await?;
             return Ok(result);
-        }
-        else{
+        } else {
             let bearer = format!("Bearer {}", token.unwrap());
             let url = format!("https://r.jina.ai/{}", website);
             let client = Client::new();
