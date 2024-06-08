@@ -44,28 +44,29 @@ impl Executor {
             memory.write(R_INPUT.to_string(), input.clone());
         }
 
-        let mut current_step = 0;
+        let mut num_steps = 0;
         let start = Instant::now();
+        let mut current_step = workflow.get_step(0);
 
-        while current_step < max_steps && start.elapsed().as_secs() < max_time {
-            if let Some(edge) = workflow.get_step(current_step) {
-                let task = workflow.get_tasks_by_id(&edge.source);
+        while num_steps < max_steps && start.elapsed().as_secs() < max_time {
+            if let Some(edge) = current_step {
+                if let Some(task) = workflow.get_tasks_by_id(&edge.source) {
+                    let is_done = self.execute_task(task, memory.borrow_mut()).await;
 
-                if let Some(task) = task {
-                    if !self.execute_task(task, memory.borrow_mut()).await {
-                        if let Some(fallback_task_id) = &edge.fallback {
-                            let fallback_task = workflow.get_tasks_by_id(fallback_task_id);
-                            if let Some(fallback_task) = fallback_task {
-                                self.execute_task(fallback_task, memory.borrow_mut()).await;
-                            }
-                        }
-                    }
+                    current_step = if is_done {
+                        workflow.get_step_by_id(&edge.target)
+                    } else if let Some(fallback) = &edge.fallback {
+                        workflow.get_step_by_id(fallback)
+                    } else {
+                        break;
+                    };
+                } else {
+                    break;
                 }
-
-                current_step += 1;
             } else {
                 break;
             }
+            num_steps += 1;
         }
     }
 
@@ -156,7 +157,7 @@ impl Executor {
     async fn handle_output(&self, task: &Task, result: Entry, memory: &mut ProgramMemory) {
         for output in &task.outputs {
             let mut data = result.clone();
-            if &output.value == R_OUTPUT {
+            if &output.value != R_OUTPUT {
                 data = Entry::from_str(&output.value);
             }
             match output.output_type {
@@ -183,6 +184,7 @@ impl Executor {
     }
 
     async fn function_call(&self, prompt: &str) -> Result<String, OllamaError> {
+        //allow to switch tools here
         let oai_parser = Arc::new(OpenAIFunctionCall {});
         let nous_parser = Arc::new(NousFunctionCall {});
         let scraper_tool = Arc::new(Browserless {});

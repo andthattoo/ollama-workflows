@@ -39,6 +39,10 @@ impl Workflow {
         self.steps.get(index as usize)
     }
 
+    pub fn get_step_by_id(&self, task_id: &str) -> Option<&Edge> {
+        self.steps.iter().find(|edge| edge.source == task_id)
+    }
+
     pub fn get_tasks_by_id(&self, task_id: &str) -> Option<&Task> {
         self.tasks.iter().find(|task| task.id == task_id)
     }

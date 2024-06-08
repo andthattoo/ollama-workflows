@@ -33,7 +33,7 @@ impl Tool for Jina {
 
     async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
         let website = input["website"].as_str().ok_or("Website URL is required")?;
-        let token = env::var("JINA_API_TOKEN");
+        let token = env::var("JINA_API_KEY");
         //if no token, send req w/o token
         if token.is_err() {
             let url = format!("https://r.jina.ai/{}", website);
