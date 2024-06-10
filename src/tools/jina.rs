@@ -50,8 +50,8 @@ impl Tool for Jina {
                 .get(&url)
                 .header("Authorization", bearer)
                 .header("X-With-Generated-Alt", "true")
-                .header("X-With-Images-Summary", "true")
-                .header("X-With-Links-Summary", "true")
+                .header("X-With-Images-Summary", "false")
+                .header("X-With-Links-Summary", "false")
                 .send()
                 .await?;
             let result = response.text().await?;
