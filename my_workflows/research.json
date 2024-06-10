@@ -33,11 +33,6 @@
             "operator": "generation",
             "outputs": [
                 {
-                    "type": "write",
-                    "key": "web_search_query",
-                    "value": "__result"
-                },
-                {
                     "type": "push",
                     "key": "history",
                     "value": "__result"
@@ -53,8 +48,9 @@
                 {
                     "name": "query",
                     "value": {
-                        "type": "read",
-                        "key": "web_search_query"
+                        "type": "peek",
+                        "key": "history",
+                        "index": 0
                     },
                     "required": true
                 }
@@ -63,11 +59,6 @@
             "outputs": [
                 {
                     "type": "write",
-                    "key": "web_search_result",
-                    "value": "__result"
-                },
-                {
-                    "type": "push",
                     "key": "web_search_result",
                     "value": "__result"
                 }

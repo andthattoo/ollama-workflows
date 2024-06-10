@@ -85,15 +85,7 @@ impl Executor {
 
                 if let Some(task) = workflow.get_tasks_by_id(&edge.source) {
 
-                    let mut is_done = false;
-                    let repeat = edge.repeat.unwrap_or(1).min(5); // max 5 repeats
-                    for _ in 0..repeat {
-                        is_done = self.execute_task(task, memory.borrow_mut(), config).await;
-                        if !is_done {
-                            break;
-                        }
-                        num_steps += 1;
-                    }
+                    let is_done = self.execute_task(task, memory.borrow_mut(), config).await;
 
                     current_step = if is_done {
                         warn!(
@@ -115,6 +107,7 @@ impl Executor {
             } else {
                 break;
             }
+            num_steps += 1;
         }
     }
 
@@ -184,7 +177,7 @@ impl Executor {
                 let result = self.check(&input.0, &input.1);
                 return result;
             }
-            Operator::FuzzyCheck => {
+            Operator::Condition => {
                 let input = self.prepare_check(input_map);
                 let result = self.fuzzy_check(&input.0, &input.1);
                 return result;
@@ -277,7 +270,6 @@ impl Executor {
     }
 
     async fn function_call(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
-        //allow to switch tools here
         let oai_parser = Arc::new(OpenAIFunctionCall {});
         let nous_parser = Arc::new(NousFunctionCall {});
         let tools = self.get_tools(config.tools.clone()).unwrap();
@@ -308,7 +300,7 @@ impl Executor {
                     .await
             }
         }?;
-
+        
         Ok(result.message.unwrap().content)
     }
 

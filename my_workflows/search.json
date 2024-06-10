@@ -11,7 +11,7 @@
             "id": "A",
             "name": "Web Search Query",
             "description": "Write a web search query to collect useful information for the given question",
-            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n###Query: {query} \n\n ###Previous Questions: {history} \n\n ###Search Query:",
+            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions, keep it concise and clear. \n###Query: {query} \n\n ###Previous Questions: {history} \n\n ###Search Query:",
             "inputs": [
                 {
                     "name": "query",

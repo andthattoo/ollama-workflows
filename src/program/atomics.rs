@@ -81,7 +81,7 @@ pub enum Operator {
     Generation,
     FunctionCalling,
     Check,
-    FuzzyCheck,
+    Condition,
     End,
 }
 
@@ -100,8 +100,43 @@ pub struct Task {
 pub struct Edge {
     pub source: String,
     pub target: String,
-    pub repeat: Option<u32>,
+    pub target_if_not_met: Option<String>,
+    pub condition: Option<Condition>,
     pub fallback: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub enum Expression{
+    Equal,
+    NotEqual,
+    Contains,
+    NotContains,
+    GreaterThan,
+    LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
+}
+
+impl Expression{
+    pub fn evaluate(&self, input: &str, expected: &str) -> bool{
+        match self{
+            Expression::Equal => input == expected,
+            Expression::NotEqual => input != expected,
+            Expression::Contains => input.contains(expected),
+            Expression::NotContains => !input.contains(expected),
+            Expression::GreaterThan => input.parse::<f64>().unwrap() > expected.parse::<f64>().unwrap(),
+            Expression::LessThan => input.parse::<f64>().unwrap() < expected.parse::<f64>().unwrap(),
+            Expression::GreaterThanOrEqual => input.parse::<f64>().unwrap() >= expected.parse::<f64>().unwrap(),
+            Expression::LessThanOrEqual => input.parse::<f64>().unwrap() <= expected.parse::<f64>().unwrap(),
+        }
+    }
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct Condition {
+    pub input: InputValue,
+    pub expected: String,
+    pub expression: Expression,
 }
 
 pub enum Model {

@@ -769,6 +769,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+
+[[package]]
 name = "dtoa"
 version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2150,7 +2156,7 @@ dependencies = [
 [[package]]
 name = "ollama-rs"
 version = "0.1.9"
-source = "git+https://github.com/andthattoo/ollama-rs.git?branch=master#bb7cdff9bd2987703e7a263df1012ab76418fc1d"
+source = "git+https://github.com/andthattoo/ollama-rs.git?branch=master#ba2eda52897f8782835321e5bd0e181ada2a9b4e"
 dependencies = [
  "async-trait",
  "log",
@@ -2169,6 +2175,7 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "colored",
+ "dotenv",
  "env_logger",
  "html2text",
  "langchain-rust",
