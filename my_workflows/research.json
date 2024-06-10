@@ -4,7 +4,7 @@
     "config": {
         "max_steps": 35,
         "max_time": 600,
-        "tools": ["web_search", "web_scrape", "browser", "finance"]
+        "tools": ["serper", "jina", "browserless", "stock"]
     },
     "tasks": [
         {
@@ -235,7 +235,8 @@
         {
             "source": "A",
             "target": "B",
-            "fallback": "H"
+            "fallback": "H",
+            "repeat": 5
         },
         {
             "source": "B",

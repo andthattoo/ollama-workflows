@@ -11,7 +11,6 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use colored::*;
-use langchain_rust::tools;
 use log::{debug, error, info, warn};
 use rand::seq::SliceRandom;
 
@@ -85,7 +84,16 @@ impl Executor {
                 }
 
                 if let Some(task) = workflow.get_tasks_by_id(&edge.source) {
-                    let is_done = self.execute_task(task, memory.borrow_mut(), config).await;
+
+                    let mut is_done = false;
+                    let repeat = edge.repeat.unwrap_or(1).min(5); // max 5 repeats
+                    for _ in 0..repeat {
+                        is_done = self.execute_task(task, memory.borrow_mut(), config).await;
+                        if !is_done {
+                            break;
+                        }
+                        num_steps += 1;
+                    }
 
                     current_step = if is_done {
                         warn!(
@@ -107,7 +115,6 @@ impl Executor {
             } else {
                 break;
             }
-            num_steps += 1;
         }
     }
 
