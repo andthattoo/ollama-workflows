@@ -1,7 +1,8 @@
-use super::atomics::{InputValueType, Model, Operator, OutputType, Task, R_INPUT, R_OUTPUT, R_END};
+use super::atomics::*;
 use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
+use crate::program::errors::ToolError;
 use crate::tools::{Browserless, Jina, SearchTool};
 
 use std::borrow::BorrowMut;
@@ -9,25 +10,26 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 
-use log::{info, warn, error, debug};
-use rand::seq::SliceRandom;
 use colored::*;
+use langchain_rust::tools;
+use log::{debug, error, info, warn};
+use rand::seq::SliceRandom;
 
 use ollama_rs::{
     error::OllamaError,
     generation::chat::request::ChatMessageRequest,
     generation::chat::ChatMessage,
     generation::functions::tools::StockScraper,
-    generation::functions::{FunctionCallRequest, NousFunctionCall, OpenAIFunctionCall},
+    generation::functions::tools::Tool,
+    generation::functions::{
+        DDGSearcher, FunctionCallRequest, NousFunctionCall, OpenAIFunctionCall, Scraper,
+    },
     generation::options::GenerationOptions,
     Ollama,
 };
 
 fn log_colored(msg: &str) {
-
-    let colors = vec![
-        "red", "green", "yellow", "blue", "magenta", "cyan",
-    ];
+    let colors = vec!["red", "green", "yellow", "blue", "magenta", "cyan"];
 
     let color = colors.choose(&mut rand::thread_rng()).unwrap();
     let colored_msg = match *color {
@@ -37,12 +39,10 @@ fn log_colored(msg: &str) {
         "blue" => msg.blue(),
         "magenta" => msg.magenta(),
         "cyan" => msg.cyan(),
-        "white" => msg.white(),
-        _ => msg.normal(), // default color if none matched
+        _ => msg.green(),
     };
     warn!("{}", colored_msg);
 }
-
 
 pub struct Executor {
     model: Model,
@@ -79,17 +79,19 @@ impl Executor {
 
         while num_steps < max_steps && start.elapsed().as_secs() < max_time {
             if let Some(edge) = current_step {
-
                 if &edge.source == R_END {
                     warn!("Successfully completed the workflow");
-                    break
+                    break;
                 }
 
                 if let Some(task) = workflow.get_tasks_by_id(&edge.source) {
-                    let is_done = self.execute_task(task, memory.borrow_mut()).await;
+                    let is_done = self.execute_task(task, memory.borrow_mut(), config).await;
 
                     current_step = if is_done {
-                        warn!("[{}] completed successfully, stepping into [{}]", &edge.source, &edge.target);
+                        warn!(
+                            "[{}] completed successfully, stepping into [{}]",
+                            &edge.source, &edge.target
+                        );
                         workflow.get_step_by_id(&edge.target)
                     } else if let Some(fallback) = &edge.fallback {
                         warn!("[{}] failed, stepping into [{}]", &edge.source, &fallback);
@@ -109,7 +111,7 @@ impl Executor {
         }
     }
 
-    async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory) -> bool {
+    async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory, config: &Config) -> bool {
         info!("Executing task: {} with id {}", &task.name, &task.id);
         info!("Using operator: {:?}", &task.operator);
 
@@ -144,25 +146,29 @@ impl Executor {
         match task.operator {
             Operator::Generation => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
-                let result = self.generate_text(&prompt).await;
+                let result = self.generate_text(&prompt, config).await;
                 if result.is_err() {
                     error!("Error generating text: {:?}", result.err().unwrap());
                     return false;
                 }
                 debug!("Prompt: {}", &prompt);
-                log_colored(format!("Operator: {:?}. Output: {:?}", &task.operator ,&result).as_str());
+                log_colored(
+                    format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
+                );
                 let result_entry = Entry::from_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::FunctionCalling => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
-                let result = self.function_call(&prompt).await;
+                let result = self.function_call(&prompt, config).await;
                 if result.is_err() {
                     error!("Error generating text: {:?}", result.err().unwrap());
                     return false;
                 }
                 debug!("Prompt: {}", &prompt);
-                log_colored(format!("Operator: {:?}. Output: {:?}", &task.operator ,&result).as_str());
+                log_colored(
+                    format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
+                );
                 let result_entry = Entry::from_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
@@ -191,15 +197,49 @@ impl Executor {
     }
 
     fn prepare_check(&self, input_map: HashMap<String, String>) -> (String, String) {
-        let input = &input_map.get("input");
-        let expected = &input_map.get("expected");
+        let input = &input_map.get(R_OUTPUTS);
+        let expected = &input_map.get(R_EXPECTED);
 
         if let Some(i) = input {
             if let Some(e) = expected {
-                return (i.to_string().clone(), e.to_string().clone());
+                return (
+                    i.to_string()
+                        .trim()
+                        .replace("\n", "")
+                        .to_lowercase()
+                        .clone(),
+                    e.to_string()
+                        .trim()
+                        .replace("\n", "")
+                        .to_lowercase()
+                        .clone(),
+                );
             }
         }
         ("+".to_string(), "-".to_string())
+    }
+
+    fn get_tools(&self, tool_names: Vec<String>) -> Result<Vec<Arc<dyn Tool>>, ToolError> {
+        if !in_tools(&tool_names) {
+            return Err(ToolError::ToolDoesNotExist);
+        }
+        let tools: Vec<Arc<dyn Tool>> = tool_names
+            .iter()
+            .map(|tool| self.get_tool_by_name(tool))
+            .collect();
+        Ok(tools)
+    }
+
+    fn get_tool_by_name(&self, tool: &str) -> Arc<dyn Tool> {
+        match tool {
+            "jina" => Arc::new(Jina {}),
+            "serper" => Arc::new(SearchTool {}),
+            "browserless" => Arc::new(Browserless {}),
+            "duckduckgo" => Arc::new(DDGSearcher::new()),
+            "stock" => Arc::new(StockScraper::new()),
+            "scraper" => Arc::new(Scraper {}),
+            _ => Arc::new(Scraper {}),
+        }
     }
 
     async fn handle_output(&self, task: &Task, result: Entry, memory: &mut ProgramMemory) {
@@ -216,14 +256,12 @@ impl Executor {
         }
     }
 
-    async fn generate_text(&self, prompt: &str) -> Result<String, OllamaError> {
+    async fn generate_text(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
         let user_message = ChatMessage::user(prompt.to_string());
-
-        let mut ops = GenerationOptions::default();
-        ops = ops.num_predict(150);
-        ops = ops.num_ctx(4096);
-
         let mut msg = ChatMessageRequest::new(self.model.to_string(), vec![user_message]);
+        let mut ops = GenerationOptions::default();
+        ops = ops.num_predict(config.max_tokens.unwrap_or(200));
+        ops = ops.num_ctx(4096);
         msg = msg.options(ops);
 
         let result = self.llm.send_chat_messages(msg).await?;
@@ -231,14 +269,11 @@ impl Executor {
         Ok(result.message.unwrap().content)
     }
 
-    async fn function_call(&self, prompt: &str) -> Result<String, OllamaError> {
+    async fn function_call(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
         //allow to switch tools here
         let oai_parser = Arc::new(OpenAIFunctionCall {});
         let nous_parser = Arc::new(NousFunctionCall {});
-        let scraper_tool = Arc::new(Browserless {});
-        let search_tool = Arc::new(SearchTool {});
-        let jina_tool = Arc::new(Jina {});
-        let stock_scraper = Arc::new(StockScraper::new());
+        let tools = self.get_tools(config.tools.clone()).unwrap();
 
         let result = match self.model {
             Model::NousTheta => {
@@ -246,11 +281,7 @@ impl Executor {
                     .send_function_call(
                         FunctionCallRequest::new(
                             self.model.to_string(),
-                            vec![
-                                stock_scraper.clone(),
-                                search_tool.clone(),
-                                jina_tool.clone(),
-                            ],
+                            tools,
                             vec![ChatMessage::user(prompt.to_string())],
                         ),
                         nous_parser.clone(),
@@ -262,7 +293,7 @@ impl Executor {
                     .send_function_call(
                         FunctionCallRequest::new(
                             self.model.to_string(),
-                            vec![jina_tool.clone(), search_tool.clone()],
+                            tools,
                             vec![ChatMessage::user(prompt.to_string())],
                         ),
                         oai_parser.clone(),

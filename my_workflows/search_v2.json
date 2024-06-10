@@ -4,14 +4,14 @@
     "config": {
         "max_steps": 35,
         "max_time": 600,
-        "tools": ["serper", "jina", "browserless", "stock"]
+        "tools": ["web_search", "web_scrape", "browser", "finance"]
     },
     "tasks": [
         {
             "id": "A",
             "name": "Web Search Query",
             "description": "Write a web search query to collect useful information for the given question",
-            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n###Query: {query} \n\n ###Previous Questions: {history} \n\n ###Search Query:",
+            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n<query>{query}</query> \n\n <previous_questions>{history}</previous_questions> \n\n <search_query>",
             "inputs": [
                 {
                     "name": "query",

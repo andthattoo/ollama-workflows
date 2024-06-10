@@ -49,9 +49,9 @@ impl Tool for Jina {
             let response = client
                 .get(&url)
                 .header("Authorization", bearer)
-                .header("X-With-Generated-Alt", "true")
-                .header("X-With-Images-Summary", "false")
-                .header("X-With-Links-Summary", "false")
+                //.header("X-With-Generated-Alt", "false")
+                //.header("X-With-Images-Summary", "false")
+                //.header("X-With-Links-Summary", "false")
                 .send()
                 .await?;
             let result = response.text().await?;

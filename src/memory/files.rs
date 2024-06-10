@@ -1,6 +1,7 @@
 use super::types::Entry;
 use crate::program::errors::{EmbeddingError, FileSystemError};
 use ollama_rs::Ollama;
+use text_splitter::TextSplitter;
 use usearch::{new_index, Index, IndexOptions, MetricKind, ScalarKind};
 
 pub static EMBEDDING_MODEL: &str = "hellord/mxbai-embed-large-v1:f16";
@@ -85,20 +86,31 @@ impl FileSystem {
             Entry::Json(j) => j.as_str().unwrap(),
         };
 
-        let embedding = self.embedder.generate_embeddings(doc).await;
-        match embedding {
-            Ok(embedding) => {
-                let res = self.index.add(self.index.size() as u64, &embedding);
-                match res {
-                    Ok(_) => {
-                        self.documents.push(doc.to_string());
-                        Ok(())
+        let splitter = TextSplitter::new(1000);
+        let chunks = splitter.chunks(&doc);
+        let sentences: Vec<String> = chunks.map(|s| s.to_string()).collect();
+
+        for sentence in sentences {
+            let embedding = self.embedder.generate_embeddings(&sentence).await;
+            let res = match embedding {
+                Ok(embedding) => {
+                    let res = self.index.add(self.index.size() as u64, &embedding);
+                    match res {
+                        Ok(_) => {
+                            self.documents.push(doc.to_string());
+                            Ok(())
+                        }
+                        Err(_) => Err(FileSystemError::InsertionFailed(doc.to_string())),
                     }
-                    Err(_) => Err(FileSystemError::InsertionFailed(doc.to_string())),
                 }
+                Err(err) => Err(FileSystemError::EmbeddingError(err)),
+            };
+            if res.is_err() {
+                return res;
             }
-            Err(err) => Err(FileSystemError::EmbeddingError(err)),
         }
+
+        Ok(())
     }
 
     pub async fn search(&self, query: &Entry) -> Result<Vec<Entry>, FileSystemError> {

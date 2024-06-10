@@ -5,16 +5,31 @@ pub static R_OUTPUT: &str = "__result";
 pub static R_END: &str = "__end";
 pub static R_EXPECTED: &str = "__expected";
 pub static R_OUTPUTS: &str = "__output";
-pub static RESERVED_KEYWORDS: [&str; 5] = [R_INPUT, R_OUTPUT, R_END, R_EXPECTED, R_OUTPUTS];
 
-pub fn in_reserved_keywords(s: &str) -> bool {
-    RESERVED_KEYWORDS.contains(&s)
+pub static TOOLS: [&str; 6] = [
+    "browserless",
+    "jina",
+    "serper",
+    "duckduckgo",
+    "stock",
+    "scraper",
+];
+
+pub fn in_tools(tools: &Vec<String>) -> bool {
+    for tool in tools {
+        if !TOOLS.contains(&tool.as_str()) {
+            return false;
+        }
+    }
+    true
 }
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
     pub max_steps: u32,
     pub max_time: u64,
+    pub tools: Vec<String>,
+    pub max_tokens: Option<i32>,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -85,6 +100,7 @@ pub struct Task {
 pub struct Edge {
     pub source: String,
     pub target: String,
+    pub repeat: Option<u32>,
     pub fallback: Option<String>,
 }
 

@@ -5,13 +5,12 @@ use ollama_workflows::{Entry, Executor, Model, ProgramMemory, Workflow};
 async fn main() {
     let env = Env::default().filter_or("LOG_LEVEL", "info");
     env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3Medium);
+    let exe = Executor::new(Model::NousTheta);
     let workflow = Workflow::new_from_json(
         "/Users/kayaomers/Documents/firstbatch/ollama-workflows/my_workflows/search.json",
     )
     .unwrap();
     let mut memory = ProgramMemory::new();
     let input = Entry::from_str("What are the origins to Mevlana?");
-    println!("Executing workflow");
     exe.execute(Some(&input), workflow, &mut memory).await;
 }

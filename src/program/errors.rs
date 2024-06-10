@@ -3,22 +3,14 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum CustomError {
-    CacheError(CacheError),
     FileSystemError(FileSystemError),
     StackError(StackError),
     EmbeddingError(EmbeddingError),
-    Other(String),
-}
-
-#[derive(Debug)]
-pub enum CacheError {
-    NotFound(String),
-    InsertionFailed(String),
+    ToolError(ToolError),
 }
 
 #[derive(Debug)]
 pub enum FileSystemError {
-    InvalidKey(String),
     InsertionFailed(String),
     SearchError,
     EmbeddingError(EmbeddingError),
@@ -37,23 +29,18 @@ pub enum EmbeddingError {
     ModelDoesNotExist,
 }
 
+#[derive(Debug)]
+pub enum ToolError {
+    ToolDoesNotExist,
+}
+
 impl fmt::Display for CustomError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            CustomError::CacheError(err) => write!(f, "Cache error: {}", err),
             CustomError::FileSystemError(err) => write!(f, "File system error: {}", err),
             CustomError::StackError(err) => write!(f, "Stack error: {}", err),
-            CustomError::Other(msg) => write!(f, "Other error: {}", msg),
             CustomError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
-        }
-    }
-}
-
-impl fmt::Display for CacheError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            CacheError::NotFound(key) => write!(f, "Key not found: {}", key),
-            CacheError::InsertionFailed(key) => write!(f, "Failed to insert key: {}", key),
+            CustomError::ToolError(err) => write!(f, "Tool error: {}", err),
         }
     }
 }
@@ -61,7 +48,6 @@ impl fmt::Display for CacheError {
 impl fmt::Display for FileSystemError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            FileSystemError::InvalidKey(key) => write!(f, "Invalid key: {}", key),
             FileSystemError::InsertionFailed(doc) => {
                 write!(f, "Insertion failed for document: {}", doc)
             }
@@ -90,17 +76,19 @@ impl fmt::Display for EmbeddingError {
     }
 }
 
+impl fmt::Display for ToolError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ToolError::ToolDoesNotExist => write!(f, "Tool does not exist"),
+        }
+    }
+}
+
 impl Error for CustomError {}
-impl Error for CacheError {}
 impl Error for FileSystemError {}
 impl Error for StackError {}
 impl Error for EmbeddingError {}
-
-impl From<CacheError> for CustomError {
-    fn from(err: CacheError) -> CustomError {
-        CustomError::CacheError(err)
-    }
-}
+impl Error for ToolError {}
 
 impl From<FileSystemError> for CustomError {
     fn from(err: FileSystemError) -> CustomError {
@@ -114,8 +102,14 @@ impl From<StackError> for CustomError {
     }
 }
 
-fn main() {
-    // Example usage
-    let error = CustomError::CacheError(CacheError::NotFound("my_key".to_string()));
-    println!("{}", error);
+impl From<EmbeddingError> for CustomError {
+    fn from(err: EmbeddingError) -> CustomError {
+        CustomError::EmbeddingError(err)
+    }
+}
+
+impl From<ToolError> for CustomError {
+    fn from(err: ToolError) -> CustomError {
+        CustomError::ToolError(err)
+    }
 }
