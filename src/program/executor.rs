@@ -1,4 +1,4 @@
-use super::atomics::{InputValueType, Model, Operator, OutputType, Task, R_INPUT, R_OUTPUT};
+use super::atomics::{InputValueType, Model, Operator, OutputType, Task, R_INPUT, R_OUTPUT, R_END};
 use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
@@ -9,6 +9,10 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
 
+use log::{info, warn, error, debug};
+use rand::seq::SliceRandom;
+use colored::*;
+
 use ollama_rs::{
     error::OllamaError,
     generation::chat::request::ChatMessageRequest,
@@ -18,6 +22,27 @@ use ollama_rs::{
     generation::options::GenerationOptions,
     Ollama,
 };
+
+fn log_colored(msg: &str) {
+
+    let colors = vec![
+        "red", "green", "yellow", "blue", "magenta", "cyan", "white",
+    ];
+
+    let color = colors.choose(&mut rand::thread_rng()).unwrap();
+    let colored_msg = match *color {
+        "red" => msg.red(),
+        "green" => msg.green(),
+        "yellow" => msg.yellow(),
+        "blue" => msg.blue(),
+        "magenta" => msg.magenta(),
+        "cyan" => msg.cyan(),
+        "white" => msg.white(),
+        _ => msg.normal(), // default color if none matched
+    };
+    warn!("{}", colored_msg);
+}
+
 
 pub struct Executor {
     model: Model,
@@ -40,6 +65,10 @@ impl Executor {
         let max_steps = config.max_steps;
         let max_time = config.max_time;
 
+        info!("------------------");
+        warn!("Executing workflow");
+        info!("Max steps: {}, Max time: {}", &max_steps, &max_time);
+
         if let Some(input) = input {
             memory.write(R_INPUT.to_string(), input.clone());
         }
@@ -50,6 +79,12 @@ impl Executor {
 
         while num_steps < max_steps && start.elapsed().as_secs() < max_time {
             if let Some(edge) = current_step {
+
+                if &edge.source == R_END {
+                    warn!("Successfully completed the workflow");
+                    break
+                }
+
                 if let Some(task) = workflow.get_tasks_by_id(&edge.source) {
                     let is_done = self.execute_task(task, memory.borrow_mut()).await;
 
@@ -71,6 +106,9 @@ impl Executor {
     }
 
     async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory) -> bool {
+        info!("Executing task: {} with id {}", &task.name, &task.id);
+        info!("Using operator: {:?}", &task.operator);
+
         let mut input_map: HashMap<String, String> = HashMap::new();
         for input in &task.inputs {
             let value: MemoryReturnType = match input.value.value_type {
@@ -103,7 +141,10 @@ impl Executor {
             Operator::Generation => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
                 let result = self.generate_text(&prompt).await;
+                debug!("Prompt: {}", &prompt);
+                log_colored(format!("Operator: {:?}. Output:\n{:?}", &task.operator ,&result).as_str());
                 if result.is_err() {
+                    error!("Error generating text: {:?}", result.err().unwrap());
                     return false;
                 }
                 let result_entry = Entry::from_str(&result.unwrap());

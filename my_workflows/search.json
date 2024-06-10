@@ -213,8 +213,8 @@
             "outputs": []
         },
         {
-            "id": "H",
-            "name": "End",
+            "id": "__end",
+            "name": "end",
             "description": "End of the task",
             "prompt": "End of the task",
             "inputs": [],
@@ -251,7 +251,7 @@
         },
         {
             "source": "G",
-            "target": "H",
+            "target": "end",
             "fallback": "A"
         }
     ]

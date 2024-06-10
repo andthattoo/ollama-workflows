@@ -2,14 +2,10 @@
 
 pub static R_INPUT: &str = "__input";
 pub static R_OUTPUT: &str = "__result";
-pub static R_OPERATOR: &str = "operator";
-pub static R_TASKS: &str = "tasks";
-pub static R_CONFIG: &str = "config";
+pub static R_END: &str = "__end";
 pub static R_EXPECTED: &str = "__expected";
 pub static R_OUTPUTS: &str = "__output";
-pub static RESERVED_KEYWORDS: [&str; 7] = [
-    R_INPUT, R_OUTPUT, R_OPERATOR, R_TASKS, R_CONFIG, R_EXPECTED, R_OUTPUTS,
-];
+pub static RESERVED_KEYWORDS: [&str; 5] = [R_INPUT, R_OUTPUT, R_END, R_EXPECTED, R_OUTPUTS];
 
 pub fn in_reserved_keywords(s: &str) -> bool {
     RESERVED_KEYWORDS.contains(&s)
