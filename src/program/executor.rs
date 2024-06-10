@@ -26,7 +26,7 @@ use ollama_rs::{
 fn log_colored(msg: &str) {
 
     let colors = vec![
-        "red", "green", "yellow", "blue", "magenta", "cyan", "white",
+        "red", "green", "yellow", "blue", "magenta", "cyan",
     ];
 
     let color = colors.choose(&mut rand::thread_rng()).unwrap();
@@ -65,7 +65,7 @@ impl Executor {
         let max_steps = config.max_steps;
         let max_time = config.max_time;
 
-        info!("------------------");
+        warn!("------------------");
         warn!("Executing workflow");
         info!("Max steps: {}, Max time: {}", &max_steps, &max_time);
 
@@ -89,13 +89,17 @@ impl Executor {
                     let is_done = self.execute_task(task, memory.borrow_mut()).await;
 
                     current_step = if is_done {
+                        warn!("[{}] completed successfully, stepping into [{}]", &edge.source, &edge.target);
                         workflow.get_step_by_id(&edge.target)
                     } else if let Some(fallback) = &edge.fallback {
+                        warn!("[{}] failed, stepping into [{}]", &edge.source, &fallback);
                         workflow.get_step_by_id(fallback)
                     } else {
+                        warn!("{} failed, halting beacause of no fallback", &edge.source);
                         break;
                     };
                 } else {
+                    warn!("Task with id [{}] not found, halting", &edge.source);
                     break;
                 }
             } else {
@@ -141,12 +145,12 @@ impl Executor {
             Operator::Generation => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
                 let result = self.generate_text(&prompt).await;
-                debug!("Prompt: {}", &prompt);
-                log_colored(format!("Operator: {:?}. Output:\n{:?}", &task.operator ,&result).as_str());
                 if result.is_err() {
                     error!("Error generating text: {:?}", result.err().unwrap());
                     return false;
                 }
+                debug!("Prompt: {}", &prompt);
+                log_colored(format!("Operator: {:?}. Output: {:?}", &task.operator ,&result).as_str());
                 let result_entry = Entry::from_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
@@ -154,8 +158,11 @@ impl Executor {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
                 let result = self.function_call(&prompt).await;
                 if result.is_err() {
+                    error!("Error generating text: {:?}", result.err().unwrap());
                     return false;
                 }
+                debug!("Prompt: {}", &prompt);
+                log_colored(format!("Operator: {:?}. Output: {:?}", &task.operator ,&result).as_str());
                 let result_entry = Entry::from_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
