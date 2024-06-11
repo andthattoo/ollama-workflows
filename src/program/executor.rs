@@ -87,11 +87,32 @@ impl Executor {
                     let is_done = self.execute_task(task, memory.borrow_mut(), config).await;
 
                     current_step = if is_done {
-                        warn!(
-                            "[{}] completed successfully, stepping into [{}]",
-                            &edge.source, &edge.target
-                        );
-                        workflow.get_step_by_id(&edge.target)
+                        //if there are conditions, check them
+                        if let Some(condition) = &edge.condition {
+                            let value = self.handle_input(&condition.input, memory).await;
+                            let eval = condition
+                                .expression
+                                .evaluate(&value.to_string(), &condition.expected);
+                            if eval {
+                                warn!(
+                                    "[{}] conditions met, stepping into [{}]",
+                                    &edge.source, &edge.target
+                                );
+                                workflow.get_step_by_id(&edge.target)
+                            } else {
+                                warn!(
+                                    "[{}] conditions not met, stepping into [{}]",
+                                    &edge.source, &condition.target_if_not
+                                );
+                                workflow.get_step_by_id(&condition.target_if_not)
+                            }
+                        } else {
+                            warn!(
+                                "[{}] completed successfully, stepping into [{}]",
+                                &edge.source, &edge.target
+                            );
+                            workflow.get_step_by_id(&edge.target)
+                        }
                     } else if let Some(fallback) = &edge.fallback {
                         warn!("[{}] failed, stepping into [{}]", &edge.source, &fallback);
                         workflow.get_step_by_id(fallback)
@@ -116,28 +137,7 @@ impl Executor {
 
         let mut input_map: HashMap<String, String> = HashMap::new();
         for input in &task.inputs {
-            let value: MemoryReturnType = match input.value.value_type {
-                InputValueType::Input => {
-                    MemoryReturnType::EntryRef(memory.read(&R_INPUT.to_string()))
-                }
-                InputValueType::Read => MemoryReturnType::EntryRef(memory.read(&input.value.key)),
-                InputValueType::Peek => MemoryReturnType::EntryRef(
-                    memory.peek(&input.value.key, input.value.index.unwrap_or(0)),
-                ),
-                InputValueType::GetAll => {
-                    MemoryReturnType::EntryVec(memory.get_all(&input.value.key))
-                }
-                InputValueType::Pop => MemoryReturnType::Entry(memory.pop(&input.value.key)),
-                InputValueType::Search => MemoryReturnType::EntryVec(
-                    memory
-                        .search(&Entry::try_value_or_str(&input.value.key))
-                        .await,
-                ),
-                InputValueType::String => {
-                    MemoryReturnType::Entry(Some(Entry::try_value_or_str(&input.value.key)))
-                }
-            };
-
+            let value = self.handle_input(&input.value, memory).await;
             if input.required && value.is_none() {
                 return false;
             }
@@ -250,6 +250,30 @@ impl Executor {
                 OutputType::Push => memory.push(output.key.clone(), data.clone()),
             }
         }
+    }
+
+    async fn handle_input<'a>(
+        &'a self,
+        input_value: &'a InputValue,
+        memory: &'a mut ProgramMemory,
+    ) -> MemoryReturnType<'a> {
+        return match input_value.value_type {
+            InputValueType::Input => MemoryReturnType::EntryRef(memory.read(&R_INPUT.to_string())),
+            InputValueType::Read => MemoryReturnType::EntryRef(memory.read(&input_value.key)),
+            InputValueType::Peek => MemoryReturnType::EntryRef(
+                memory.peek(&input_value.key, input_value.index.unwrap_or(0)),
+            ),
+            InputValueType::GetAll => MemoryReturnType::EntryVec(memory.get_all(&input_value.key)),
+            InputValueType::Pop => MemoryReturnType::Entry(memory.pop(&input_value.key)),
+            InputValueType::Search => MemoryReturnType::EntryVec(
+                memory
+                    .search(&Entry::try_value_or_str(&input_value.key))
+                    .await,
+            ),
+            InputValueType::String => {
+                MemoryReturnType::Entry(Some(Entry::try_value_or_str(&input_value.key)))
+            }
+        };
     }
 
     async fn generate_text(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
