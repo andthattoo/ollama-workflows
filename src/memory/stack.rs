@@ -38,9 +38,7 @@ impl Stack {
         if let Some(page) = page {
             page.push(value);
         } else {
-            let mut new_page = StackPage::new();
-            new_page.push(value);
-            self.pages.insert(key, new_page);
+            self.pages.insert(key, vec![value]);
         }
     }
 }

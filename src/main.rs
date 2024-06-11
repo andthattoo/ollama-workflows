@@ -1,6 +1,6 @@
+use dotenv::dotenv;
 use env_logger::Env;
 use ollama_workflows::{Entry, Executor, Model, ProgramMemory, Workflow};
-use dotenv::dotenv;
 
 #[tokio::main]
 async fn main() {
@@ -13,7 +13,7 @@ async fn main() {
     )
     .unwrap();
     let mut memory = ProgramMemory::new();
-    let input = Entry::from_str("How would does reiki work?");
+    let input = Entry::try_value_or_str("How would does reiki work?");
     exe.execute(Some(&input), workflow, &mut memory).await;
     println!("{:?}", memory.read(&"final_result".to_string()));
 }

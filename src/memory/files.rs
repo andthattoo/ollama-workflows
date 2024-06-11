@@ -72,14 +72,6 @@ impl FileSystem {
         }
     }
 
-    pub fn load_model(&self) {
-        self.index.load("index.usearch").unwrap();
-    }
-
-    pub fn save_model(&self) {
-        self.index.save("index.usearch").unwrap();
-    }
-
     pub async fn add(&mut self, entry: &Entry) -> Result<(), FileSystemError> {
         let doc = match entry {
             Entry::String(s) => s,
@@ -87,7 +79,7 @@ impl FileSystem {
         };
 
         let splitter = TextSplitter::new(1000);
-        let chunks = splitter.chunks(&doc);
+        let chunks = splitter.chunks(doc);
         let sentences: Vec<String> = chunks.map(|s| s.to_string()).collect();
 
         for sentence in sentences {
@@ -105,9 +97,7 @@ impl FileSystem {
                 }
                 Err(err) => Err(FileSystemError::EmbeddingError(err)),
             };
-            if res.is_err() {
-                return res;
-            }
+            res?;
         }
 
         Ok(())
@@ -129,7 +119,7 @@ impl FileSystem {
                                 break;
                             };
                             let doc = &self.documents[*key as usize];
-                            let passage = Entry::from_str(doc);
+                            let passage = Entry::try_value_or_str(doc);
                             passages.push(passage);
                         }
                         Ok(passages)

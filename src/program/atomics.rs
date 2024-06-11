@@ -1,4 +1,5 @@
 //Reseverd keywords
+use std::fmt;
 
 pub static R_INPUT: &str = "__input";
 pub static R_OUTPUT: &str = "__result";
@@ -81,7 +82,6 @@ pub enum Operator {
     Generation,
     FunctionCalling,
     Check,
-    Condition,
     End,
 }
 
@@ -100,13 +100,12 @@ pub struct Task {
 pub struct Edge {
     pub source: String,
     pub target: String,
-    pub target_if_not_met: Option<String>,
     pub condition: Option<Condition>,
     pub fallback: Option<String>,
 }
 
 #[derive(Debug, serde::Deserialize)]
-pub enum Expression{
+pub enum Expression {
     Equal,
     NotEqual,
     Contains,
@@ -117,17 +116,25 @@ pub enum Expression{
     LessThanOrEqual,
 }
 
-impl Expression{
-    pub fn evaluate(&self, input: &str, expected: &str) -> bool{
-        match self{
+impl Expression {
+    pub fn evaluate(&self, input: &str, expected: &str) -> bool {
+        match self {
             Expression::Equal => input == expected,
             Expression::NotEqual => input != expected,
             Expression::Contains => input.contains(expected),
             Expression::NotContains => !input.contains(expected),
-            Expression::GreaterThan => input.parse::<f64>().unwrap() > expected.parse::<f64>().unwrap(),
-            Expression::LessThan => input.parse::<f64>().unwrap() < expected.parse::<f64>().unwrap(),
-            Expression::GreaterThanOrEqual => input.parse::<f64>().unwrap() >= expected.parse::<f64>().unwrap(),
-            Expression::LessThanOrEqual => input.parse::<f64>().unwrap() <= expected.parse::<f64>().unwrap(),
+            Expression::GreaterThan => {
+                input.parse::<f64>().unwrap() > expected.parse::<f64>().unwrap()
+            }
+            Expression::LessThan => {
+                input.parse::<f64>().unwrap() < expected.parse::<f64>().unwrap()
+            }
+            Expression::GreaterThanOrEqual => {
+                input.parse::<f64>().unwrap() >= expected.parse::<f64>().unwrap()
+            }
+            Expression::LessThanOrEqual => {
+                input.parse::<f64>().unwrap() <= expected.parse::<f64>().unwrap()
+            }
         }
     }
 }
@@ -137,6 +144,7 @@ pub struct Condition {
     pub input: InputValue,
     pub expected: String,
     pub expression: Expression,
+    pub target_if_not: String,
 }
 
 pub enum Model {
@@ -146,13 +154,14 @@ pub enum Model {
     Phi3Mini,
 }
 
-impl Model {
-    pub fn to_string(&self) -> String {
+//implement display with mathcing
+impl fmt::Display for Model {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Model::NousTheta => "adrienbrault/nous-hermes2theta-llama3-8b:q8_0".to_string(),
-            Model::Phi3Medium => "phi3:14b-medium-4k-instruct-q4_1".to_string(),
-            Model::Phi3Medium128k => "phi3:14b-medium-128k-instruct-q4_1".to_string(),
-            Model::Phi3Mini => "Phi3Mini".to_string(),
+            Model::NousTheta => write!(f, "adrienbrault/nous-hermes2theta-llama3-8b:q8_0"),
+            Model::Phi3Medium => write!(f, "phi3:14b-medium-4k-instruct-q4_1"),
+            Model::Phi3Medium128k => write!(f, "phi3:14b-medium-128k-instruct-q4_1"),
+            Model::Phi3Mini => write!(f, "phi3:3.8b"),
         }
     }
 }

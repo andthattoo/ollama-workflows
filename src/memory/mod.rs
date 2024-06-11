@@ -54,9 +54,14 @@ impl ProgramMemory {
 
     pub fn get_all(&self, key: &str) -> Option<Vec<types::Entry>> {
         let entries = self.stack.get_all(key);
+        entries.map(|entries| entries.to_vec())
+    }
+
+    pub fn size(&self, key: &str) -> usize {
+        let entries = self.stack.get_all(key);
         match entries {
-            Some(entries) => Some(entries.to_vec()),
-            None => None,
+            Some(entries) => entries.len(),
+            None => 0,
         }
     }
 

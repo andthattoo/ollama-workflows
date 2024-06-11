@@ -1,3 +1,5 @@
+use std::fmt;
+
 pub type ID = String;
 pub type StackPage = Vec<Entry>;
 
@@ -8,16 +10,18 @@ pub enum Entry {
     Json(serde_json::Value),
 }
 
-impl Entry {
-    pub fn to_string(&self) -> String {
+impl fmt::Display for Entry {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Entry::String(s) => s.clone(),
-            Entry::Json(j) => j.to_string(),
+            Entry::String(s) => write!(f, "{}", s),
+            Entry::Json(j) => write!(f, "{}", j),
         }
     }
+}
 
+impl Entry {
     //A method that creates an Entry from str by first trying to convert to Value
-    pub fn from_str(s: &str) -> Entry {
+    pub fn try_value_or_str(s: &str) -> Entry {
         match serde_json::from_str(s) {
             Ok(json) => Entry::Json(json),
             Err(_) => Entry::String(s.to_string()),
@@ -49,23 +53,23 @@ impl<'a> MemoryReturnType<'a> {
     }
 }
 
-impl<'a> MemoryReturnType<'a> {
-    pub fn to_string(&self) -> String {
+impl<'a> fmt::Display for MemoryReturnType<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             MemoryReturnType::EntryRef(entry_ref) => match entry_ref {
-                Some(entry) => entry.to_string(),
-                None => String::new(),
+                Some(entry) => write!(f, "{}", entry),
+                None => write!(f, ""),
             },
             MemoryReturnType::Entry(entry) => match entry {
-                Some(entry) => entry.to_string(),
-                None => String::new(),
+                Some(entry) => write!(f, "{}", entry),
+                None => write!(f, ""),
             },
             MemoryReturnType::EntryVec(entry_vec) => {
                 let mut result = String::new();
                 for entry in entry_vec.iter().flatten() {
                     result.push_str(&entry.to_string());
                 }
-                result
+                write!(f, "{}", result)
             }
         }
     }

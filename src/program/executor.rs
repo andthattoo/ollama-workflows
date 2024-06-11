@@ -28,7 +28,7 @@ use ollama_rs::{
 };
 
 fn log_colored(msg: &str) {
-    let colors = vec!["red", "green", "yellow", "blue", "magenta", "cyan"];
+    let colors = ["red", "green", "yellow", "blue", "magenta", "cyan"];
 
     let color = colors.choose(&mut rand::thread_rng()).unwrap();
     let colored_msg = match *color {
@@ -78,13 +78,12 @@ impl Executor {
 
         while num_steps < max_steps && start.elapsed().as_secs() < max_time {
             if let Some(edge) = current_step {
-                if &edge.source == R_END {
+                if edge.source == R_END {
                     warn!("Successfully completed the workflow");
                     break;
                 }
 
                 if let Some(task) = workflow.get_tasks_by_id(&edge.source) {
-
                     let is_done = self.execute_task(task, memory.borrow_mut(), config).await;
 
                     current_step = if is_done {
@@ -130,10 +129,12 @@ impl Executor {
                 }
                 InputValueType::Pop => MemoryReturnType::Entry(memory.pop(&input.value.key)),
                 InputValueType::Search => MemoryReturnType::EntryVec(
-                    memory.search(&Entry::from_str(&input.value.key)).await,
+                    memory
+                        .search(&Entry::try_value_or_str(&input.value.key))
+                        .await,
                 ),
                 InputValueType::String => {
-                    MemoryReturnType::Entry(Some(Entry::from_str(&input.value.key)))
+                    MemoryReturnType::Entry(Some(Entry::try_value_or_str(&input.value.key)))
                 }
             };
 
@@ -155,7 +156,7 @@ impl Executor {
                 log_colored(
                     format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
                 );
-                let result_entry = Entry::from_str(&result.unwrap());
+                let result_entry = Entry::try_value_or_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::FunctionCalling => {
@@ -169,17 +170,12 @@ impl Executor {
                 log_colored(
                     format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
                 );
-                let result_entry = Entry::from_str(&result.unwrap());
+                let result_entry = Entry::try_value_or_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::Check => {
                 let input = self.prepare_check(input_map);
                 let result = self.check(&input.0, &input.1);
-                return result;
-            }
-            Operator::Condition => {
-                let input = self.prepare_check(input_map);
-                let result = self.fuzzy_check(&input.0, &input.1);
                 return result;
             }
             Operator::End => {}
@@ -205,12 +201,12 @@ impl Executor {
                 return (
                     i.to_string()
                         .trim()
-                        .replace("\n", "")
+                        .replace('\n', "")
                         .to_lowercase()
                         .clone(),
                     e.to_string()
                         .trim()
-                        .replace("\n", "")
+                        .replace('\n', "")
                         .to_lowercase()
                         .clone(),
                 );
@@ -245,8 +241,8 @@ impl Executor {
     async fn handle_output(&self, task: &Task, result: Entry, memory: &mut ProgramMemory) {
         for output in &task.outputs {
             let mut data = result.clone();
-            if &output.value != R_OUTPUT {
-                data = Entry::from_str(&output.value);
+            if output.value != R_OUTPUT {
+                data = Entry::try_value_or_str(&output.value);
             }
             match output.output_type {
                 OutputType::Write => memory.write(output.key.clone(), data.clone()),
@@ -300,15 +296,11 @@ impl Executor {
                     .await
             }
         }?;
-        
+
         Ok(result.message.unwrap().content)
     }
 
     fn check(&self, input: &str, expected: &str) -> bool {
-        input == expected
-    }
-
-    fn fuzzy_check(&self, input: &str, expected: &str) -> bool {
         input == expected
     }
 }
