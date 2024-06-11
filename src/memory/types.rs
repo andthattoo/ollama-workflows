@@ -2,6 +2,7 @@ use std::fmt;
 
 pub type ID = String;
 pub type StackPage = Vec<Entry>;
+pub type FilePage = (String, Vec<f32>);
 
 //a type that can store both string and json Value
 #[derive(Debug, serde::Deserialize)]

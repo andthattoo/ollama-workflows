@@ -9,6 +9,7 @@ pub enum CustomError {
     ToolError(ToolError),
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum FileSystemError {
     InsertionFailed(String),

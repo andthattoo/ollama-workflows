@@ -1,8 +1,8 @@
-use super::types::Entry;
+use super::types::{Entry, FilePage};
 use crate::program::errors::{EmbeddingError, FileSystemError};
 use ollama_rs::Ollama;
+use simsimd::SpatialSimilarity;
 use text_splitter::TextSplitter;
-use usearch::{new_index, Index, IndexOptions, MetricKind, ScalarKind};
 
 pub static EMBEDDING_MODEL: &str = "hellord/mxbai-embed-large-v1:f16";
 struct Embedder {
@@ -49,26 +49,14 @@ impl Embedder {
 
 pub struct FileSystem {
     embedder: Embedder,
-    index: Index,
-    documents: Vec<String>,
+    entries: Vec<FilePage>,
 }
 
 impl FileSystem {
     pub fn new() -> Self {
-        let options = IndexOptions {
-            dimensions: 3,                 // necessary for most metric kinds
-            metric: MetricKind::IP,        // or MetricKind::L2sq, MetricKind::Cos ...
-            quantization: ScalarKind::F16, // or ScalarKind::F32, ScalarKind::I8, ScalarKind::B1x8 ...
-            connectivity: 0,               // zero for auto
-            expansion_add: 0,              // zero for auto
-            expansion_search: 0,           // zero for auto
-            multi: true,
-        };
-
         FileSystem {
             embedder: Embedder::new(),
-            index: new_index(&options).unwrap(),
-            documents: Vec::new(),
+            entries: Vec::new(),
         }
     }
 
@@ -84,50 +72,58 @@ impl FileSystem {
 
         for sentence in sentences {
             let embedding = self.embedder.generate_embeddings(&sentence).await;
-            let res = match embedding {
+            match embedding {
                 Ok(embedding) => {
-                    let res = self.index.add(self.index.size() as u64, &embedding);
-                    match res {
-                        Ok(_) => {
-                            self.documents.push(doc.to_string());
-                            Ok(())
-                        }
-                        Err(_) => Err(FileSystemError::InsertionFailed(doc.to_string())),
-                    }
+                    //convert to f32
+                    let vec: Vec<f32> = embedding.iter().map(|&x| x as f32).collect();
+                    self.entries.push((doc.to_string(), vec));
                 }
-                Err(err) => Err(FileSystemError::EmbeddingError(err)),
-            };
-            res?;
+                Err(err) => return Err(FileSystemError::EmbeddingError(err)),
+            }
         }
 
         Ok(())
     }
 
     pub async fn search(&self, query: &Entry) -> Result<Vec<Entry>, FileSystemError> {
-        let embedding = self
+        let query_embedding = self
             .embedder
             .generate_query_embeddings(&query.to_string())
             .await;
-        match embedding {
+        match query_embedding {
             Ok(embedding) => {
-                let results = self.index.search(&embedding, 10);
-                match results {
-                    Ok(res) => {
-                        let mut passages = Vec::new();
-                        for (key, distance) in res.keys.iter().zip(res.distances.iter()) {
-                            if distance > &0.5 {
-                                break;
-                            };
-                            let doc = &self.documents[*key as usize];
-                            let passage = Entry::try_value_or_str(doc);
-                            passages.push(passage);
-                        }
-                        Ok(passages)
+                //to f32
+                let query: Vec<f32> = embedding.iter().map(|&x| x as f32).collect();
+                let res = self.brute_force_top_n(&query, 5);
+
+                let mut passages = Vec::new();
+                for (doc, sim) in res {
+                    if sim > 0.75 {
+                        let passage = Entry::try_value_or_str(&doc);
+                        passages.push(passage);
                     }
-                    Err(_) => Err(FileSystemError::SearchError),
                 }
+                Ok(passages)
             }
             Err(err) => Err(FileSystemError::EmbeddingError(err)),
         }
+    }
+
+    fn brute_force_top_n(&self, query: &[f32], n: usize) -> Vec<(String, f32)> {
+        let mut distances = Vec::new();
+        for (_, v) in &self.entries {
+            let distance = f32::cosine(query, v).unwrap_or(0.0) as f32;
+            distances.push(distance);
+        }
+
+        let mut indices: Vec<usize> = (0..distances.len()).collect();
+        indices.sort_by(|&a, &b| distances[a].partial_cmp(&distances[b]).unwrap());
+        let top_indices: Vec<usize> = indices.into_iter().take(n).collect();
+        //Collect into (String, f32)
+        let top_results: Vec<(String, f32)> = top_indices
+            .iter()
+            .map(|&i| (self.entries[i].0.clone(), distances[i]))
+            .collect();
+        top_results
     }
 }

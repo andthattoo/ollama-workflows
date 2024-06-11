@@ -1,0 +1,92 @@
+{
+  "name": "Searching Agent",
+  "description": "Try to answer a given question using data from the web with grounded data.",
+  "config": {
+    "max_steps": 35,
+    "max_time": 600,
+    "tools": ["serper", "jina", "browserless", "stock"]
+  },
+  "tasks": [
+    {
+      "id": "A",
+      "name": "Web Search Query",
+      "description": "Write a web search query to collect useful information for the given question",
+      "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions: \n<query>{query}</query> \n\n <previous_questions>{history}</previous_questions> \n\n <search_query>",
+      "inputs": [
+        {
+          "name": "query",
+          "value": {
+            "type": "input",
+            "key": ""
+          },
+          "required": true
+        },
+        {
+          "name": "history",
+          "value": {
+            "type": "get_all",
+            "key": "history"
+          },
+          "required": false
+        }
+      ],
+      "operator": "generation",
+      "outputs": [
+        {
+          "type": "insert",
+          "key": "",
+          "value": "__result"
+        },
+        {
+          "type": "write",
+          "key": "query",
+          "value": "__result"
+        }
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Search",
+      "description": "Write a web search query to collect useful information for the given question",
+      "prompt": "{query}",
+      "inputs": [
+        {
+          "name": "query",
+          "value": {
+            "type": "read",
+            "key": "query"
+          },
+          "required": true
+        }
+      ],
+      "operator": "generation",
+      "outputs": [
+        {
+          "type": "write",
+          "key": "res",
+          "value": "__result"
+        }
+      ]
+    },
+    {
+      "id": "__end",
+      "name": "end",
+      "description": "End of the task",
+      "prompt": "End of the task",
+      "inputs": [],
+      "operator": "end",
+      "outputs": []
+    }
+  ],
+  "steps": [
+    {
+      "source": "A",
+      "target": "B"
+    },
+    {
+      "source": "B",
+      "target": "end",
+      "fallback": "A"
+    }
+  ]
+}

@@ -20,8 +20,8 @@ search_with_google = "0.5.0"
 html2text = "0.12.5"
 async-trait = "0.1.80"
 regex = { version = "1.9.3" }
-usearch = { version = "2.12.0", features = ["simsimd", "fp16lib"] }
 log = "0.4"
 env_logger = "0.9"
 colored = "2.0"
 dotenv = "0.15"
+simsimd = "4.3.1"

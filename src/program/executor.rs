@@ -189,7 +189,7 @@ impl Executor {
                 log_colored(
                     format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
                 );
-                
+
                 let ent_str = MemoryReturnType::EntryVec(result).to_string();
                 let result_entry = Entry::try_value_or_str(&ent_str);
                 self.handle_output(task, result_entry, memory).await;
@@ -263,7 +263,7 @@ impl Executor {
             match output.output_type {
                 OutputType::Write => memory.write(output.key.clone(), data.clone()),
                 OutputType::Insert => memory.insert(&data).await,
-                OutputType::Push => memory.push(output.key.clone(), data.clone())
+                OutputType::Push => memory.push(output.key.clone(), data.clone()),
             }
         }
     }
