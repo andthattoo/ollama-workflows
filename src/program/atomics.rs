@@ -45,11 +45,18 @@ pub struct Input {
 pub enum InputValueType {
     Input,
     Read,
-    Search,
     Pop,
     Peek,
     GetAll,
+    Size,
     String,
+}
+
+#[derive(Debug, serde::Deserialize)]
+pub struct SearchQuery {
+    #[serde(rename = "type")]
+    pub value_type: InputValueType,
+    pub key: String,
 }
 
 #[derive(Debug, serde::Deserialize)]
@@ -57,6 +64,7 @@ pub struct InputValue {
     #[serde(rename = "type")]
     pub value_type: InputValueType,
     pub index: Option<usize>,
+    pub search_query: Option<SearchQuery>,
     pub key: String,
 }
 
@@ -82,6 +90,7 @@ pub enum Operator {
     Generation,
     FunctionCalling,
     Check,
+    Search,
     End,
 }
 
@@ -152,6 +161,8 @@ pub enum Model {
     Phi3Medium,
     Phi3Medium128k,
     Phi3Mini,
+    TinyAgent,
+    TinyAgentFP16,
 }
 
 //implement display with mathcing
@@ -162,6 +173,8 @@ impl fmt::Display for Model {
             Model::Phi3Medium => write!(f, "phi3:14b-medium-4k-instruct-q4_1"),
             Model::Phi3Medium128k => write!(f, "phi3:14b-medium-128k-instruct-q4_1"),
             Model::Phi3Mini => write!(f, "phi3:3.8b"),
+            Model::TinyAgent => write!(f, "andthattoo/tinyagent-1.1b:latest"),
+            Model::TinyAgentFP16 => write!(f, "andthattoo/tinyagent-1.1b:latest"),
         }
     }
 }

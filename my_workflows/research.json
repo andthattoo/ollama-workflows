@@ -34,6 +34,11 @@
             "outputs": [
                 {
                     "type": "push",
+                    "key": "queries",
+                    "value": "__result"
+                },
+                {
+                    "type": "push",
                     "key": "history",
                     "value": "__result"
                 }
@@ -48,9 +53,8 @@
                 {
                     "name": "query",
                     "value": {
-                        "type": "peek",
-                        "key": "history",
-                        "index": 0
+                        "type": "pop",
+                        "key": "history"
                     },
                     "required": true
                 }
@@ -59,7 +63,7 @@
             "outputs": [
                 {
                     "type": "write",
-                    "key": "web_search_result",
+                    "key": "search_result",
                     "value": "__result"
                 }
             ]
@@ -74,7 +78,7 @@
                     "name": "web_results",
                     "value": {
                         "type": "read",
-                        "key": "web_search_result"
+                        "key": "search_result"
                     },
                     "required": true
                 },
@@ -115,32 +119,58 @@
             "operator": "function_calling",
             "outputs": [
                 {
-                    "type": "push",
-                    "key": "content",
+                    "type": "insert",
+                    "key": "",
                     "value": "__result"
                 }
             ]
         },
         {
             "id": "E",
-            "name": "Summarize Website",
-            "description": "Summarize website content",
-            "prompt": "Answer given question completely based on following context. Don't assume anything. Use the provided information to answer the question. If context is not enough, say 'I dont know.' ###Content: {content} \n\n ###Question: {query} \n\n ###Answer:",
+            "name": "Ask questions",
+            "description": "Ask questions to filesystem",
+            "prompt": "{query}",
             "inputs": [
                 {
-                    "name": "content",
+                    "name": "query",
                     "value": {
                         "type": "pop",
                         "key": "content",
                         "required": true
                     },
                     "required": true
-                },
+                }
+            ],
+            "operator": "search",
+            "outputs": [
+                {
+                    "type": "push",
+                    "key": "passages",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "F",
+            "name": "Answer Query",
+            "description": "Answer questions from the scraped data",
+            "prompt": "Answer following question based on the passages provided as context. Striclty used the context to answer the question. \n\n###Question:{query}  \n\n###Passages:{passages} \n\n###Answer:",
+            "inputs": [
                 {
                     "name": "query",
                     "value": {
-                        "type": "input",
-                        "key": ""
+                        "type": "pop",
+                        "key": "queries",
+                        "required": true
+                    },
+                    "required": true
+                },
+                {
+                    "name": "passages",
+                    "value": {
+                        "type": "get_all",
+                        "key": "passages",
+                        "required": true
                     },
                     "required": true
                 }
@@ -148,14 +178,14 @@
             "operator": "generation",
             "outputs": [
                 {
-                    "type": "push",
-                    "key": "answers",
+                    "type": "write",
+                    "key": "answer",
                     "value": "__result"
                 }
             ]
         },
         {
-            "id": "F",
+            "id": "G",
             "name": "Evaluate Result",
             "description": "Evaluate if the result is satisfying",
             "prompt": "Evaluate the result if it answers the query. Write 'Yes' if valid, if not 'No'.Write nothing else but strictly 'Yes'|'No'. query:{query} result:{answer}. ###Evaluation:",
@@ -163,8 +193,8 @@
                 {
                     "name": "answer",
                     "value": {
-                        "type": "get_all",
-                        "key": "answers"
+                        "type": "read",
+                        "key": "answer"
                     },
                     "required": true
                 },
@@ -187,7 +217,7 @@
             ]
         },
         {
-            "id": "G",
+            "id": "H",
             "name": "Check Result",
             "description": "Check if the result is satisfying",
             "prompt": "",
@@ -226,8 +256,7 @@
         {
             "source": "A",
             "target": "B",
-            "fallback": "H",
-            "repeat": 5
+            "fallback": "end"
         },
         {
             "source": "B",
@@ -240,11 +269,29 @@
         },
         {
             "source": "D",
-            "target": "E"
+            "target": "E",
+            "condition": {
+                "input":{
+                    "type":"size",
+                    "key": "history"
+                },
+                "expression": "GreaterThan",
+                "expected": "5",
+                "target_if_not": "A"
+            }
         },
         {
             "source": "E",
-            "target": "F"
+            "target": "F",
+            "condition": {
+                "input":{
+                    "type":"size",
+                    "key": "queries"
+                },
+                "expression": "Equal",
+                "expected": "0",
+                "target_if_not": "E"
+            }
         },
         {
             "source": "F",

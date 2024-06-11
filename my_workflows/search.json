@@ -248,7 +248,8 @@
         },
         {
             "source": "D",
-            "target": "E"
+            "target": "E",
+            "fallback": "A"
         },
         {
             "source": "E",

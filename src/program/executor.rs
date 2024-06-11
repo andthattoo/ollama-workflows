@@ -161,6 +161,7 @@ impl Executor {
             }
             Operator::FunctionCalling => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
+                info!("Prompt: {}", &prompt);
                 let result = self.function_call(&prompt, config).await;
                 if result.is_err() {
                     error!("Error generating text: {:?}", result.err().unwrap());
@@ -177,6 +178,21 @@ impl Executor {
                 let input = self.prepare_check(input_map);
                 let result = self.check(&input.0, &input.1);
                 return result;
+            }
+            Operator::Search => {
+                let prompt = self.fill_prompt(&task.prompt, &input_map);
+                let result = memory.search(&Entry::try_value_or_str(&prompt)).await;
+                if result.is_none() {
+                    error!("Error searching: {:?}", "No results found");
+                    return false;
+                }
+                log_colored(
+                    format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
+                );
+                
+                let ent_str = MemoryReturnType::EntryVec(result).to_string();
+                let result_entry = Entry::try_value_or_str(&ent_str);
+                self.handle_output(task, result_entry, memory).await;
             }
             Operator::End => {}
         };
@@ -247,7 +263,7 @@ impl Executor {
             match output.output_type {
                 OutputType::Write => memory.write(output.key.clone(), data.clone()),
                 OutputType::Insert => memory.insert(&data).await,
-                OutputType::Push => memory.push(output.key.clone(), data.clone()),
+                OutputType::Push => memory.push(output.key.clone(), data.clone())
             }
         }
     }
@@ -265,14 +281,12 @@ impl Executor {
             ),
             InputValueType::GetAll => MemoryReturnType::EntryVec(memory.get_all(&input_value.key)),
             InputValueType::Pop => MemoryReturnType::Entry(memory.pop(&input_value.key)),
-            InputValueType::Search => MemoryReturnType::EntryVec(
-                memory
-                    .search(&Entry::try_value_or_str(&input_value.key))
-                    .await,
-            ),
             InputValueType::String => {
                 MemoryReturnType::Entry(Some(Entry::try_value_or_str(&input_value.key)))
             }
+            InputValueType::Size => MemoryReturnType::Entry(Some(Entry::try_value_or_str(
+                &memory.size(&input_value.key).to_string(),
+            ))),
         };
     }
 
@@ -280,8 +294,7 @@ impl Executor {
         let user_message = ChatMessage::user(prompt.to_string());
         let mut msg = ChatMessageRequest::new(self.model.to_string(), vec![user_message]);
         let mut ops = GenerationOptions::default();
-        ops = ops.num_predict(config.max_tokens.unwrap_or(200));
-        ops = ops.num_ctx(4096);
+        ops = ops.num_predict(config.max_tokens.unwrap_or(250));
         msg = msg.options(ops);
 
         let result = self.llm.send_chat_messages(msg).await?;
