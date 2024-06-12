@@ -52,12 +52,12 @@ impl ProgramMemory {
         self.stack.peek(key, index)
     }
 
-    pub fn get_all(&self, key: &str) -> Option<Vec<types::Entry>> {
+    pub fn get_all(&self, key: &types::ID) -> Option<Vec<types::Entry>> {
         let entries = self.stack.get_all(key);
         entries.map(|entries| entries.to_vec())
     }
 
-    pub fn size(&self, key: &str) -> usize {
+    pub fn size(&self, key: &types::ID) -> usize {
         let entries = self.stack.get_all(key);
         match entries {
             Some(entries) => entries.len(),

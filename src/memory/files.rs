@@ -1,6 +1,7 @@
 use super::types::{Entry, FilePage};
 use crate::program::errors::{EmbeddingError, FileSystemError};
 use ollama_rs::Ollama;
+use serde_json::json;
 use simsimd::SpatialSimilarity;
 use text_splitter::TextSplitter;
 
@@ -18,19 +19,20 @@ impl Embedder {
         }
     }
 
-    pub async fn generate_embeddings(&self, prompt: &str) -> Result<Vec<f64>, EmbeddingError> {
+    pub async fn generate_embeddings(&self, prompt: &str) -> Result<Vec<f32>, EmbeddingError> {
         let res = self
             .ollama
             .generate_embeddings(self.model.clone(), prompt.to_string(), None)
             .await;
-
         match res {
-            Ok(res) => Ok(res.embeddings),
+            Ok(res) => {
+                Ok(res.embeddings.iter().map(|&x| x as f32).collect())
+            },
             Err(_) => Err(EmbeddingError::DocumentEmbedding(prompt.to_string())),
         }
     }
 
-    pub async fn generate_query_embeddings(&self, query: &str) -> Result<Vec<f64>, EmbeddingError> {
+    pub async fn generate_query_embeddings(&self, query: &str) -> Result<Vec<f32>, EmbeddingError> {
         let prompt = Embedder::transform_query(query);
         let res = self.generate_embeddings(&prompt).await;
         match res {
@@ -66,7 +68,7 @@ impl FileSystem {
             Entry::Json(j) => j.as_str().unwrap(),
         };
 
-        let splitter = TextSplitter::new(1000);
+        let splitter = TextSplitter::new(250);
         let chunks = splitter.chunks(doc);
         let sentences: Vec<String> = chunks.map(|s| s.to_string()).collect();
 
@@ -75,8 +77,7 @@ impl FileSystem {
             match embedding {
                 Ok(embedding) => {
                     //convert to f32
-                    let vec: Vec<f32> = embedding.iter().map(|&x| x as f32).collect();
-                    self.entries.push((doc.to_string(), vec));
+                    self.entries.push((sentence.to_string(), embedding));
                 }
                 Err(err) => return Err(FileSystemError::EmbeddingError(err)),
             }
@@ -93,15 +94,16 @@ impl FileSystem {
         match query_embedding {
             Ok(embedding) => {
                 //to f32
-                let query: Vec<f32> = embedding.iter().map(|&x| x as f32).collect();
-                let res = self.brute_force_top_n(&query, 5);
+                let res = self.brute_force_top_n(&embedding, 3);
 
                 let mut passages = Vec::new();
-                for (doc, sim) in res {
-                    if sim > 0.75 {
-                        let passage = Entry::try_value_or_str(&doc);
-                        passages.push(passage);
-                    }
+                for r in res {
+                        //can add distance threshold here
+                        let entry = Entry::Json(json!({
+                            "passage": r.0,
+                            "similarity": r.1
+                        }));
+                        passages.push(entry);
                 }
                 Ok(passages)
             }

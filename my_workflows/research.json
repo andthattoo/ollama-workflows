@@ -54,7 +54,7 @@
                     "name": "query",
                     "value": {
                         "type": "pop",
-                        "key": "history"
+                        "key": "queries"
                     },
                     "required": true
                 }
