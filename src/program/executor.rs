@@ -334,8 +334,8 @@ impl Executor {
         let nous_parser = Arc::new(NousFunctionCall {});
         let tools = self.get_tools(config.tools.clone()).unwrap();
 
-        let result = match self.model.clone() {
-            Model::NousTheta => {
+        let result = match self.model.clone().into() {
+            ModelProvider::Ollama => {
                 self.llm
                     .send_function_call(
                         FunctionCallRequest::new(
@@ -343,68 +343,55 @@ impl Executor {
                             tools,
                             vec![ChatMessage::user(prompt.to_string())],
                         ),
-                        nous_parser.clone(),
+                        match self.model {
+                            Model::NousTheta => nous_parser.clone(),
+                            _ => oai_parser.clone(),
+                        },
                     )
                     .await
             }
-            model => match model.clone().into() {
-                ModelProvider::Ollama => {
-                    self.llm
-                        .send_function_call(
-                            FunctionCallRequest::new(
-                                self.model.to_string(),
-                                tools,
-                                vec![ChatMessage::user(prompt.to_string())],
-                            ),
-                            oai_parser.clone(),
-                        )
-                        .await
-                }
-                ModelProvider::OpenAI => {
-                    let llm = langchain_rust::llm::OpenAI::default().with_model(model.to_string());
+            ModelProvider::OpenAI => {
+                let llm = langchain_rust::llm::OpenAI::default().with_model(self.model.to_string());
 
-                    let langchain_tools = tools
-                        .into_iter()
-                        .map(|tool| {
-                            Arc::new(LangchainToolCompat::new(tool)) as Arc<dyn LangchainTool>
-                        })
-                        .collect::<Vec<Arc<dyn LangchainTool>>>();
+                let langchain_tools = tools
+                    .into_iter()
+                    .map(|tool| Arc::new(LangchainToolCompat::new(tool)) as Arc<dyn LangchainTool>)
+                    .collect::<Vec<Arc<dyn LangchainTool>>>();
 
-                    // TODO: keeping the code here in case we create config for OpenAI as well
-                    // let mut chain_call_options = ChainCallOptions::default();
-                    // if let Some(max_tokens) = config.max_tokens {
-                    //     chain_call_options = chain_call_options.with_max_tokens(max_tokens as u16);
-                    // }
+                // TODO: keeping the code here in case we create config for OpenAI as well
+                // let mut chain_call_options = ChainCallOptions::default();
+                // if let Some(max_tokens) = config.max_tokens {
+                //     chain_call_options = chain_call_options.with_max_tokens(max_tokens as u16);
+                // }
 
-                    let agent = OpenAiToolAgentBuilder::new()
-                        .tools(&langchain_tools)
-                        .options(ChainCallOptions::default())
-                        .build(llm)
-                        .map_err(|e| {
-                            OllamaError::from(format!("Could not build OpenAI agent: {:?}", e))
-                        })?;
+                let agent = OpenAiToolAgentBuilder::new()
+                    .tools(&langchain_tools)
+                    .options(ChainCallOptions::default())
+                    .build(llm)
+                    .map_err(|e| {
+                        OllamaError::from(format!("Could not build OpenAI agent: {:?}", e))
+                    })?;
 
-                    let executor =
-                        AgentExecutor::from_agent(agent).with_memory(SimpleMemory::new().into());
+                let executor =
+                    AgentExecutor::from_agent(agent).with_memory(SimpleMemory::new().into());
 
-                    let result = executor
-                        .invoke(prompt_args! {
-                            "input" => prompt,
-                        })
-                        .await
-                        .map_err(|e| {
-                            OllamaError::from(format!("Could not execute OpenAI agent: {:?}", e))
-                        })?;
-
-                    Ok(ChatMessageResponse {
-                        message: Some(ChatMessage::assistant(result)),
-                        created_at: "".to_string(), // TODO: add date here
-                        done: true,
-                        final_data: None, // OpenAI does not provide these
-                        model: model.to_string(),
+                let result = executor
+                    .invoke(prompt_args! {
+                        "input" => prompt,
                     })
-                }
-            },
+                    .await
+                    .map_err(|e| {
+                        OllamaError::from(format!("Could not execute OpenAI agent: {:?}", e))
+                    })?;
+
+                Ok(ChatMessageResponse {
+                    message: Some(ChatMessage::assistant(result)),
+                    created_at: "".to_string(), // TODO: add date here
+                    done: true,
+                    final_data: None, // OpenAI does not provide these
+                    model: self.model.to_string(),
+                })
+            }
         }?;
 
         Ok(result.message.unwrap().content)
