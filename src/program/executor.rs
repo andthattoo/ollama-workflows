@@ -317,12 +317,9 @@ impl Executor {
             ModelProvider::OpenAI => {
                 let llm = OpenAI::default().with_model(self.model.to_string());
 
-                let result = llm
-                    .invoke(prompt)
+                llm.invoke(prompt)
                     .await
-                    .map_err(|e| OllamaError::from(format!("Could not generate text: {:?}", e)))?;
-
-                result
+                    .map_err(|e| OllamaError::from(format!("Could not generate text: {:?}", e)))?
             }
         };
 
