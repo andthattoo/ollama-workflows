@@ -156,25 +156,60 @@ pub struct Condition {
     pub target_if_not: String,
 }
 
+#[derive(Debug, Clone)]
 pub enum Model {
+    // Ollama models
     NousTheta,
     Phi3Medium,
     Phi3Medium128k,
     Phi3Mini,
     TinyAgent,
     TinyAgentFP16,
+    // OpenAI models
+    GPT3_5Turbo,
+    GPT4_5Turbo,
+    GPT4o,
+}
+
+#[derive(Debug, Clone)]
+pub enum ModelProvider {
+    Ollama,
+    OpenAI,
+}
+
+impl From<Model> for ModelProvider {
+    fn from(model: Model) -> Self {
+        match model {
+            // Ollama models
+            Model::NousTheta => ModelProvider::Ollama,
+            Model::Phi3Medium => ModelProvider::Ollama,
+            Model::Phi3Medium128k => ModelProvider::Ollama,
+            Model::Phi3Mini => ModelProvider::Ollama,
+            Model::TinyAgent => ModelProvider::Ollama,
+            Model::TinyAgentFP16 => ModelProvider::Ollama,
+            // OpenAI models
+            Model::GPT3_5Turbo => ModelProvider::OpenAI,
+            Model::GPT4_5Turbo => ModelProvider::OpenAI,
+            Model::GPT4o => ModelProvider::OpenAI,
+        }
+    }
 }
 
 //implement display with mathcing
 impl fmt::Display for Model {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            // Ollama models
             Model::NousTheta => write!(f, "adrienbrault/nous-hermes2theta-llama3-8b:q8_0"),
             Model::Phi3Medium => write!(f, "phi3:14b-medium-4k-instruct-q4_1"),
             Model::Phi3Medium128k => write!(f, "phi3:14b-medium-128k-instruct-q4_1"),
             Model::Phi3Mini => write!(f, "phi3:3.8b"),
             Model::TinyAgent => write!(f, "andthattoo/tinyagent-1.1b:latest"),
             Model::TinyAgentFP16 => write!(f, "andthattoo/tinyagent-1.1b:latest"),
+            // OpenAI models
+            Model::GPT3_5Turbo => write!(f, "gpt-3.5-turbo"),
+            Model::GPT4_5Turbo => write!(f, "gpt-4.5-turbo"),
+            Model::GPT4o => write!(f, "gpt-4o"),
         }
     }
 }
