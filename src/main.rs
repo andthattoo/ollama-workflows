@@ -9,7 +9,7 @@ async fn main() {
     env_logger::Builder::from_env(env).init();
     let exe = Executor::new(Model::Phi3Medium);
     let workflow = Workflow::new_from_json(
-        "/Users/kayaomers/Documents/firstbatch/ollama-workflows/my_workflows/xx.json",
+        "/Users/kayaomers/Documents/firstbatch/ollama-workflows/my_workflows/research.json",
     )
     .unwrap();
     let mut memory = ProgramMemory::new();

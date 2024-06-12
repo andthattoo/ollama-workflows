@@ -4,7 +4,19 @@
     "config": {
         "max_steps": 35,
         "max_time": 600,
-        "tools": ["serper", "jina", "browserless", "stock"]
+        "tools": ["serper", "jina", "browserless", "stock"],
+        "custom_tool": {
+            "name" :"",
+            "description": "",
+            "url": "url",
+            "method": "GET",
+            "headers": {
+                "Content-Type": "application/json"
+            },
+            "body": {
+                "query": "query"
+            }
+        }
     },
     "tasks": [
         {
@@ -276,7 +288,7 @@
                     "key": "history"
                 },
                 "expression": "GreaterThan",
-                "expected": "5",
+                "expected": "2",
                 "target_if_not": "A"
             }
         },
