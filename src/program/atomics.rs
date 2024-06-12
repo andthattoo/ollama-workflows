@@ -167,7 +167,7 @@ pub enum Model {
     TinyAgentFP16,
     // OpenAI models
     GPT3_5Turbo,
-    GPT4_5Turbo,
+    GPT4Turbo,
     GPT4o,
 }
 
@@ -189,7 +189,7 @@ impl From<Model> for ModelProvider {
             Model::TinyAgentFP16 => ModelProvider::Ollama,
             // OpenAI models
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
-            Model::GPT4_5Turbo => ModelProvider::OpenAI,
+            Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
         }
     }
@@ -208,7 +208,7 @@ impl fmt::Display for Model {
             Model::TinyAgentFP16 => write!(f, "andthattoo/tinyagent-1.1b:latest"),
             // OpenAI models
             Model::GPT3_5Turbo => write!(f, "gpt-3.5-turbo"),
-            Model::GPT4_5Turbo => write!(f, "gpt-4.5-turbo"),
+            Model::GPT4Turbo => write!(f, "gpt-4-turbo"),
             Model::GPT4o => write!(f, "gpt-4o"),
         }
     }

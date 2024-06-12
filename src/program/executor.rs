@@ -3,7 +3,6 @@ use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::errors::ToolError;
-use crate::tools::langchain_compat::LangchainToolCompat;
 use crate::tools::{Browserless, Jina, SearchTool};
 
 use std::borrow::BorrowMut;
@@ -12,16 +11,9 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use colored::*;
-use langchain_rust::agent::{AgentExecutor, OpenAiToolAgentBuilder};
-use langchain_rust::chain::options::ChainCallOptions;
-use langchain_rust::chain::Chain;
 use langchain_rust::language_models::llm::LLM;
 use langchain_rust::llm::OpenAI;
-use langchain_rust::memory::SimpleMemory;
-use langchain_rust::prompt_args;
-use langchain_rust::tools::Tool as LangchainTool;
 use log::{debug, error, info, warn};
-use ollama_rs::generation::chat::ChatMessageResponse;
 use rand::seq::SliceRandom;
 
 use ollama_rs::{
@@ -348,46 +340,7 @@ impl Executor {
                     .await
             }
             ModelProvider::OpenAI => {
-                let llm = langchain_rust::llm::OpenAI::default().with_model(self.model.to_string());
-
-                let langchain_tools = tools
-                    .into_iter()
-                    .map(|tool| Arc::new(LangchainToolCompat::new(tool)) as Arc<dyn LangchainTool>)
-                    .collect::<Vec<Arc<dyn LangchainTool>>>();
-
-                // TODO: keeping the code here in case we create config for OpenAI as well
-                // let mut chain_call_options = ChainCallOptions::default();
-                // if let Some(max_tokens) = config.max_tokens {
-                //     chain_call_options = chain_call_options.with_max_tokens(max_tokens as u16);
-                // }
-
-                let agent = OpenAiToolAgentBuilder::new()
-                    .tools(&langchain_tools)
-                    .options(ChainCallOptions::default())
-                    .build(llm)
-                    .map_err(|e| {
-                        OllamaError::from(format!("Could not build OpenAI agent: {:?}", e))
-                    })?;
-
-                let executor =
-                    AgentExecutor::from_agent(agent).with_memory(SimpleMemory::new().into());
-
-                let result = executor
-                    .invoke(prompt_args! {
-                        "input" => prompt,
-                    })
-                    .await
-                    .map_err(|e| {
-                        OllamaError::from(format!("Could not execute OpenAI agent: {:?}", e))
-                    })?;
-
-                Ok(ChatMessageResponse {
-                    message: Some(ChatMessage::assistant(result)),
-                    created_at: "".to_string(), // TODO: add date here
-                    done: true,
-                    final_data: None, // OpenAI does not provide these
-                    model: self.model.to_string(),
-                })
+                unimplemented!("OpenAI function calling is not implemented in this build");
             }
         }?;
 
