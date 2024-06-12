@@ -1,4 +1,6 @@
 /target
 .DS_Store
-.idea
+.idea/
 .env
+target/
+Cargo.lock
