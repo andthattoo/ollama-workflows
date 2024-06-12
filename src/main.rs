@@ -7,11 +7,9 @@ async fn main() {
     dotenv().ok();
     let env = Env::default().filter_or("LOG_LEVEL", "info");
     env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3Medium);
-    let workflow = Workflow::new_from_json(
-        "/Users/kayaomers/Documents/firstbatch/ollama-workflows/my_workflows/xx.json",
-    )
-    .unwrap();
+    let exe = Executor::new(Model::GPT4o);
+    let workflow =
+        Workflow::new_from_json("/Users/erhant/ollama-workflows/my_workflows/search.json").unwrap();
     let mut memory = ProgramMemory::new();
     let input = Entry::try_value_or_str("How would does reiki work?");
     exe.execute(Some(&input), workflow, &mut memory).await;

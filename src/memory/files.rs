@@ -25,9 +25,7 @@ impl Embedder {
             .generate_embeddings(self.model.clone(), prompt.to_string(), None)
             .await;
         match res {
-            Ok(res) => {
-                Ok(res.embeddings.iter().map(|&x| x as f32).collect())
-            },
+            Ok(res) => Ok(res.embeddings.iter().map(|&x| x as f32).collect()),
             Err(_) => Err(EmbeddingError::DocumentEmbedding(prompt.to_string())),
         }
     }
@@ -98,12 +96,12 @@ impl FileSystem {
 
                 let mut passages = Vec::new();
                 for r in res {
-                        //can add distance threshold here
-                        let entry = Entry::Json(json!({
-                            "passage": r.0,
-                            "similarity": r.1
-                        }));
-                        passages.push(entry);
+                    //can add distance threshold here
+                    let entry = Entry::Json(json!({
+                        "passage": r.0,
+                        "similarity": r.1
+                    }));
+                    passages.push(entry);
                 }
                 Ok(passages)
             }

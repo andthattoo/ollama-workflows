@@ -1,6 +1,5 @@
 pub mod browserless;
 pub mod jina;
-pub mod langchain_compat;
 pub mod serper;
 
 pub use self::browserless::Browserless;
