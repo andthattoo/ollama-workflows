@@ -3,7 +3,7 @@ use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::errors::ToolError;
-use crate::tools::{Browserless, Jina, SearchTool};
+use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
 
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
@@ -233,14 +233,23 @@ impl Executor {
         ("+".to_string(), "-".to_string())
     }
 
-    fn get_tools(&self, tool_names: Vec<String>) -> Result<Vec<Arc<dyn Tool>>, ToolError> {
+    fn get_tools(
+        &self,
+        tool_names: Vec<String>,
+        custom_template: Option<CustomToolTemplate>,
+    ) -> Result<Vec<Arc<dyn Tool>>, ToolError> {
         if !in_tools(&tool_names) {
             return Err(ToolError::ToolDoesNotExist);
         }
-        let tools: Vec<Arc<dyn Tool>> = tool_names
+        let mut tools: Vec<Arc<dyn Tool>> = tool_names
             .iter()
             .map(|tool| self.get_tool_by_name(tool))
             .collect();
+
+        if let Some(template) = custom_template {
+            let custom_tool = Arc::new(CustomTool::new_from_template(template));
+            tools.push(custom_tool);
+        }
         Ok(tools)
     }
 
@@ -321,7 +330,9 @@ impl Executor {
     async fn function_call(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
         let oai_parser = Arc::new(OpenAIFunctionCall {});
         let nous_parser = Arc::new(NousFunctionCall {});
-        let tools = self.get_tools(config.tools.clone()).unwrap();
+        let tools = self
+            .get_tools(config.tools.clone(), config.custom_tool.clone())
+            .unwrap();
 
         let result = match self.model.clone().into() {
             ModelProvider::Ollama => {

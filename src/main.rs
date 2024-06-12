@@ -7,7 +7,7 @@ async fn main() {
     dotenv().ok();
     let env = Env::default().filter_or("LOG_LEVEL", "info");
     env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3Medium);
+    let exe = Executor::new(Model::GPT3_5Turbo);
     let workflow = Workflow::new_from_json(
         "/Users/kayaomers/Documents/firstbatch/ollama-workflows/my_workflows/research.json",
     )

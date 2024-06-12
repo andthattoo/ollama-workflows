@@ -1,4 +1,5 @@
 //Reseverd keywords
+use std::collections::HashMap;
 use std::fmt;
 
 pub static R_INPUT: &str = "__input";
@@ -25,11 +26,22 @@ pub fn in_tools(tools: &Vec<String>) -> bool {
     true
 }
 
+#[derive(Debug, serde::Deserialize, Clone)]
+pub struct CustomToolTemplate {
+    pub name: String,
+    pub description: String,
+    pub url: String,
+    pub method: String,
+    pub headers: HashMap<String, String>,
+    pub body: HashMap<String, String>,
+}
+
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
     pub max_steps: u32,
     pub max_time: u64,
     pub tools: Vec<String>,
+    pub custom_tool: Option<CustomToolTemplate>,
     pub max_tokens: Option<i32>,
 }
 
