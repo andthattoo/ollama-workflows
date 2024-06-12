@@ -3,6 +3,7 @@ use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::errors::ToolError;
+use crate::tools::langchain_compat::LangchainToolCompat;
 use crate::tools::{Browserless, Jina, SearchTool};
 
 use std::borrow::BorrowMut;
@@ -11,7 +12,16 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use colored::*;
+use langchain_rust::agent::{AgentExecutor, OpenAiToolAgentBuilder};
+use langchain_rust::chain::options::ChainCallOptions;
+use langchain_rust::chain::Chain;
+use langchain_rust::language_models::llm::LLM;
+use langchain_rust::llm::OpenAI;
+use langchain_rust::memory::SimpleMemory;
+use langchain_rust::prompt_args;
+use langchain_rust::tools::Tool as LangchainTool;
 use log::{debug, error, info, warn};
+use ollama_rs::generation::chat::ChatMessageResponse;
 use rand::seq::SliceRandom;
 
 use ollama_rs::{
@@ -292,14 +302,31 @@ impl Executor {
 
     async fn generate_text(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
         let user_message = ChatMessage::user(prompt.to_string());
-        let mut msg = ChatMessageRequest::new(self.model.to_string(), vec![user_message]);
-        let mut ops = GenerationOptions::default();
-        ops = ops.num_predict(config.max_tokens.unwrap_or(250));
-        msg = msg.options(ops);
 
-        let result = self.llm.send_chat_messages(msg).await?;
+        let response = match self.model.clone().into() {
+            ModelProvider::Ollama => {
+                let mut msg = ChatMessageRequest::new(self.model.to_string(), vec![user_message]);
+                let mut ops = GenerationOptions::default();
+                ops = ops.num_predict(config.max_tokens.unwrap_or(250));
+                msg = msg.options(ops);
 
-        Ok(result.message.unwrap().content)
+                let result = self.llm.send_chat_messages(msg).await?;
+
+                result.message.unwrap().content
+            }
+            ModelProvider::OpenAI => {
+                let llm = OpenAI::default().with_model(self.model.to_string());
+
+                let result = llm
+                    .invoke(prompt)
+                    .await
+                    .map_err(|e| OllamaError::from(format!("Could not generate text: {:?}", e)))?;
+
+                result
+            }
+        };
+
+        Ok(response)
     }
 
     async fn function_call(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
@@ -307,8 +334,8 @@ impl Executor {
         let nous_parser = Arc::new(NousFunctionCall {});
         let tools = self.get_tools(config.tools.clone()).unwrap();
 
-        let result = match self.model {
-            Model::NousTheta => {
+        let result = match self.model.clone().into() {
+            ModelProvider::Ollama => {
                 self.llm
                     .send_function_call(
                         FunctionCallRequest::new(
@@ -316,21 +343,54 @@ impl Executor {
                             tools,
                             vec![ChatMessage::user(prompt.to_string())],
                         ),
-                        nous_parser.clone(),
+                        match self.model {
+                            Model::NousTheta => nous_parser.clone(),
+                            _ => oai_parser.clone(),
+                        },
                     )
                     .await
             }
-            _ => {
-                self.llm
-                    .send_function_call(
-                        FunctionCallRequest::new(
-                            self.model.to_string(),
-                            tools,
-                            vec![ChatMessage::user(prompt.to_string())],
-                        ),
-                        oai_parser.clone(),
-                    )
+            ModelProvider::OpenAI => {
+                let llm = langchain_rust::llm::OpenAI::default().with_model(self.model.to_string());
+
+                let langchain_tools = tools
+                    .into_iter()
+                    .map(|tool| Arc::new(LangchainToolCompat::new(tool)) as Arc<dyn LangchainTool>)
+                    .collect::<Vec<Arc<dyn LangchainTool>>>();
+
+                // TODO: keeping the code here in case we create config for OpenAI as well
+                // let mut chain_call_options = ChainCallOptions::default();
+                // if let Some(max_tokens) = config.max_tokens {
+                //     chain_call_options = chain_call_options.with_max_tokens(max_tokens as u16);
+                // }
+
+                let agent = OpenAiToolAgentBuilder::new()
+                    .tools(&langchain_tools)
+                    .options(ChainCallOptions::default())
+                    .build(llm)
+                    .map_err(|e| {
+                        OllamaError::from(format!("Could not build OpenAI agent: {:?}", e))
+                    })?;
+
+                let executor =
+                    AgentExecutor::from_agent(agent).with_memory(SimpleMemory::new().into());
+
+                let result = executor
+                    .invoke(prompt_args! {
+                        "input" => prompt,
+                    })
                     .await
+                    .map_err(|e| {
+                        OllamaError::from(format!("Could not execute OpenAI agent: {:?}", e))
+                    })?;
+
+                Ok(ChatMessageResponse {
+                    message: Some(ChatMessage::assistant(result)),
+                    created_at: "".to_string(), // TODO: add date here
+                    done: true,
+                    final_data: None, // OpenAI does not provide these
+                    model: self.model.to_string(),
+                })
             }
         }?;
 
