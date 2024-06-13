@@ -12,9 +12,9 @@
             "name": "Random Poem",
             "description": "Writes a poem about Kapadokya.",
             "prompt": "Please write a poem about Kapadokya.",
-            "inputs":{},
+            "inputs":[],
             "operator": "generation",
-            "outputs":{}
+            "outputs":[]
         },
         {
             "id": "__end",

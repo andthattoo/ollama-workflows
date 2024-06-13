@@ -3,6 +3,11 @@ name = "ollama-workflows"
 version = "0.1.0"
 edition = "2021"
 authors = ["andthattoo"]
+description = "Ollama Workflows is a framework that enables users to program LLMs through workflows to create agentic behavior."
+readme = "README.md"
+repository = "https://github.com/andthattoo/ollama-workflows"
+license-file = "LICENSE"
+keywords = ["ollama", "llm", "ai", "agents"]
 
 [dependencies]
 tokio-util = { version = "0.7.10", features = ["rt"] }
