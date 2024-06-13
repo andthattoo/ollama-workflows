@@ -37,5 +37,3 @@ async fn test_insert_workflow() {
     let input = Entry::try_value_or_str("How would does reiki work?");
     exe.execute(Some(&input), workflow, &mut memory).await;
 }
-
-
