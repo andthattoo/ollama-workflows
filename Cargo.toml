@@ -11,7 +11,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 reqwest = { version = "0.12.4", features = ["json"] }
 rand = "0.8.5"
-ollama-rs = { git = "https://github.com/andthattoo/ollama-rs.git", branch = "master", features = [
+ollama-rs = { version = "0.2.0", features = [
     "function-calling",
 ] }
 parking_lot = "0.12.2"
