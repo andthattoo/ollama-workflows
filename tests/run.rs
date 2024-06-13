@@ -26,12 +26,14 @@ async fn test_simple_workflow() {
     exe.execute(Some(&input), workflow, &mut memory).await;
 }
 
+/// Test the insert workflow
+/// This workflow inserts a document into the file system.
 #[tokio::test]
 async fn test_insert_workflow() {
     dotenv().ok();
     let env = Env::default().filter_or("LOG_LEVEL", "info");
     env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3Medium);
+    let exe = Executor::new(Model::GPT3_5Turbo);
     let workflow = Workflow::new_from_json("./tests/test_workflows/insert.json").unwrap();
     let mut memory = ProgramMemory::new();
     let input = Entry::try_value_or_str("How would does reiki work?");

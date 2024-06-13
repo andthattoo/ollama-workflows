@@ -1,20 +1,55 @@
 {
-    "name": "Simple",
-    "description": "This is a simple workflow",
+    "name": "Insertion Workflow",
+    "description": "This is a workflow testing insertion, search & conditions",
     "config":{
         "max_steps": 5,
         "max_time": 100,
-        "tools": ["serper", "jina", "stock"]
+        "tools": []
     },
     "tasks":[
         {
             "id": "A",
-            "name": "Random Poem",
-            "description": "Writes a poem about Kapadokya.",
-            "prompt": "Please write a poem about Kapadokya.",
-            "inputs":{},
+            "name": "Random Facts about Kapadokya",
+            "description": "Write down facts about Kapadokya. ",
+            "prompt": "Please write a facts about Kapadokya. Refrain from generating previously generated facts.\n\n ###History:{history}",
+            "inputs":[
+                {
+                    "name": "history",
+                    "value": {
+                        "type": "get_all",
+                        "key": "history"
+                    },
+                    "required": false
+                }
+            ],
             "operator": "generation",
-            "outputs":{}
+            "outputs":[
+                {
+                    "type": "insert",
+                    "key": "",
+                    "value": "__result"
+                },
+                {
+                    "type": "push",
+                    "key": "history",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "B",
+            "name": "Search",
+            "description": "Perform search on kapadokya",
+            "prompt": "What are the unique geographic features of Kapadokya?",
+            "inputs":[],
+            "operator": "search",
+            "outputs":[
+                {
+                "type": "write",
+                "key": "final_result",
+                "value": "__result"
+            }
+        ]
         },
         {
             "id": "__end",
@@ -29,7 +64,20 @@
     "steps":[
         {
             "source":"A",
-            "target":"end"
+            "target":"B",
+            "condition": {
+                "input":{
+                    "type":"size",
+                    "key": "history"
+                },
+                "expression": "GreaterThanOrEqual",
+                "expected": "3",
+                "target_if_not": "A"
+            }
+        },
+        {
+            "source":"B",
+            "target":"__end"
         }
     ]
 }
