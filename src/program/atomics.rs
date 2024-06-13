@@ -2,6 +2,8 @@
 use std::collections::HashMap;
 use std::fmt;
 
+use ollama_rs::models::LocalModel;
+
 pub static R_INPUT: &str = "__input";
 pub static R_OUTPUT: &str = "__result";
 pub static R_END: &str = "__end";
@@ -181,27 +183,30 @@ pub struct Condition {
 /// ```
 /// These models are selected based on their performance and size.
 /// You can add models by creating a pull request.
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone, PartialEq)]
 pub enum Model {
     // Ollama models
-    /// Nous's Hermes-2-Theta model, q8_0 quantized
+    /// [Nous's Hermes-2-Theta model](https://ollama.com/adrienbrault/nous-hermes2theta-llama3-8b), q8_0 quantized
     NousTheta,
-    /// Microsoft's Phi3 Medium model, q4_1 quantized
+    /// [Microsoft's Phi3 Medium model](https://ollama.com/library/phi3:medium), q4_1 quantized
     Phi3Medium,
-    /// Microsoft's Phi3 Medium model, 128k context length, q4_1 quantized
+    /// [Microsoft's Phi3 Medium model, 128k context length](https://ollama.com/library/phi3:medium-128k), q4_1 quantized
     Phi3Medium128k,
-    /// Microsoft's Phi3 Mini model, 3.8b parameters
+    /// [Microsoft's Phi3 Mini model](https://ollama.com/library/phi3:3.8b), 3.8b parameters
+    #[default]
     Phi3Mini,
     // OpenAI models
-    /// OpenAI's GPT-3.5 Turbo model
+    /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3-5-turbo)
     GPT3_5Turbo,
-    /// OpenAI's GPT-4 Turbo model
+    /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4)
     GPT4Turbo,
-    /// OpenAI's GPT-4o model
+    /// [OpenAI's GPT-4o model](https://platform.openai.com/docs/models/gpt-4o)
     GPT4o,
 }
 
-#[derive(Debug, Clone)]
+/// A model provider is a service that hosts the chosen Model.
+/// It can be derived from the model name, e.g. GPT4o is hosted by OpenAI (via API), or Phi3 is hosted by Ollama (locally).
+#[derive(Debug, Clone, PartialEq)]
 pub enum ModelProvider {
     Ollama,
     OpenAI,
@@ -223,7 +228,12 @@ impl From<Model> for ModelProvider {
     }
 }
 
-//implement display with mathcing
+impl From<Model> for String {
+    fn from(model: Model) -> Self {
+        model.to_string() // via Display
+    }
+}
+
 impl fmt::Display for Model {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
@@ -237,5 +247,54 @@ impl fmt::Display for Model {
             Model::GPT4Turbo => write!(f, "gpt-4-turbo"),
             Model::GPT4o => write!(f, "gpt-4o"),
         }
+    }
+}
+
+impl TryFrom<LocalModel> for Model {
+    type Error = String;
+
+    fn try_from(value: LocalModel) -> Result<Self, Self::Error> {
+        Model::try_from(value.name)
+    }
+}
+
+impl TryFrom<String> for Model {
+    type Error = String;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.as_str().to_lowercase().trim() {
+            // Ollama models
+            "adrienbrault/nous-hermes2theta-llama3-8b:q8_0" => Ok(Model::NousTheta),
+            "phi3:14b-medium-4k-instruct-q4_1" => Ok(Model::Phi3Medium),
+            "phi3:14b-medium-128k-instruct-q4_1" => Ok(Model::Phi3Medium128k),
+            "phi3:3.8b" => Ok(Model::Phi3Mini),
+            // OpenAI models
+            "gpt-3.5-turbo" => Ok(Model::GPT3_5Turbo),
+            "gpt-4-turbo" => Ok(Model::GPT4Turbo),
+            "gpt-4o" => Ok(Model::GPT4o),
+            _ => Err(format!("Model {} not found", value)),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_model_conversion() {
+        let model = Model::Phi3Mini;
+
+        // convert to string
+        let model_str: String = model.clone().into();
+        assert_eq!(model_str, "phi3:3.8b");
+
+        // (try) convert from string
+        let model_from = Model::try_from(model_str).expect("should convert");
+        assert_eq!(model_from, model);
+
+        // (try) convert from string
+        let model = Model::try_from("this-model-does-not-will-not-exist".to_string());
+        assert!(model.is_err());
     }
 }

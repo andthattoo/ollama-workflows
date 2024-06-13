@@ -46,6 +46,7 @@ fn log_colored(msg: &str) {
 }
 
 /// Executor, the main struct that executes the workflow
+#[derive(Default)]
 pub struct Executor {
     model: Model,
     llm: Ollama,
@@ -57,6 +58,7 @@ impl Executor {
         let llm = Ollama::default();
         Executor { model, llm }
     }
+
     /// Executes the workflow
     pub async fn execute(
         &self,
@@ -360,7 +362,57 @@ impl Executor {
         Ok(result.message.unwrap().content)
     }
 
+    /// Lists existing models compatible with the `Model` enum.
+    ///
+    /// Will ignore models that are not compatible with the `Model` enum.
+    pub async fn list_local_models(&self) -> Result<Vec<Model>, OllamaError> {
+        let local_models = self.llm.list_local_models().await?;
+
+        let local_models = local_models
+            .iter()
+            .filter_map(|model| Model::try_from(model.clone()).ok())
+            .collect();
+
+        Ok(local_models)
+    }
+
+    /// Pulls a model if it does not exist locally, only relevant for Ollama models.
+    pub async fn pull_model(&self) -> Result<(), OllamaError> {
+        if ModelProvider::from(self.model.clone()) == ModelProvider::Ollama {
+            let local_models = self.list_local_models().await?;
+            if !local_models.contains(&self.model) {
+                info!("Pulling model {}, this may take a while.", self.model);
+                self.llm
+                    .pull_model(self.model.clone().into(), false)
+                    .await?;
+            } else {
+                debug!("Model {} already exists locally", self.model);
+            }
+        }
+
+        Ok(())
+    }
+
+    #[inline]
     fn check(&self, input: &str, expected: &str) -> bool {
         input == expected
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore = "run this manually"]
+    async fn test_pull() {
+        let executor = Executor::new(Model::Phi3Mini);
+        let locals = executor
+            .list_local_models()
+            .await
+            .expect("should list models");
+        println!("{:?}", locals);
+
+        executor.pull_model().await.expect("should pull model");
     }
 }
