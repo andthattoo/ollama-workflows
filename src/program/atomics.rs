@@ -45,7 +45,7 @@ pub struct Config {
     pub max_time: u64,
     /// Set of tools to use in the workflow
     pub tools: Vec<String>,
-    /// A custom tool that user can define within workflow. 
+    /// A custom tool that user can define within workflow.
     pub custom_tool: Option<CustomToolTemplate>,
     /// Maximum number of tokens for LLMs to generate per run.
     pub max_tokens: Option<i32>,

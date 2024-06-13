@@ -11,9 +11,9 @@ use stack::Stack;
 
 /// ProgramMemory is a struct that holds the cache, file_system, and stack.
 pub struct ProgramMemory {
-    cache: Cache,            
-    file_system: FileSystem, 
-    stack: Stack,           
+    cache: Cache,
+    file_system: FileSystem,
+    stack: Stack,
 }
 
 impl ProgramMemory {
