@@ -1,0 +1,35 @@
+{
+    "name": "Simple",
+    "description": "This is a simple workflow",
+    "config":{
+        "max_steps": 5,
+        "max_time": 100,
+        "tools": []
+    },
+    "tasks":[
+        {
+            "id": "A",
+            "name": "Random Poem",
+            "description": "Writes a poem about Kapadokya.",
+            "prompt": "Please write a poem about Kapadokya.",
+            "inputs":{},
+            "operator": "generation",
+            "outputs":{}
+        },
+        {
+            "id": "__end",
+            "name": "end",
+            "description": "End of the task",
+            "prompt": "End of the task",
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
+        }
+    ],
+    "steps":[
+        {
+            "source":"A",
+            "target":"end"
+        }
+    ]
+}

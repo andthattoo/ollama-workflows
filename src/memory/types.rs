@@ -4,7 +4,8 @@ pub type ID = String;
 pub type StackPage = Vec<Entry>;
 pub type FilePage = (String, Vec<f32>);
 
-//a type that can store both string and json Value
+/// Entry is an enum that can be either a String or a Json Value.
+/// It is used for I/O operations in the memory module.
 #[derive(Debug, serde::Deserialize, PartialEq)]
 pub enum Entry {
     String(String),

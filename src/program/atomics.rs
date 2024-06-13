@@ -36,12 +36,18 @@ pub struct CustomToolTemplate {
     pub body: HashMap<String, String>,
 }
 
+/// Configuration for the workflow
 #[derive(Debug, serde::Deserialize)]
 pub struct Config {
+    /// Maximum number of steps to execute. Program halts afterwards.
     pub max_steps: u32,
+    /// Maximum execution time in seconds. Program halts afterwards.
     pub max_time: u64,
+    /// Set of tools to use in the workflow
     pub tools: Vec<String>,
+    /// A custom tool that user can define within workflow. 
     pub custom_tool: Option<CustomToolTemplate>,
+    /// Maximum number of tokens for LLMs to generate per run.
     pub max_tokens: Option<i32>,
 }
 
@@ -168,18 +174,30 @@ pub struct Condition {
     pub target_if_not: String,
 }
 
+/// Enum for the models that can be used in the workflow
+/// Import the model to executor using:
+/// ```rust
+/// let exe = Executor::new(Model::Phi3Medium);
+/// ```
+/// These models are selected based on their performance and size.
+/// You can add models by creating a pull request.
 #[derive(Debug, Clone)]
 pub enum Model {
     // Ollama models
+    /// Nous's Hermes-2-Theta model, q8_0 quantized
     NousTheta,
+    /// Microsoft's Phi3 Medium model, q4_1 quantized
     Phi3Medium,
+    /// Microsoft's Phi3 Medium model, 128k context length, q4_1 quantized
     Phi3Medium128k,
+    /// Microsoft's Phi3 Mini model, 3.8b parameters
     Phi3Mini,
-    TinyAgent,
-    TinyAgentFP16,
     // OpenAI models
+    /// OpenAI's GPT-3.5 Turbo model
     GPT3_5Turbo,
+    /// OpenAI's GPT-4 Turbo model
     GPT4Turbo,
+    /// OpenAI's GPT-4o model
     GPT4o,
 }
 
@@ -197,8 +215,6 @@ impl From<Model> for ModelProvider {
             Model::Phi3Medium => ModelProvider::Ollama,
             Model::Phi3Medium128k => ModelProvider::Ollama,
             Model::Phi3Mini => ModelProvider::Ollama,
-            Model::TinyAgent => ModelProvider::Ollama,
-            Model::TinyAgentFP16 => ModelProvider::Ollama,
             // OpenAI models
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
             Model::GPT4Turbo => ModelProvider::OpenAI,
@@ -216,8 +232,6 @@ impl fmt::Display for Model {
             Model::Phi3Medium => write!(f, "phi3:14b-medium-4k-instruct-q4_1"),
             Model::Phi3Medium128k => write!(f, "phi3:14b-medium-128k-instruct-q4_1"),
             Model::Phi3Mini => write!(f, "phi3:3.8b"),
-            Model::TinyAgent => write!(f, "andthattoo/tinyagent-1.1b:latest"),
-            Model::TinyAgentFP16 => write!(f, "andthattoo/tinyagent-1.1b:latest"),
             // OpenAI models
             Model::GPT3_5Turbo => write!(f, "gpt-3.5-turbo"),
             Model::GPT4Turbo => write!(f, "gpt-4-turbo"),

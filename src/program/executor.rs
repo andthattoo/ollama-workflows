@@ -45,17 +45,19 @@ fn log_colored(msg: &str) {
     warn!("{}", colored_msg);
 }
 
+/// Executor, the main struct that executes the workflow
 pub struct Executor {
     model: Model,
     llm: Ollama,
 }
 
 impl Executor {
+    /// Create a new Executor
     pub fn new(model: Model) -> Self {
         let llm = Ollama::default();
         Executor { model, llm }
     }
-
+    /// Executes the workflow
     pub async fn execute(
         &self,
         input: Option<&Entry>,
