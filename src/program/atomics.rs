@@ -60,6 +60,16 @@ pub struct Input {
     pub required: bool,
 }
 
+
+#[derive(Debug, serde::Deserialize)]
+pub struct InputValue {
+    #[serde(rename = "type")]
+    pub value_type: InputValueType,
+    pub index: Option<usize>,
+    pub search_query: Option<SearchQuery>,
+    pub key: String,
+}
+
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum InputValueType {
@@ -79,14 +89,6 @@ pub struct SearchQuery {
     pub key: String,
 }
 
-#[derive(Debug, serde::Deserialize)]
-pub struct InputValue {
-    #[serde(rename = "type")]
-    pub value_type: InputValueType,
-    pub index: Option<usize>,
-    pub search_query: Option<SearchQuery>,
-    pub key: String,
-}
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -116,12 +118,19 @@ pub enum Operator {
 
 #[derive(Debug, serde::Deserialize)]
 pub struct Task {
+    /// A unique identifier for the task
     pub id: String,
+    /// A human-readable name for the task
     pub name: String,
+    /// A description of the task
     pub description: String,
+    /// Prompt of the task. Can have placeholders for inputs e.g. {query}.
     pub prompt: String,
+    /// Memory operations before the task. Inputs are read from memory or from reserved "__input" key
     pub inputs: Vec<Input>,
+    /// The operator to be used for the task
     pub operator: Operator,
+    /// Memory operations after the task is finished
     pub outputs: Vec<Output>,
 }
 
