@@ -1,3 +1,3 @@
 # Worklows
 
-At the heart of [ollama-workflows](readme.md)
+Core idea to [ollama-workflows](readme.md) is to program LLMs through `workflows`. 
