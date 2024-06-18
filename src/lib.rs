@@ -30,4 +30,8 @@ mod tools;
 
 pub use memory::types::Entry;
 pub use memory::ProgramMemory;
-pub use program::{atomics::Model, executor::Executor, workflow::Workflow};
+pub use program::{
+    atomics::{Model, ModelProvider},
+    executor::Executor,
+    workflow::Workflow,
+};
