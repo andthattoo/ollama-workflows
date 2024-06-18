@@ -61,7 +61,6 @@ pub struct Input {
     pub required: bool,
 }
 
-
 #[derive(Debug, serde::Deserialize)]
 pub struct InputValue {
     #[serde(rename = "type")]
@@ -89,7 +88,6 @@ pub struct SearchQuery {
     pub value_type: InputValueType,
     pub key: String,
 }
-
 
 #[derive(Debug, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
