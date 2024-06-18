@@ -46,6 +46,7 @@ pub struct Config {
     /// Maximum execution time in seconds. Program halts afterwards.
     pub max_time: u64,
     /// Set of tools to use in the workflow
+    #[serde(default)]
     pub tools: Vec<String>,
     /// A custom tool that user can define within workflow.
     pub custom_tool: Option<CustomToolTemplate>,
@@ -120,8 +121,10 @@ pub struct Task {
     pub name: String,
     pub description: String,
     pub prompt: String,
+    #[serde(default)]
     pub inputs: Vec<Input>,
     pub operator: Operator,
+    #[serde(default)]
     pub outputs: Vec<Output>,
 }
 
@@ -183,7 +186,7 @@ pub struct Condition {
 /// ```
 /// These models are selected based on their performance and size.
 /// You can add models by creating a pull request.
-#[derive(Default, Debug, Clone, PartialEq)]
+#[derive(Default, Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum Model {
     // Ollama models
     /// [Nous's Hermes-2-Theta model](https://ollama.com/adrienbrault/nous-hermes2theta-llama3-8b), q8_0 quantized
@@ -206,7 +209,7 @@ pub enum Model {
 
 /// A model provider is a service that hosts the chosen Model.
 /// It can be derived from the model name, e.g. GPT4o is hosted by OpenAI (via API), or Phi3 is hosted by Ollama (locally).
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
 pub enum ModelProvider {
     Ollama,
     OpenAI,
