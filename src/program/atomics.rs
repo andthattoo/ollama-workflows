@@ -1,8 +1,8 @@
-//Reseverd keywords
 use std::collections::HashMap;
 use std::fmt;
 
 use ollama_rs::models::LocalModel;
+use serde::{Deserialize, Serialize};
 
 pub static R_INPUT: &str = "__input";
 pub static R_OUTPUT: &str = "__result";
@@ -28,7 +28,7 @@ pub fn in_tools(tools: &Vec<String>) -> bool {
     true
 }
 
-#[derive(Debug, serde::Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct CustomToolTemplate {
     pub name: String,
     pub description: String,
@@ -39,7 +39,7 @@ pub struct CustomToolTemplate {
 }
 
 /// Configuration for the workflow
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Config {
     /// Maximum number of steps to execute. Program halts afterwards.
     pub max_steps: u32,
@@ -54,14 +54,14 @@ pub struct Config {
     pub max_tokens: Option<i32>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Input {
     pub name: String,
     pub value: InputValue,
     pub required: bool,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct InputValue {
     #[serde(rename = "type")]
     pub value_type: InputValueType,
@@ -70,7 +70,7 @@ pub struct InputValue {
     pub key: String,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum InputValueType {
     Input,
@@ -82,14 +82,14 @@ pub enum InputValueType {
     String,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct SearchQuery {
     #[serde(rename = "type")]
     pub value_type: InputValueType,
     pub key: String,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OutputType {
     Write,
@@ -97,7 +97,7 @@ pub enum OutputType {
     Push,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Output {
     #[serde(rename = "type")]
     pub output_type: OutputType,
@@ -105,7 +105,7 @@ pub struct Output {
     pub value: String,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Operator {
     Generation,
@@ -116,7 +116,7 @@ pub enum Operator {
     End,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Task {
     /// A unique identifier for the task
     pub id: String,
@@ -134,7 +134,7 @@ pub struct Task {
     pub outputs: Vec<Output>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Edge {
     pub source: String,
     pub target: String,
@@ -142,7 +142,7 @@ pub struct Edge {
     pub fallback: Option<String>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub enum Expression {
     Equal,
     NotEqual,
@@ -177,7 +177,7 @@ impl Expression {
     }
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct Condition {
     pub input: InputValue,
     pub expected: String,
@@ -192,44 +192,51 @@ pub struct Condition {
 /// ```
 /// These models are selected based on their performance and size.
 /// You can add models by creating a pull request.
-#[derive(Default, Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Default, Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum Model {
     // Ollama models
     /// [Nous's Hermes-2-Theta model](https://ollama.com/adrienbrault/nous-hermes2theta-llama3-8b), q8_0 quantized
+    #[serde(rename = "adrienbrault/nous-hermes2theta-llama3-8b:q8_0")]
     NousTheta,
     /// [Microsoft's Phi3 Medium model](https://ollama.com/library/phi3:medium), q4_1 quantized
+    #[serde(rename = "phi3:14b-medium-4k-instruct-q4_1")]
     Phi3Medium,
     /// [Microsoft's Phi3 Medium model, 128k context length](https://ollama.com/library/phi3:medium-128k), q4_1 quantized
+    #[serde(rename = "phi3:14b-medium-128k-instruct-q4_1")]
     Phi3Medium128k,
     /// [Microsoft's Phi3 Mini model](https://ollama.com/library/phi3:3.8b), 3.8b parameters
     #[default]
+    #[serde(rename = "phi3:3.8b")]
     Phi3Mini,
     // OpenAI models
     /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3-5-turbo)
+    #[serde(rename = "gpt-3.5-turbo")]
     GPT3_5Turbo,
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4)
+    #[serde(rename = "gpt-4-turbo")]
     GPT4Turbo,
     /// [OpenAI's GPT-4o model](https://platform.openai.com/docs/models/gpt-4o)
+    #[serde(rename = "gpt-4o")]
     GPT4o,
 }
 
 /// A model provider is a service that hosts the chosen Model.
 /// It can be derived from the model name, e.g. GPT4o is hosted by OpenAI (via API), or Phi3 is hosted by Ollama (locally).
-#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum ModelProvider {
+    #[serde(rename = "ollama")]
     Ollama,
+    #[serde(rename = "openai")]
     OpenAI,
 }
 
 impl From<Model> for ModelProvider {
     fn from(model: Model) -> Self {
         match model {
-            // Ollama models
             Model::NousTheta => ModelProvider::Ollama,
             Model::Phi3Medium => ModelProvider::Ollama,
             Model::Phi3Medium128k => ModelProvider::Ollama,
             Model::Phi3Mini => ModelProvider::Ollama,
-            // OpenAI models
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
@@ -245,23 +252,16 @@ impl From<Model> for String {
 
 impl fmt::Display for Model {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            // Ollama models
-            Model::NousTheta => write!(f, "adrienbrault/nous-hermes2theta-llama3-8b:q8_0"),
-            Model::Phi3Medium => write!(f, "phi3:14b-medium-4k-instruct-q4_1"),
-            Model::Phi3Medium128k => write!(f, "phi3:14b-medium-128k-instruct-q4_1"),
-            Model::Phi3Mini => write!(f, "phi3:3.8b"),
-            // OpenAI models
-            Model::GPT3_5Turbo => write!(f, "gpt-3.5-turbo"),
-            Model::GPT4Turbo => write!(f, "gpt-4-turbo"),
-            Model::GPT4o => write!(f, "gpt-4o"),
-        }
+        // guaranteed not to fail because this is enum to string serialization
+        let self_str = serde_json::to_string(&self).unwrap_or_default();
+
+        // remove quotes from JSON
+        write!(f, "{}", self_str.trim_matches('"'))
     }
 }
 
 impl TryFrom<LocalModel> for Model {
     type Error = String;
-
     fn try_from(value: LocalModel) -> Result<Self, Self::Error> {
         Model::try_from(value.name)
     }
@@ -269,20 +269,10 @@ impl TryFrom<LocalModel> for Model {
 
 impl TryFrom<String> for Model {
     type Error = String;
-
     fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.as_str().to_lowercase().trim() {
-            // Ollama models
-            "adrienbrault/nous-hermes2theta-llama3-8b:q8_0" => Ok(Model::NousTheta),
-            "phi3:14b-medium-4k-instruct-q4_1" => Ok(Model::Phi3Medium),
-            "phi3:14b-medium-128k-instruct-q4_1" => Ok(Model::Phi3Medium128k),
-            "phi3:3.8b" => Ok(Model::Phi3Mini),
-            // OpenAI models
-            "gpt-3.5-turbo" => Ok(Model::GPT3_5Turbo),
-            "gpt-4-turbo" => Ok(Model::GPT4Turbo),
-            "gpt-4o" => Ok(Model::GPT4o),
-            _ => Err(format!("Model {} not found", value)),
-        }
+        // serde requires quotes (for JSON)
+        serde_json::from_str::<Self>(&format!("\"{}\"", value))
+            .map_err(|e| format!("Model {} invalid: {}", value, e))
     }
 }
 
@@ -290,13 +280,14 @@ impl TryFrom<String> for Model {
 mod tests {
     use super::*;
 
+    const MODEL_NAME: &str = "phi3:3.8b";
     #[test]
-    fn test_model_conversion() {
+    fn test_model_string_conversion() {
         let model = Model::Phi3Mini;
 
         // convert to string
         let model_str: String = model.clone().into();
-        assert_eq!(model_str, "phi3:3.8b");
+        assert_eq!(model_str, MODEL_NAME);
 
         // (try) convert from string
         let model_from = Model::try_from(model_str).expect("should convert");
@@ -304,6 +295,23 @@ mod tests {
 
         // (try) convert from string
         let model = Model::try_from("this-model-does-not-will-not-exist".to_string());
+        assert!(model.is_err());
+    }
+
+    #[test]
+    fn test_model_string_serde() {
+        let model = Model::Phi3Mini;
+
+        // serialize to string via serde
+        let model_str = serde_json::to_string(&model).expect("should serialize");
+        assert_eq!(model_str, format!("\"{}\"", MODEL_NAME));
+
+        // deserialize from string via serde
+        let model_from: Model = serde_json::from_str(&model_str).expect("should deserialize");
+        assert_eq!(model_from, model);
+
+        // (try) deserialize from invalid model
+        let model = serde_json::from_str::<Model>("\"this-model-does-not-will-not-exist\"");
         assert!(model.is_err());
     }
 }
