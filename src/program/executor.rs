@@ -200,6 +200,11 @@ impl Executor {
                 let result_entry = Entry::try_value_or_str(&ent_str);
                 self.handle_output(task, result_entry, memory).await;
             }
+            Operator::HaveSimilar => {
+                let prompt = self.fill_prompt(&task.prompt, &input_map);
+                let result = memory.have_similar(&Entry::try_value_or_str(&prompt), Some(0.95)).await;
+                //handle output
+            }
             Operator::End => {}
         };
 

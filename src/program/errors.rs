@@ -15,6 +15,7 @@ pub enum FileSystemError {
     InsertionFailed(String),
     SearchError,
     EmbeddingError(EmbeddingError),
+    InvalidThreshold(f32),
 }
 
 #[allow(dead_code)]
@@ -48,6 +49,7 @@ impl fmt::Display for FileSystemError {
             }
             FileSystemError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
             FileSystemError::SearchError => write!(f, "Search error"),
+            FileSystemError::InvalidThreshold(threshold) => write!(f, "Invalid threshold: {}", threshold),
         }
     }
 }

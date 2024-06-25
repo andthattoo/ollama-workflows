@@ -109,6 +109,34 @@ impl FileSystem {
         }
     }
 
+    pub async fn have_similar(&self, query: &Entry, threshold: Option<f32>) -> Result<bool, FileSystemError> {
+        let query_embedding = self
+            .embedder
+            .generate_embeddings(&query.to_string())
+            .await;
+
+        let mut thres = 0.85;
+        if let Some(threshold) = threshold {
+            if threshold > 1.0 || threshold < 0.0 {
+                return Err(FileSystemError::InvalidThreshold(threshold));
+            }
+            thres = threshold;
+        }
+
+        match query_embedding {
+            Ok(embedding) => {
+                let res = self.brute_force_top_n(&embedding, 1);
+
+                let sim = res[0].1;
+                if sim > thres {
+                    return Ok(true);
+                }
+                Ok(false)
+            }
+            Err(err) => return Err(FileSystemError::EmbeddingError(err)),
+        }
+    }
+
     fn brute_force_top_n(&self, query: &[f32], n: usize) -> Vec<(String, f32)> {
         let mut distances = Vec::new();
         for (_, v) in &self.entries {

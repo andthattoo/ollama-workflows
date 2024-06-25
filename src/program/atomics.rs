@@ -112,6 +112,7 @@ pub enum Operator {
     FunctionCalling,
     Check,
     Search,
+    HaveSimilar,
     End,
 }
 
