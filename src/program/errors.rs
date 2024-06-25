@@ -49,7 +49,9 @@ impl fmt::Display for FileSystemError {
             }
             FileSystemError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
             FileSystemError::SearchError => write!(f, "Search error"),
-            FileSystemError::InvalidThreshold(threshold) => write!(f, "Invalid threshold: {}", threshold),
+            FileSystemError::InvalidThreshold(threshold) => {
+                write!(f, "Invalid threshold: {}", threshold)
+            }
         }
     }
 }

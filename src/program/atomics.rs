@@ -4,6 +4,8 @@ use std::fmt;
 use ollama_rs::models::LocalModel;
 use serde::{Deserialize, Serialize};
 
+use crate::ProgramMemory;
+
 pub static R_INPUT: &str = "__input";
 pub static R_OUTPUT: &str = "__result";
 pub static R_END: &str = "__end";
@@ -112,7 +114,6 @@ pub enum Operator {
     FunctionCalling,
     Check,
     Search,
-    HaveSimilar,
     End,
 }
 
@@ -142,7 +143,7 @@ pub struct Edge {
     pub fallback: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 pub enum Expression {
     Equal,
     NotEqual,
@@ -152,10 +153,16 @@ pub enum Expression {
     LessThan,
     GreaterThanOrEqual,
     LessThanOrEqual,
+    HaveSimilar,
 }
 
 impl Expression {
-    pub fn evaluate(&self, input: &str, expected: &str) -> bool {
+    pub async fn evaluate(
+        &self,
+        input: &str,
+        expected: &str,
+        memory: Option<&mut ProgramMemory>,
+    ) -> bool {
         match self {
             Expression::Equal => input == expected,
             Expression::NotEqual => input != expected,
@@ -172,6 +179,10 @@ impl Expression {
             }
             Expression::LessThanOrEqual => {
                 input.parse::<f64>().unwrap() <= expected.parse::<f64>().unwrap()
+            }
+            Expression::HaveSimilar => {
+                let res = memory.unwrap().have_similar(expected, Some(0.95)).await;
+                res.unwrap_or(false)
             }
         }
     }

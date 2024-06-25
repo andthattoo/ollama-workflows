@@ -109,15 +109,16 @@ impl FileSystem {
         }
     }
 
-    pub async fn have_similar(&self, query: &Entry, threshold: Option<f32>) -> Result<bool, FileSystemError> {
-        let query_embedding = self
-            .embedder
-            .generate_embeddings(&query.to_string())
-            .await;
+    pub async fn have_similar(
+        &self,
+        query: &Entry,
+        threshold: Option<f32>,
+    ) -> Result<bool, FileSystemError> {
+        let query_embedding = self.embedder.generate_embeddings(&query.to_string()).await;
 
         let mut thres = 0.85;
         if let Some(threshold) = threshold {
-            if threshold > 1.0 || threshold < 0.0 {
+            if !(0.0..=1.0).contains(&threshold) {
                 return Err(FileSystemError::InvalidThreshold(threshold));
             }
             thres = threshold;
@@ -133,7 +134,7 @@ impl FileSystem {
                 }
                 Ok(false)
             }
-            Err(err) => return Err(FileSystemError::EmbeddingError(err)),
+            Err(err) => Err(FileSystemError::EmbeddingError(err)),
         }
     }
 

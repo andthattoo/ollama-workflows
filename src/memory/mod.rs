@@ -79,12 +79,14 @@ impl ProgramMemory {
         }
     }
 
-    pub async fn have_similar(&self, query: &types::Entry, threshold: Option<f32>) -> Option<bool> {
-        let res = self.file_system.have_similar(query, threshold).await;
+    pub async fn have_similar(&self, query: &str, threshold: Option<f32>) -> Option<bool> {
+        let res = self
+            .file_system
+            .have_similar(&types::Entry::try_value_or_str(query), threshold)
+            .await;
         match res {
             Ok(res) => Some(res),
             Err(_) => None,
         }
     }
-
 }

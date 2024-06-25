@@ -96,9 +96,21 @@ impl Executor {
                         //if there are conditions, check them
                         if let Some(condition) = &edge.condition {
                             let value = self.handle_input(&condition.input, memory).await;
-                            let eval = condition
-                                .expression
-                                .evaluate(&value.to_string(), &condition.expected);
+                            let eval = if condition.expression == Expression::HaveSimilar {
+                                condition
+                                    .expression
+                                    .evaluate(
+                                        &value.to_string(),
+                                        &condition.expected,
+                                        Some(memory.borrow_mut()),
+                                    )
+                                    .await
+                            } else {
+                                condition
+                                    .expression
+                                    .evaluate(&value.to_string(), &condition.expected, None)
+                                    .await
+                            };
                             if eval {
                                 warn!(
                                     "[{}] conditions met, stepping into [{}]",
@@ -199,11 +211,6 @@ impl Executor {
                 let ent_str = MemoryReturnType::EntryVec(result).to_string();
                 let result_entry = Entry::try_value_or_str(&ent_str);
                 self.handle_output(task, result_entry, memory).await;
-            }
-            Operator::HaveSimilar => {
-                let prompt = self.fill_prompt(&task.prompt, &input_map);
-                let result = memory.have_similar(&Entry::try_value_or_str(&prompt), Some(0.95)).await;
-                //handle output
             }
             Operator::End => {}
         };
