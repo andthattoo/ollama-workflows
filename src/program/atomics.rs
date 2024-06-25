@@ -72,7 +72,7 @@ pub struct InputValue {
     pub key: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 pub enum InputValueType {
     Input,
@@ -114,6 +114,7 @@ pub enum Operator {
     FunctionCalling,
     Check,
     Search,
+    Sample,
     End,
 }
 

@@ -5,6 +5,7 @@ use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::errors::ToolError;
 use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
 
+use rand::Rng;
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -212,6 +213,23 @@ impl Executor {
                 let result_entry = Entry::try_value_or_str(&ent_str);
                 self.handle_output(task, result_entry, memory).await;
             }
+            Operator::Sample => {
+                let mut sample_mix = "".to_string();
+                for input in &task.inputs {
+                    if input.value.value_type != InputValueType::GetAll {
+                        error!("Input value type should be GetAll for sample");
+                        return false;
+                    }
+                    let to_sample = memory.get_all(&input.value.key);
+                    if to_sample.is_none() {
+                        error!("Error sampling: {:?}", "No results found");
+                        return false;
+                    }
+                    sample_mix.push_str(&self.sample(&to_sample.unwrap()).to_string())
+                }
+                let result_entry = Entry::try_value_or_str(&sample_mix);
+                self.handle_output(task, result_entry, memory).await;
+            }
             Operator::End => {}
         };
 
@@ -408,6 +426,12 @@ impl Executor {
     #[inline]
     fn check(&self, input: &str, expected: &str) -> bool {
         input == expected
+    }
+
+    //randomly sample list of entries
+    fn sample(&self, entries: &[Entry]) -> Entry {
+        let index = rand::thread_rng().gen_range(0..entries.len());
+        entries[index].clone()
     }
 }
 
