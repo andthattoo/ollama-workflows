@@ -150,7 +150,42 @@ impl Executor {
         }
         let rv = workflow.get_return_value();
         let return_value = self.handle_input(&rv.input, memory).await;
-        return_value.to_string().clone()
+        let mut return_string = return_value.to_string().clone();
+
+        if let Some(post_pr) = rv.post_process.clone() {
+            if let Some(proccess) = post_pr.into_iter().next() {
+                return match proccess.process_type {
+                    PostProcessType::Replace => {
+                        if proccess.lhs.is_none() || proccess.rhs.is_none() {
+                            error!("lhs and rhs are required for replace post process");
+                            return return_string;
+                        }
+                        return_string.replace(&proccess.lhs.unwrap(), &proccess.rhs.unwrap())
+                    }
+                    PostProcessType::Append => {
+                        if proccess.lhs.is_none() {
+                            error!("lhs is required for append post process");
+                            return return_string;
+                        }
+                        return_string.push_str(&proccess.lhs.unwrap());
+                        return_string
+                    }
+                    PostProcessType::Prepend => {
+                        if proccess.lhs.is_none() {
+                            error!("lhs is required for prepend post process");
+                            return return_string;
+                        }
+                        format!("{}{}", proccess.lhs.unwrap(), return_string)
+                    }
+                    PostProcessType::ToLower => return_string.to_lowercase(),
+                    PostProcessType::ToUpper => return_string.to_uppercase(),
+                    PostProcessType::Trim => return_string.trim().to_string(),
+                    PostProcessType::TrimStart => return_string.trim_start().to_string(),
+                    PostProcessType::TrimEnd => return_string.trim_end().to_string(),
+                };
+            }
+        }
+        return_string
     }
 
     async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory, config: &Config) -> bool {

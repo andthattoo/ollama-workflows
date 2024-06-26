@@ -139,6 +139,27 @@ pub struct Task {
 #[derive(Debug, Deserialize)]
 pub struct TaskOutput {
     pub input: InputValue,
+    pub to_json: Option<bool>,
+    pub post_process: Option<Vec<TaskPostProcess>>,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct TaskPostProcess {
+    pub process_type: PostProcessType,
+    pub lhs: Option<String>,
+    pub rhs: Option<String>,
+}
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum PostProcessType {
+    Replace,
+    Append,
+    Prepend,
+    Trim,
+    TrimStart,
+    TrimEnd,
+    ToLower,
+    ToUpper,
 }
 
 #[derive(Debug, Deserialize)]
