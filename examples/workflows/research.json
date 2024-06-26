@@ -314,5 +314,11 @@
             "target": "end",
             "fallback": "A"
         }
-    ]
+    ],
+    "return_value":{
+        "input":{
+            "type": "read",
+            "key": "final_result"
+        }
+    }
 }

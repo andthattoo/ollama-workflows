@@ -1,4 +1,4 @@
-use super::atomics::{Config, Edge, Task};
+use super::atomics::{Config, Edge, Task, TaskOutput};
 
 /// Workflow serves as a container for the tasks and steps that make up a workflow.
 #[derive(Debug, serde::Deserialize)]
@@ -6,14 +6,21 @@ pub struct Workflow {
     config: Config,
     tasks: Vec<Task>,
     steps: Vec<Edge>,
+    return_value: TaskOutput,
 }
 
 impl Workflow {
-    pub fn new(tasks: Vec<Task>, steps: Vec<Edge>, config: Config) -> Self {
+    pub fn new(
+        tasks: Vec<Task>,
+        steps: Vec<Edge>,
+        config: Config,
+        return_value: TaskOutput,
+    ) -> Self {
         Workflow {
             config,
             tasks,
             steps,
+            return_value,
         }
     }
 
@@ -38,6 +45,10 @@ impl Workflow {
     /// Returns a reference to the steps of the workflow.
     pub fn get_workflow(&self) -> &Vec<Edge> {
         &self.steps
+    }
+    /// Returns a reference to the return value of the workflow.
+    pub fn get_return_value(&self) -> &TaskOutput {
+        &self.return_value
     }
     /// Returns a reference to the task at the specified index.
     pub fn get_step(&self, index: u32) -> Option<&Edge> {

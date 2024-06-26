@@ -14,7 +14,13 @@
             "prompt": "Please write a poem about Kapadokya.",
             "inputs":[],
             "operator": "generation",
-            "outputs":[]
+            "outputs":[
+                {
+                    "type": "write",
+                    "key": "poem",
+                    "value": "__result"
+                }
+            ]
         },
         {
             "id": "__end",
@@ -31,5 +37,11 @@
             "source":"A",
             "target":"end"
         }
-    ]
+    ],
+    "return_value":{
+        "input":{
+            "type": "read",
+            "key": "poem"
+        }
+    }
 }

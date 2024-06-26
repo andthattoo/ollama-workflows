@@ -79,5 +79,11 @@
             "source":"B",
             "target":"__end"
         }
-    ]
+    ],
+    "return_value":{
+        "input":{
+            "type": "read",
+            "key": "final_result"
+        }
+    }
 }

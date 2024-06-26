@@ -137,6 +137,11 @@ pub struct Task {
 }
 
 #[derive(Debug, Deserialize)]
+pub struct TaskOutput {
+    pub input: InputValue,
+}
+
+#[derive(Debug, Deserialize)]
 pub struct Edge {
     pub source: String,
     pub target: String,

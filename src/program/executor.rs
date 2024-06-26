@@ -66,7 +66,7 @@ impl Executor {
         input: Option<&Entry>,
         workflow: Workflow,
         memory: &mut ProgramMemory,
-    ) {
+    ) -> String {
         let config = workflow.get_config();
         let max_steps = config.max_steps;
         let max_time = config.max_time;
@@ -148,6 +148,9 @@ impl Executor {
             }
             num_steps += 1;
         }
+        let rv = workflow.get_return_value();
+        let return_value = self.handle_input(&rv.input, memory).await;
+        return_value.to_string().clone()
     }
 
     async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory, config: &Config) -> bool {
