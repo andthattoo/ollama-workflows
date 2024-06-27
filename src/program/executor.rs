@@ -72,6 +72,12 @@ impl Executor {
         let max_time = config.max_time;
 
         warn!("------------------");
+
+        if let Some(external_memory) = &workflow.external_memory {
+            warn!("Reading external memory into Stack");
+            memory.read_external_memory(external_memory);
+        }
+
         warn!("Executing workflow");
         info!("Max steps: {}, Max time: {}", &max_steps, &max_time);
 

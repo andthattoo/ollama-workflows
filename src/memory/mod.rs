@@ -9,6 +9,8 @@ use cache::Cache;
 use files::FileSystem;
 use stack::Stack;
 
+use std::collections::HashMap;
+
 /// ProgramMemory is a struct that holds the cache, file_system, and stack.
 pub struct ProgramMemory {
     cache: Cache,
@@ -33,6 +35,15 @@ impl Default for ProgramMemory {
 }
 
 impl ProgramMemory {
+    /// Read external memory into Stack
+    pub fn read_external_memory(&mut self, external_memory: &HashMap<types::ID, types::StackPage>) {
+        for (key, value) in external_memory {
+            for entry in value {
+                self.push(key.clone(), entry.clone());
+            }
+        }
+    }
+
     /// Read from the cache.
     pub fn read(&self, key: &types::ID) -> Option<&types::Entry> {
         self.cache.get(key)

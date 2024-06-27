@@ -1,9 +1,12 @@
 use super::atomics::{Config, Edge, Task, TaskOutput};
+use crate::memory::types::{StackPage, ID};
+use std::collections::HashMap;
 
 /// Workflow serves as a container for the tasks and steps that make up a workflow.
 #[derive(Debug, serde::Deserialize)]
 pub struct Workflow {
     config: Config,
+    pub external_memory: Option<HashMap<ID, StackPage>>,
     tasks: Vec<Task>,
     steps: Vec<Edge>,
     return_value: TaskOutput,
@@ -14,10 +17,12 @@ impl Workflow {
         tasks: Vec<Task>,
         steps: Vec<Edge>,
         config: Config,
+        external_memory: Option<HashMap<ID, StackPage>>,
         return_value: TaskOutput,
     ) -> Self {
         Workflow {
             config,
+            external_memory,
             tasks,
             steps,
             return_value,
