@@ -39,3 +39,17 @@ async fn test_insert_workflow() {
     let input = Entry::try_value_or_str("How would does reiki work?");
     exe.execute(Some(&input), workflow, &mut memory).await;
 }
+
+/// Test the user workflow
+/// This workflow samples random variables and produces reviews based on sampled persona
+#[tokio::test]
+async fn test_user_workflow() {
+    dotenv().ok();
+    let env = Env::default().filter_or("LOG_LEVEL", "info");
+    env_logger::Builder::from_env(env).init();
+    let exe = Executor::new(Model::GPT4o);
+    let workflow = Workflow::new_from_json("./tests/test_workflows/users.json").unwrap();
+    let mut memory = ProgramMemory::new();
+    let input = Entry::try_value_or_str("How would does reiki work?");
+    exe.execute(Some(&input), workflow, &mut memory).await;
+}

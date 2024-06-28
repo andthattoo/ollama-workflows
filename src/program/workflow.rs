@@ -1,11 +1,47 @@
 use super::atomics::{Config, Edge, Task, TaskOutput};
-use crate::memory::types::{StackPage, ID};
+use crate::memory::types::{Entry, StackPage, ID};
+use serde::{Deserialize, Deserializer};
+use serde_json::Value;
 use std::collections::HashMap;
+
+/// Custom deserializer for external memory.
+fn deserialize_external_memory<'de, D>(
+    deserializer: D,
+) -> Result<Option<HashMap<ID, StackPage>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let value: Value = Deserialize::deserialize(deserializer)?;
+    let map = value
+        .as_object()
+        .ok_or_else(|| serde::de::Error::custom("Expected a map"))?;
+
+    let mut external_memory = HashMap::new();
+
+    for (key, val) in map {
+        if let Some(array) = val.as_array() {
+            let mut stack_page = Vec::new();
+            for item in array {
+                if let Some(s) = item.as_str() {
+                    stack_page.push(Entry::String(s.to_string()));
+                } else if item.is_object() {
+                    stack_page.push(Entry::Json(item.clone()));
+                } else {
+                    return Err(serde::de::Error::custom("Invalid entry format"));
+                }
+            }
+            external_memory.insert(key.clone(), stack_page);
+        }
+    }
+
+    Ok(Some(external_memory))
+}
 
 /// Workflow serves as a container for the tasks and steps that make up a workflow.
 #[derive(Debug, serde::Deserialize)]
 pub struct Workflow {
     config: Config,
+    #[serde(deserialize_with = "deserialize_external_memory")]
     pub external_memory: Option<HashMap<ID, StackPage>>,
     tasks: Vec<Task>,
     steps: Vec<Edge>,
