@@ -39,29 +39,31 @@ impl Clone for Entry {
     }
 }
 
-pub enum MemoryReturnType<'a> {
-    EntryRef(Option<&'a Entry>),
+#[derive(Debug, Clone)]
+pub enum MemoryReturnType {
+    //<'a>
+    //EntryRef(Option<&'a Entry>),
     Entry(Option<Entry>),
     EntryVec(Option<Vec<Entry>>),
 }
 
-impl<'a> MemoryReturnType<'a> {
+impl MemoryReturnType {
     pub fn is_none(&self) -> bool {
         match self {
-            MemoryReturnType::EntryRef(entry_ref) => entry_ref.is_none(),
+            //MemoryReturnType::EntryRef(entry_ref) => entry_ref.is_none(),
             MemoryReturnType::Entry(entry) => entry.is_none(),
             MemoryReturnType::EntryVec(entry_vec) => entry_vec.is_none(),
         }
     }
 }
 
-impl<'a> fmt::Display for MemoryReturnType<'a> {
+impl fmt::Display for MemoryReturnType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            MemoryReturnType::EntryRef(entry_ref) => match entry_ref {
+            /*MemoryReturnType::EntryRef(entry_ref) => match entry_ref {
                 Some(entry) => write!(f, "{}", entry),
                 None => write!(f, ""),
-            },
+            },*/
             MemoryReturnType::Entry(entry) => match entry {
                 Some(entry) => write!(f, "{}", entry),
                 None => write!(f, ""),
@@ -73,6 +75,15 @@ impl<'a> fmt::Display for MemoryReturnType<'a> {
                 }
                 write!(f, "{}", result)
             }
+        }
+    }
+}
+
+impl From<MemoryReturnType> for Vec<Entry> {
+    fn from(memory_return: MemoryReturnType) -> Vec<Entry> {
+        match memory_return {
+            MemoryReturnType::EntryVec(entry_vec) => entry_vec.unwrap_or_default(),
+            _ => vec![],
         }
     }
 }

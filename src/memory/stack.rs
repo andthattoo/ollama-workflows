@@ -16,10 +16,10 @@ impl Stack {
         self.pages.get(key)
     }
 
-    pub fn peek(&self, key: &str, index: usize) -> Option<&Entry> {
+    pub fn peek(&self, key: &str, index: usize) -> Option<Entry> {
         let vec = self.pages.get(key);
         if let Some(vec) = vec {
-            return vec.get(index);
+            return vec.get(index).cloned();
         }
         None
     }

@@ -198,13 +198,13 @@ impl Executor {
         info!("Executing task: {} with id {}", &task.name, &task.id);
         info!("Using operator: {:?}", &task.operator);
 
-        let mut input_map: HashMap<String, String> = HashMap::new();
+        let mut input_map: HashMap<String, MemoryReturnType> = HashMap::new();
         for input in &task.inputs {
             let value = self.handle_input(&input.value, memory).await;
             if input.required && value.is_none() {
                 return false;
             }
-            input_map.insert(input.name.clone(), value.to_string());
+            input_map.insert(input.name.clone(), value.clone());
         }
 
         match task.operator {
@@ -238,7 +238,7 @@ impl Executor {
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::Check => {
-                let input = self.prepare_check(input_map);
+                let input = self.prepare_check(&input_map);
                 let result = self.check(&input.0, &input.1);
                 return result;
             }
@@ -258,21 +258,32 @@ impl Executor {
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::Sample => {
-                let mut sample_mix = "".to_string();
-                for input in &task.inputs {
-                    if input.value.value_type != InputValueType::GetAll {
-                        error!("Input value type should be GetAll for sample");
+                // Read Stack for each key in the inputs
+                // Sample from the stack
+                // fill prompts with values
+                // write to memory
+
+                let mut sample_map: HashMap<String, MemoryReturnType> = HashMap::new();
+                for (key, value) in &input_map {
+                    let v = Vec::<Entry>::from(value.clone());
+                    if !v.is_empty() {
+                        error!("Input for Sample operator cannot be GetAll");
                         return false;
+                    } else {
+                        let stack_lookup = value.to_string();
+                        let entry = memory.get_all(&stack_lookup);
+                        if entry.is_none() {
+                            error!("Error sampling: {:?}", key);
+                            return false;
+                        }
+                        let sample = self.sample(&entry.unwrap());
+                        sample_map.insert(key.clone(), MemoryReturnType::Entry(Some(sample)));
                     }
-                    let to_sample = memory.get_all(&input.value.key);
-                    if to_sample.is_none() {
-                        error!("Error sampling: {:?}", "No results found");
-                        return false;
-                    }
-                    sample_mix.push_str(&self.sample(&to_sample.unwrap()).to_string())
                 }
-                let result_entry = Entry::try_value_or_str(&sample_mix);
-                self.handle_output(task, result_entry, memory).await;
+
+                let prompt = self.fill_prompt(&task.prompt, &sample_map);
+                self.handle_output(task, Entry::try_value_or_str(&prompt), memory)
+                    .await;
             }
             Operator::End => {}
         };
@@ -280,17 +291,22 @@ impl Executor {
         true
     }
 
-    fn fill_prompt(&self, prompt: &str, input_values: &HashMap<String, String>) -> String {
+    fn fill_prompt(
+        &self,
+        prompt: &str,
+        input_values: &HashMap<String, MemoryReturnType>,
+    ) -> String {
         let mut filled_prompt = prompt.to_string();
         for (key, value) in input_values {
-            filled_prompt = filled_prompt.replace(&format!("{{{}}}", key), value);
+            filled_prompt =
+                filled_prompt.replace(&format!("{{{}}}", key), value.to_string().as_str());
         }
         filled_prompt
     }
 
-    fn prepare_check(&self, input_map: HashMap<String, String>) -> (String, String) {
-        let input = &input_map.get(R_OUTPUTS);
-        let expected = &input_map.get(R_EXPECTED);
+    fn prepare_check(&self, input_map: &HashMap<String, MemoryReturnType>) -> (String, String) {
+        let input = input_map.get(R_OUTPUTS);
+        let expected = input_map.get(R_EXPECTED);
 
         if let Some(i) = input {
             if let Some(e) = expected {
@@ -357,15 +373,15 @@ impl Executor {
         }
     }
 
-    async fn handle_input<'a>(
-        &'a self,
-        input_value: &'a InputValue,
-        memory: &'a mut ProgramMemory,
-    ) -> MemoryReturnType<'a> {
-        return match input_value.value_type {
-            InputValueType::Input => MemoryReturnType::EntryRef(memory.read(&R_INPUT.to_string())),
-            InputValueType::Read => MemoryReturnType::EntryRef(memory.read(&input_value.key)),
-            InputValueType::Peek => MemoryReturnType::EntryRef(
+    async fn handle_input(
+        &self,
+        input_value: &InputValue,
+        memory: &mut ProgramMemory,
+    ) -> MemoryReturnType {
+        match input_value.value_type {
+            InputValueType::Input => MemoryReturnType::Entry(memory.read(&R_INPUT.to_string())),
+            InputValueType::Read => MemoryReturnType::Entry(memory.read(&input_value.key)),
+            InputValueType::Peek => MemoryReturnType::Entry(
                 memory.peek(&input_value.key, input_value.index.unwrap_or(0)),
             ),
             InputValueType::GetAll => MemoryReturnType::EntryVec(memory.get_all(&input_value.key)),
@@ -376,7 +392,7 @@ impl Executor {
             InputValueType::Size => MemoryReturnType::Entry(Some(Entry::try_value_or_str(
                 &memory.size(&input_value.key).to_string(),
             ))),
-        };
+        }
     }
 
     async fn generate_text(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {

@@ -12,8 +12,8 @@ impl Cache {
         }
     }
 
-    pub fn get(&self, key: &ID) -> Option<&Entry> {
-        self.pages.get(key)
+    pub fn get(&self, key: &ID) -> Option<Entry> {
+        self.pages.get(key).cloned()
     }
 
     pub fn set(&mut self, key: ID, value: Entry) {

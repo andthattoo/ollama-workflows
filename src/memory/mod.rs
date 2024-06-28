@@ -45,7 +45,7 @@ impl ProgramMemory {
     }
 
     /// Read from the cache.
-    pub fn read(&self, key: &types::ID) -> Option<&types::Entry> {
+    pub fn read(&self, key: &types::ID) -> Option<types::Entry> {
         self.cache.get(key)
     }
     /// Write to the cache.
@@ -61,7 +61,7 @@ impl ProgramMemory {
         self.stack.pop(key)
     }
     /// Peek from the stack.
-    pub fn peek(&self, key: &str, index: usize) -> Option<&types::Entry> {
+    pub fn peek(&self, key: &str, index: usize) -> Option<types::Entry> {
         self.stack.peek(key, index)
     }
     /// Get all from the stack.
