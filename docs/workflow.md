@@ -4,13 +4,14 @@ Core idea to [ollama-workflows](readme.md) is to program LLMs through `workflows
 
 ## Structure
 
-A workflow JSON has five main fields:
+A workflow JSON has six main fields:
 
 1. `name`: A string representing the name of the workflow.
 2. `description`: A string describing the purpose of the workflow.
 3. `config`: An object containing the configuration settings for the workflow.
 4. `tasks`: An array of task objects defining the individual tasks in the workflow.
 5. `steps`: An array of step objects specifying the order of execution and conditionals for the tasks.
+6. `return_value`: A memory input to read and return the final designated value
 
 ## Config
 
@@ -175,6 +176,7 @@ More detailed examples can be found on [test workflows](../tests/test_workflows)
 - `function_calling`
 - `check`
 - `search`
+- `sample`
 - `end`.
 
 ## Memory Operations
@@ -198,7 +200,21 @@ Memory operations are divided by I/O
 
 **Outputs**
 
-- `write`: Write to the cache.
+- `write`: Write to the cache. 
+
+Example:
+```json
+{
+    "type": "write",
+    "key": "web_search_query",
+    "value": "__result"
+},
+```
+This example writes the output of the task to cache. `__result` is the reserverd keyword for resulting value. Equivalent to
+```json
+"web_search_query": "the resulting value of the task"
+``` 
+
 - `push`: Push to the stack.
 - `insert`: Insert into the file system.
 

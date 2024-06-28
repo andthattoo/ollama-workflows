@@ -263,7 +263,7 @@ impl Executor {
                 // fill prompts with values
                 // write to memory
 
-                let mut sample_map: HashMap<String, MemoryReturnType> = HashMap::new();
+                let mut prompt = self.fill_prompt(&task.prompt, &input_map);
                 for (key, value) in &input_map {
                     let v = Vec::<Entry>::from(value.clone());
                     if !v.is_empty() {
@@ -277,11 +277,10 @@ impl Executor {
                             return false;
                         }
                         let sample = self.sample(&entry.unwrap());
-                        sample_map.insert(key.clone(), MemoryReturnType::Entry(Some(sample)));
+                        prompt.push_str(&format!(": {}", sample));
                     }
                 }
-
-                let prompt = self.fill_prompt(&task.prompt, &sample_map);
+                info!("Sampled: {}", &prompt);
                 self.handle_output(task, Entry::try_value_or_str(&prompt), memory)
                     .await;
             }
