@@ -54,10 +54,20 @@ pub struct Executor {
 }
 
 impl Executor {
-    /// Create a new Executor
+    /// Create a new Executor with a default Ollama instance.
     pub fn new(model: Model) -> Self {
-        let llm = Ollama::default();
-        Executor { model, llm }
+        Self {
+            model,
+            llm: Ollama::default(),
+        }
+    }
+
+    /// Create a new Executor with a given Ollama instance
+    pub fn new_at(model: Model, host: &str, port: u16) -> Self {
+        Self {
+            model,
+            llm: Ollama::new(host, port),
+        }
     }
 
     /// Executes the workflow
