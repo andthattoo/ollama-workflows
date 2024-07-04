@@ -62,7 +62,7 @@ impl Executor {
         }
     }
 
-    /// Create a new Executor with a given Ollama instance
+    /// Create a new Executor for an Ollama instance at a specific host and port.
     pub fn new_at(model: Model, host: &str, port: u16) -> Self {
         Self {
             model,
