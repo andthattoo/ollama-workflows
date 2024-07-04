@@ -4,7 +4,7 @@ Core idea to [ollama-workflows](readme.md) is to program LLMs through `workflows
 
 ## Structure
 
-A workflow JSON has six main fields:
+A workflow JSON has following fields:
 
 1. `name`: A string representing the name of the workflow.
 2. `description`: A string describing the purpose of the workflow.
