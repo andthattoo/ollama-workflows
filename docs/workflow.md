@@ -24,7 +24,56 @@ The `config` field is an object with the following properties:
 - `max_tokens`: An optional integer specifying the maximum number of tokens for LLMs to generate per run.
 
 ### Tools
-asdasd
+Ollama-workflows provides ready-to-use tools
+```rust
+pub static TOOLS: [&str; 6] = [
+    "browserless",
+    "jina",
+    "serper",
+    "duckduckgo",
+    "stock",
+    "scraper",
+];
+```
+
+Main functionalities of tools are `Search` & `Scrape`. 
+
+#### Search tools
+`jina`
+
+Jina utilizies [Reader API](https://jina.ai/reader/ ) by Jina. **This can work with or without paid API keys.** Has higher rates when used with API. It searches the internet, yielding well formatted results. 
+
+`serper`
+
+Serper utilizes [Serper's](https://serper.dev/) unmatched Google Search API to search google and yield results from web. **Requires API Key**
+
+`duckduckgo`
+
+Utilizes duckduckgo to search the web. Doesn't require an API key. 
+
+#### Scrape tools
+`browserless`
+
+[Browserless](https://www.browserless.io/) offers a docker image that runs a headless browser to help scraping. Renders dynamic webpages. To use, you need to run a browserless image. **It doesn't require a paid service yet you need to make up a token and use it in your .env file.** 
+
+Run:
+```bash
+docker run \
+  --rm \
+  -p 3000:3000 \
+  -e "CONCURRENT=10" \
+  -e "TOKEN=<YOUR_MADE_UP_TOKEN>" \
+  ghcr.io/browserless/chromium
+```
+
+`scraper`
+
+Scraper is a request based scraping tool, **doesn't require API keys**. 
+
+#### Stock tool
+`stock`
+
+Helps receiving tickers values and **doesn't require an API key**.
 
 ## Tasks
 
