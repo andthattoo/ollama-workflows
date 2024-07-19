@@ -26,6 +26,8 @@ Ollama Workflows does not require chat history and allows attaching specific pro
 
 - **Workflows**: A Workflow is the instruction set for the program.
 
+- **OpenAI Testing**: Ollama-workflows fully supports OpenAI, for faster prototyping and seamless testing for your workflows. 
+
 For detailed documentation, please refer to the [documentation](docs/readme.md).
 
 ---
