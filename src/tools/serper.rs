@@ -193,7 +193,7 @@ pub struct SearchTool;
 #[async_trait]
 impl Tool for SearchTool {
     fn name(&self) -> String {
-        "Google Search Tool".to_string()
+        "google_search_tool".to_string()
     }
 
     fn description(&self) -> String {
@@ -221,15 +221,15 @@ impl Tool for SearchTool {
         })
     }
     /*
-                   "stype": {
-                   "type": "string",
-                   "description": "The search type (search, scholar, or news)"
-               }
+                "search_type": {
+                    "type": "string",
+                    "description": "The search type (search, scholar, or news)"
+                }
     */
 
     async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
         let query = input["query"].as_str().ok_or("Query is required")?;
-        let stype = input["stype"].as_str().unwrap_or("search");
+        let stype = input["search_type"].as_str().unwrap_or("search");
         let lang = input["lang"].as_str().unwrap_or("en");
         let n_result = input["n_results"].as_u64().unwrap_or(5);
 

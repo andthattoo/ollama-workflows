@@ -4,7 +4,7 @@
     "config": {
         "max_steps": 35,
         "max_time": 600,
-        "tools": ["serper", "jina", "stock"]
+        "tools": ["serper", "jina"]
     },
     "tasks": [
         {

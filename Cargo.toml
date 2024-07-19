@@ -21,6 +21,7 @@ ollama-rs = { git = "https://github.com/andthattoo/ollama-rs", branch = "master"
 ] }
 parking_lot = "0.12.2"
 langchain-rust = "4.2.0"
+openai_dive = "0.5.3"
 scraper = "0.19.0"
 text-splitter = "0.13.1"
 search_with_google = "0.5.0"

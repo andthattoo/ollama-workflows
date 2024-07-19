@@ -6,6 +6,7 @@ use crate::program::errors::ToolError;
 use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
 
 use rand::Rng;
+use serde_json::Value;
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -14,6 +15,10 @@ use std::time::Instant;
 use colored::*;
 use langchain_rust::language_models::llm::LLM;
 use langchain_rust::llm::OpenAI;
+
+use openai_dive::v1::api::Client;
+use openai_dive::v1::resources::chat::*;
+
 use log::{debug, error, info, warn};
 use rand::seq::SliceRandom;
 
@@ -419,7 +424,8 @@ impl Executor {
                 result.message.unwrap().content
             }
             ModelProvider::OpenAI => {
-                let llm = OpenAI::default().with_model(self.model.to_string());
+                let llm: OpenAI<langchain_rust::llm::OpenAIConfig> =
+                    OpenAI::default().with_model(self.model.to_string());
 
                 llm.invoke(prompt)
                     .await
@@ -439,7 +445,8 @@ impl Executor {
 
         let result = match self.model.clone().into() {
             ModelProvider::Ollama => {
-                self.llm
+                let res = self
+                    .llm
                     .send_function_call(
                         FunctionCallRequest::new(
                             self.model.to_string(),
@@ -451,14 +458,73 @@ impl Executor {
                             _ => oai_parser.clone(),
                         },
                     )
-                    .await
+                    .await?;
+                res.message.unwrap().content
             }
             ModelProvider::OpenAI => {
-                unimplemented!("OpenAI function calling is not implemented in this build");
-            }
-        }?;
+                let api_key = std::env::var("OPENAI_API_KEY").expect("$OPENAI_API_KEY is not set");
+                let client = Client::new(api_key);
 
-        Ok(result.message.unwrap().content)
+                let openai_tools: Vec<_> = tools
+                    .iter()
+                    .map(|tool| ChatCompletionTool {
+                        r#type: ChatCompletionToolType::Function,
+                        function: ChatCompletionFunction {
+                            name: tool.name().to_lowercase().replace(' ', "_"),
+                            description: Some(tool.description()),
+                            parameters: tool.parameters(),
+                        },
+                    })
+                    .collect();
+
+                let messages = vec![ChatMessageBuilder::default()
+                    .content(ChatMessageContent::Text(prompt.to_string()))
+                    .build()
+                    .expect("OpenAI function call message build error")];
+
+                let parameters = ChatCompletionParametersBuilder::default()
+                    .model(self.model.to_string())
+                    .messages(messages)
+                    .tools(openai_tools)
+                    .build()
+                    .expect("Error while building tools.");
+
+                let result = client.chat().create(parameters).await.expect("msg");
+                let message = result.choices[0].message.clone();
+
+                let mut results = Vec::<String>::new();
+                if let Some(tool_calls) = message.tool_calls {
+                    for tool_call in tool_calls {
+                        for tool in &tools {
+                            if tool.name().to_lowercase().replace(' ', "_")
+                                == tool_call.function.name
+                            {
+                                let tool_params: Value =
+                                    serde_json::from_str(&tool_call.function.arguments)?;
+                                let res = oai_parser
+                                    .function_call_with_history(
+                                        tool_call.function.name.clone(),
+                                        tool_params,
+                                        tool.clone(),
+                                    )
+                                    .await;
+                                if let Ok(result) = res {
+                                    results.push(result.message.unwrap().content);
+                                } else {
+                                    return Err(OllamaError::from(format!(
+                                        "Could not generate text: {:?}",
+                                        res.err().unwrap()
+                                    )));
+                                }
+                            }
+                        }
+                    }
+                }
+                results.join("\n")
+            }
+        };
+
+        Ok(result)
     }
 
     /// Lists existing models compatible with the `Model` enum.

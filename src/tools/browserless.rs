@@ -13,7 +13,7 @@ pub struct Browserless {}
 #[async_trait]
 impl Tool for Browserless {
     fn name(&self) -> String {
-        "Website Scraper with Javascript support".to_string()
+        "browserless_web_scraper".to_string()
     }
 
     fn description(&self) -> String {

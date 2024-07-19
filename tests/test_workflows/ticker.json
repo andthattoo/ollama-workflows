@@ -1,0 +1,47 @@
+{
+    "name": "Ticker",
+    "description": "This is a ticker workflow",
+    "config":{
+        "max_steps": 5,
+        "max_time": 100,
+        "tools": ["stock"]
+    },
+    "tasks":[
+        {
+            "id": "A",
+            "name": "APPL",
+            "description": "Fetches the current value of $APPL",
+            "prompt": "What is the current value of $APPL?",
+            "inputs":[],
+            "operator": "function_calling",
+            "outputs":[
+                {
+                    "type": "write",
+                    "key": "price",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "__end",
+            "name": "end",
+            "description": "End of the task",
+            "prompt": "End of the task",
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
+        }
+    ],
+    "steps":[
+        {
+            "source":"A",
+            "target":"end"
+        }
+    ],
+    "return_value":{
+        "input":{
+            "type": "read",
+            "key": "price"
+        }
+    }
+}

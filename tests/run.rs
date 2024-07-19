@@ -15,6 +15,29 @@ async fn test_search_workflow() {
 }
 
 #[tokio::test]
+async fn test_search_workflow_openai() {
+    dotenv().ok();
+    let env = Env::default().filter_or("LOG_LEVEL", "info");
+    env_logger::Builder::from_env(env).init();
+    let exe = Executor::new(Model::GPT4oMini);
+    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
+    let mut memory = ProgramMemory::new();
+    let input = Entry::try_value_or_str("Best ZK Rollups to date, july 2024?");
+    exe.execute(Some(&input), workflow, &mut memory).await;
+}
+
+#[tokio::test]
+async fn test_ticker_workflow_openai() {
+    dotenv().ok();
+    let env = Env::default().filter_or("LOG_LEVEL", "info");
+    env_logger::Builder::from_env(env).init();
+    let exe = Executor::new(Model::GPT4oMini);
+    let workflow = Workflow::new_from_json("./tests/test_workflows/ticker.json").unwrap();
+    let mut memory = ProgramMemory::new();
+    exe.execute(None, workflow, &mut memory).await;
+}
+
+#[tokio::test]
 async fn test_simple_workflow() {
     dotenv().ok();
     let env = Env::default().filter_or("LOG_LEVEL", "info");
@@ -50,6 +73,5 @@ async fn test_user_workflow() {
     let exe = Executor::new(Model::GPT4o);
     let workflow = Workflow::new_from_json("./tests/test_workflows/users.json").unwrap();
     let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("How would does reiki work?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+    exe.execute(None, workflow, &mut memory).await;
 }

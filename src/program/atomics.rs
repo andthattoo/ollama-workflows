@@ -256,6 +256,9 @@ pub enum Model {
     /// [OpenAI's GPT-4o model](https://platform.openai.com/docs/models/gpt-4o)
     #[serde(rename = "gpt-4o")]
     GPT4o,
+    /// [OpenAI's GPT-4o mini model](https://platform.openai.com/docs/models/gpt-4o-mini)
+    #[serde(rename = "gpt-4o-mini")]
+    GPT4oMini,
 }
 
 /// A model provider is a service that hosts the chosen Model.
@@ -278,6 +281,7 @@ impl From<Model> for ModelProvider {
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
+            Model::GPT4oMini => ModelProvider::OpenAI,
         }
     }
 }

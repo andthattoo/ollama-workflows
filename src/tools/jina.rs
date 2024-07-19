@@ -10,7 +10,7 @@ pub struct Jina {}
 #[async_trait]
 impl Tool for Jina {
     fn name(&self) -> String {
-        "Jina Web Scraper".to_string()
+        "jina_web_scraper".to_string()
     }
 
     fn description(&self) -> String {

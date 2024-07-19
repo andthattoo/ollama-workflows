@@ -297,6 +297,9 @@ name = "bytes"
 version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "514de17de45fdb8dc022b1a7975556c53c86f9f0aa5f534b98977b171857c2c9"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "cc"
@@ -1911,6 +1914,7 @@ dependencies = [
  "langchain-rust",
  "log",
  "ollama-rs",
+ "openai_dive",
  "parking_lot",
  "rand 0.8.5",
  "regex",
@@ -1930,6 +1934,21 @@ name = "once_cell"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
+
+[[package]]
+name = "openai_dive"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3bc4497e4ed579ba6e3489c1778eecc4fb4c814da62464c8269a7a59e0db4980"
+dependencies = [
+ "bytes 1.6.0",
+ "derive_builder",
+ "reqwest 0.12.4",
+ "serde",
+ "serde_json",
+ "tokio 1.38.0",
+ "tokio-util 0.7.11",
+]
 
 [[package]]
 name = "openssl"
