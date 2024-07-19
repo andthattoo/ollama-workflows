@@ -94,10 +94,9 @@ pub enum Model {
     GPT3_5Turbo,
     GPT4Turbo,
     GPT4o,
+    GPT4oMini
 }
 ```
-
-**Important!** Function calling is currently not implemented for OpenAI models.
 
 ### Logs
 
