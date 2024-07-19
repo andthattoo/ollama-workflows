@@ -1,44 +1,30 @@
+use std::sync::Arc;
+
 use super::types::{Entry, FilePage};
 use crate::program::errors::{EmbeddingError, FileSystemError};
+use async_trait::async_trait;
+use log::debug;
 use ollama_rs::Ollama;
+use openai_dive::v1::api::Client;
+use openai_dive::v1::models::EmbeddingsEngine;
+use openai_dive::v1::resources::embedding::{
+    EmbeddingEncodingFormat, EmbeddingInput, EmbeddingOutput, EmbeddingParametersBuilder,
+};
 use serde_json::json;
 use simsimd::SpatialSimilarity;
 use text_splitter::TextSplitter;
 
 pub static EMBEDDING_MODEL: &str = "hellord/mxbai-embed-large-v1:f16";
-struct Embedder {
-    ollama: Ollama,
-    model: String,
+
+#[async_trait]
+pub trait Embedder {
+    async fn generate_embeddings(&self, prompt: &str) -> Result<Vec<f32>, EmbeddingError>;
+    async fn generate_query_embeddings(&self, query: &str) -> Result<Vec<f32>, EmbeddingError>;
 }
 
-impl Embedder {
-    pub fn new() -> Self {
-        Embedder {
-            ollama: Ollama::default(),
-            model: EMBEDDING_MODEL.to_string(),
-        }
-    }
+struct OllamaEmbedder {}
 
-    pub async fn generate_embeddings(&self, prompt: &str) -> Result<Vec<f32>, EmbeddingError> {
-        let res = self
-            .ollama
-            .generate_embeddings(self.model.clone(), prompt.to_string(), None)
-            .await;
-        match res {
-            Ok(res) => Ok(res.embeddings.iter().map(|&x| x as f32).collect()),
-            Err(_) => Err(EmbeddingError::DocumentEmbedding(prompt.to_string())),
-        }
-    }
-
-    pub async fn generate_query_embeddings(&self, query: &str) -> Result<Vec<f32>, EmbeddingError> {
-        let prompt = Embedder::transform_query(query);
-        let res = self.generate_embeddings(&prompt).await;
-        match res {
-            Ok(res) => Ok(res),
-            Err(_) => Err(EmbeddingError::QueryEmbedding(query.to_string())),
-        }
-    }
-
+impl OllamaEmbedder {
     fn transform_query(query: &str) -> String {
         format!(
             "Represent this sentence for searching relevant passages: {}",
@@ -46,17 +32,87 @@ impl Embedder {
         )
     }
 }
+#[async_trait]
+impl Embedder for OllamaEmbedder {
+    async fn generate_embeddings(&self, prompt: &str) -> Result<Vec<f32>, EmbeddingError> {
+        let ollama = Ollama::default();
+        let res = ollama
+            .generate_embeddings(EMBEDDING_MODEL.to_string(), prompt.to_string(), None)
+            .await;
+        match res {
+            Ok(res) => Ok(res.embeddings.iter().map(|&x| x as f32).collect()),
+            Err(_) => Err(EmbeddingError::DocumentEmbedding(prompt.to_string())),
+        }
+    }
+
+    async fn generate_query_embeddings(&self, query: &str) -> Result<Vec<f32>, EmbeddingError> {
+        let prompt = OllamaEmbedder::transform_query(query);
+        let res = self.generate_embeddings(&prompt).await;
+        match res {
+            Ok(res) => Ok(res),
+            Err(_) => Err(EmbeddingError::QueryEmbedding(query.to_string())),
+        }
+    }
+}
+
+struct OpenAIEmbedder {}
+
+#[async_trait]
+impl Embedder for OpenAIEmbedder {
+    async fn generate_embeddings(&self, _prompt: &str) -> Result<Vec<f32>, EmbeddingError> {
+        let api_key = std::env::var("OPENAI_API_KEY").expect("$OPENAI_API_KEY is not set");
+        let client = Client::new(api_key);
+
+        let parameters = EmbeddingParametersBuilder::default()
+            .model(EmbeddingsEngine::TextEmbeddingAda002.to_string())
+            .input(EmbeddingInput::String(_prompt.to_string()))
+            .encoding_format(EmbeddingEncodingFormat::Float)
+            .build()
+            .expect("Error building OpenAI embedder");
+
+        let result = client.embeddings().create(parameters).await;
+
+        match result {
+            Ok(result) => {
+                let embeddings = result.data[0].clone();
+                return match embeddings.embedding {
+                    EmbeddingOutput::Float(f64_vec) => {
+                        let vec = f64_vec.iter().map(|&x| x as f32).collect();
+                        Ok(vec)
+                    }
+                    _ => Err(EmbeddingError::DocumentEmbedding(
+                        "OpenAI embedding result conversion error".to_string(),
+                    )),
+                };
+            }
+            Err(_) => Err(EmbeddingError::DocumentEmbedding(
+                "OpenAI Embedding response error".to_string(),
+            )),
+        }
+    }
+
+    async fn generate_query_embeddings(&self, _query: &str) -> Result<Vec<f32>, EmbeddingError> {
+        self.generate_embeddings(_query).await
+    }
+}
 
 pub struct FileSystem {
-    embedder: Embedder,
+    embedder: Arc<dyn Embedder>,
     entries: Vec<FilePage>,
 }
 
 impl FileSystem {
     pub fn new() -> Self {
-        FileSystem {
-            embedder: Embedder::new(),
-            entries: Vec::new(),
+        if std::env::var("OPENAI_API_KEY").is_ok() {
+            FileSystem {
+                embedder: Arc::new(OpenAIEmbedder {}),
+                entries: Vec::new(),
+            }
+        } else {
+            FileSystem {
+                embedder: Arc::new(OllamaEmbedder {}),
+                entries: Vec::new(),
+            }
         }
     }
 
@@ -71,6 +127,9 @@ impl FileSystem {
         let sentences: Vec<String> = chunks.map(|s| s.to_string()).collect();
 
         for sentence in sentences {
+            if sentence.len() < 25 {
+                continue;
+            }
             let embedding = self.embedder.generate_embeddings(&sentence).await;
             match embedding {
                 Ok(embedding) => {
@@ -97,6 +156,7 @@ impl FileSystem {
                 let mut passages = Vec::new();
                 for r in res {
                     //can add distance threshold here
+                    debug!("Similarity: {}, passage: {}", r.1, r.0);
                     let entry = Entry::Json(json!({
                         "passage": r.0,
                         "similarity": r.1
@@ -139,19 +199,19 @@ impl FileSystem {
     }
 
     fn brute_force_top_n(&self, query: &[f32], n: usize) -> Vec<(String, f32)> {
-        let mut distances = Vec::new();
+        let mut similarities = Vec::new();
         for (_, v) in &self.entries {
-            let distance = f32::cosine(query, v).unwrap_or(0.0) as f32;
-            distances.push(distance);
+            let similarity = f32::cosine(query, v).unwrap_or(0.0) as f32;
+            similarities.push(similarity);
         }
 
-        let mut indices: Vec<usize> = (0..distances.len()).collect();
-        indices.sort_by(|&a, &b| distances[a].partial_cmp(&distances[b]).unwrap());
+        let mut indices: Vec<usize> = (0..similarities.len()).collect();
+        indices.sort_by(|&a, &b| similarities[b].partial_cmp(&similarities[a]).unwrap());
         let top_indices: Vec<usize> = indices.into_iter().take(n).collect();
         //Collect into (String, f32)
         let top_results: Vec<(String, f32)> = top_indices
             .iter()
-            .map(|&i| (self.entries[i].0.clone(), distances[i]))
+            .map(|&i| (self.entries[i].0.clone(), similarities[i]))
             .collect();
         top_results
     }

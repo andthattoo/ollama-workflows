@@ -52,15 +52,25 @@ async fn test_simple_workflow() {
 /// Test the insert workflow
 /// This workflow inserts a document into the file system.
 #[tokio::test]
-async fn test_insert_workflow() {
+async fn test_insert_workflow_ollama() {
     dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
+    let env = Env::default().filter_or("LOG_LEVEL", "debug");
     env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT3_5Turbo);
+    let exe = Executor::new(Model::Phi3Medium);
     let workflow = Workflow::new_from_json("./tests/test_workflows/insert.json").unwrap();
     let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("How would does reiki work?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+    exe.execute(None, workflow, &mut memory).await;
+}
+
+#[tokio::test]
+async fn test_insert_workflow_openai() {
+    dotenv().ok();
+    let env = Env::default().filter_or("LOG_LEVEL", "debug");
+    env_logger::Builder::from_env(env).init();
+    let exe = Executor::new(Model::GPT4oMini);
+    let workflow = Workflow::new_from_json("./tests/test_workflows/insert.json").unwrap();
+    let mut memory = ProgramMemory::new();
+    exe.execute(None, workflow, &mut memory).await;
 }
 
 /// Test the user workflow
