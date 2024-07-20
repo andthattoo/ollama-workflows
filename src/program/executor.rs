@@ -174,29 +174,29 @@ impl Executor {
         let mut return_string = return_value.to_string().clone();
 
         if let Some(post_pr) = rv.post_process.clone() {
-            if let Some(proccess) = post_pr.into_iter().next() {
-                return match proccess.process_type {
+            for process in post_pr {
+                return_string = match process.process_type {
                     PostProcessType::Replace => {
-                        if proccess.lhs.is_none() || proccess.rhs.is_none() {
+                        if process.lhs.is_none() || process.rhs.is_none() {
                             error!("lhs and rhs are required for replace post process");
-                            return return_string;
+                            continue;
                         }
-                        return_string.replace(&proccess.lhs.unwrap(), &proccess.rhs.unwrap())
+                        return_string.replace(&process.lhs.unwrap(), &process.rhs.unwrap())
                     }
                     PostProcessType::Append => {
-                        if proccess.lhs.is_none() {
+                        if process.lhs.is_none() {
                             error!("lhs is required for append post process");
-                            return return_string;
+                            continue;
                         }
-                        return_string.push_str(&proccess.lhs.unwrap());
+                        return_string.push_str(&process.lhs.unwrap());
                         return_string
                     }
                     PostProcessType::Prepend => {
-                        if proccess.lhs.is_none() {
+                        if process.lhs.is_none() {
                             error!("lhs is required for prepend post process");
-                            return return_string;
+                            continue;
                         }
-                        format!("{}{}", proccess.lhs.unwrap(), return_string)
+                        format!("{}{}", process.lhs.unwrap(), return_string)
                     }
                     PostProcessType::ToLower => return_string.to_lowercase(),
                     PostProcessType::ToUpper => return_string.to_uppercase(),
@@ -346,18 +346,37 @@ impl Executor {
         tool_names: Vec<String>,
         custom_template: Option<CustomToolTemplate>,
     ) -> Result<Vec<Arc<dyn Tool>>, ToolError> {
-        if !in_tools(&tool_names) {
-            return Err(ToolError::ToolDoesNotExist);
+        let mut tools: Vec<Arc<dyn Tool>> = vec![];
+
+        if tool_names.len() == 1 && tool_names[0] == *"ALL".to_string() {
+            // Check if serper API is set
+            // ALL results in [jina, serper, stock] or [jina, duckduckgo, stock]
+            let serper_key = std::env::var("SERPER_API_KEY");
+            if serper_key.is_err() {
+                tools.push(Arc::new(DDGSearcher::new()));
+            } else {
+                tools.push(Arc::new(SearchTool {}));
+            }
+            tools.push(Arc::new(StockScraper::new()));
+            tools.push(Arc::new(Jina {}));
+        } else {
+            if !in_tools(&tool_names) {
+                return Err(ToolError::ToolDoesNotExist);
+            }
+
+            let _tools: Vec<Arc<dyn Tool>> = tool_names
+                .iter()
+                .map(|tool| self.get_tool_by_name(tool))
+                .collect();
+
+            tools.extend(_tools);
         }
-        let mut tools: Vec<Arc<dyn Tool>> = tool_names
-            .iter()
-            .map(|tool| self.get_tool_by_name(tool))
-            .collect();
 
         if let Some(template) = custom_template {
             let custom_tool = Arc::new(CustomTool::new_from_template(template));
             tools.push(custom_tool);
         }
+
         Ok(tools)
     }
 

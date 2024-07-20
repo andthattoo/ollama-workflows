@@ -1,0 +1,75 @@
+{
+    "name": "Simple",
+    "description": "This is a simple workflow",
+    "config":{
+        "max_steps": 5,
+        "max_time": 100,
+        "tools": ["ALL"]
+    },
+    "tasks":[
+        {
+            "id": "A",
+            "name": "Random Query",
+            "description": "Writes a random question about Kapadokya.",
+            "prompt": "Please write a random question about Kapadokya.",
+            "inputs":[],
+            "operator": "generation",
+            "outputs":[
+                {
+                    "type": "write",
+                    "key": "query",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "B",
+            "name": "Search",
+            "description": "Searches query.",
+            "prompt": "Find useful information about the query: {query}",
+            "inputs":[
+                {
+                    "name": "query",
+                    "value": {
+                        "type": "read",
+                        "key": "query"
+                    },
+                    "required": true
+                }
+            ],
+            "operator": "function_calling",
+            "outputs":[
+                {
+                    "type": "write",
+                    "key": "search",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "__end",
+            "name": "end",
+            "description": "End of the task",
+            "prompt": "End of the task",
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
+        }
+    ],
+    "steps":[
+        {
+            "source":"A",
+            "target":"B"
+        },
+        {
+            "source":"B",
+            "target":"end"
+        }
+    ],
+    "return_value":{
+        "input":{
+            "type": "read",
+            "key": "search"
+        }
+    }
+}

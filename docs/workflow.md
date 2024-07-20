@@ -39,9 +39,6 @@ pub static TOOLS: [&str; 6] = [
 Main functionalities of tools are `Search` & `Scrape`. 
 
 #### Search tools
-`jina`
-
-Jina utilizies [Reader API](https://jina.ai/reader/ ) by Jina. **This can work with or without paid API keys.** Has higher rates when used with API. It searches the internet, yielding well formatted results. 
 
 `serper`
 
@@ -52,6 +49,11 @@ Serper utilizes [Serper's](https://serper.dev/) unmatched Google Search API to s
 Utilizes duckduckgo to search the web. Doesn't require an API key. 
 
 #### Scrape tools
+
+`jina`
+
+Jina utilizies [Reader API](https://jina.ai/reader/ ) by Jina. **This can work with or without paid API keys.** Has higher rates when used with API. It searches the internet, yielding well formatted results. 
+
 `browserless`
 
 [Browserless](https://www.browserless.io/) offers a docker image that runs a headless browser to help scraping. Renders dynamic webpages. To use, you need to run a browserless image. **It doesn't require a paid service yet you need to make up a token and use it in your .env file.** 
@@ -74,6 +76,16 @@ Scraper is a request based scraping tool, **doesn't require API keys**.
 `stock`
 
 Helps receiving tickers values and **doesn't require an API key**.
+
+You can also pass in "ALL" keyword to add all possible tool functionalities. 
+
+```json
+    "config":{
+        "max_steps": 5,
+        "max_time": 100,
+        "tools": ["ALL"]
+    },
+```
 
 ## Tasks
 
@@ -247,6 +259,30 @@ Memory operations are divided by I/O
 - `size`: Get the size of the stack.
 - `search`: Search the file system.
 
+Input operations help fill variables in prompts using memory operations.
+
+```json
+            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions, keep it concise and clear. \n\nQuery: {query} \n\n Previous Questions: {history} \n\n Search Query:",
+            "inputs": [
+                {
+                    "name": "query",
+                    "value": {
+                        "type": "input",
+                        "key": ""
+                    },
+                    "required": true
+                },
+                {
+                    "name": "history",
+                    "value": {
+                        "type": "get_all",
+                        "key": "history"
+                    },
+                    "required": false
+                }
+            ],
+```
+
 **Outputs**
 
 - `write`: Write to the cache. 
@@ -265,7 +301,28 @@ This example writes the output of the task to cache. `__result` is the reserverd
 ``` 
 
 - `push`: Push to the stack.
+
+Example
+```json
+{
+    "type": "push",
+    "key": "queries",
+    "value": "__result"
+},
+```
+
+Equivalent to a push operation to a list
+
 - `insert`: Insert into the file system.
 
+Example
+```json
+{
+    "type": "insert",
+    "key": "",
+    "value": "__result"
+},
+```
+Insert adds `String`to file system for embedding based vector search. If string is large, it is automatically chunked up to smaller documents. 
 
 These memory operations can be used in the `inputs` and `outputs` fields of the tasks to manipulate and access data during the workflow execution.
