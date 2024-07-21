@@ -184,11 +184,11 @@ impl Executor {
                         return_string.replace(&process.lhs.unwrap(), &process.rhs.unwrap())
                     }
                     PostProcessType::Append => {
-                        if process.lhs.is_none() {
+                        if process.rhs.is_none() {
                             error!("lhs is required for append post process");
                             continue;
                         }
-                        return_string.push_str(&process.lhs.unwrap());
+                        return_string.push_str(&process.rhs.unwrap());
                         return_string
                     }
                     PostProcessType::Prepend => {

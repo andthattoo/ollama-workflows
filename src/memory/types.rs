@@ -72,6 +72,7 @@ impl fmt::Display for MemoryReturnType {
                 let mut result = String::new();
                 for entry in entry_vec.iter().flatten() {
                     result.push_str(&entry.to_string());
+                    result.push_str(" \n"); // Add a newline in between strings
                 }
                 write!(f, "{}", result)
             }
