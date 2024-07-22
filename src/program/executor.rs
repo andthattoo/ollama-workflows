@@ -173,6 +173,13 @@ impl Executor {
         let return_value = self.handle_input(&rv.input, memory).await;
         let mut return_string = return_value.to_string().clone();
 
+        if rv.to_json.is_some() && rv.to_json.unwrap() {
+            let res = return_value.to_json();
+            if let Some(result) = res {
+                return result;
+            }
+        }
+
         if let Some(post_pr) = rv.post_process.clone() {
             for process in post_pr {
                 return_string = match process.process_type {
@@ -204,13 +211,6 @@ impl Executor {
                     PostProcessType::TrimStart => return_string.trim_start().to_string(),
                     PostProcessType::TrimEnd => return_string.trim_end().to_string(),
                 };
-            }
-        }
-
-        if rv.to_json.is_some() && rv.to_json.unwrap() {
-            let res = return_value.to_json();
-            if res.is_ok() {
-                return_string = res.unwrap();
             }
         }
         return_string

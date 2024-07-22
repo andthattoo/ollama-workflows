@@ -56,8 +56,22 @@ impl MemoryReturnType {
         }
     }
 
-    pub fn to_json(&self) -> serde_json::Result<String> {
-        serde_json::to_string(&self)
+    pub fn to_json(&self) -> Option<String> {
+        match self {
+            MemoryReturnType::EntryVec(Some(entries)) => {
+                // Extracting the string directly from each Entry.
+                let values: Vec<String> = entries
+                    .iter()
+                    .map(|entry| entry.to_string().clone())
+                    .collect();
+                let res = serde_json::to_string(&values);
+                match res {
+                    Ok(json) => Some(json),
+                    Err(_) => None,
+                }
+            }
+            _ => None,
+        }
     }
 }
 
