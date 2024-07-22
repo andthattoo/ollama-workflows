@@ -17,7 +17,7 @@ use text_splitter::TextSplitter;
 pub static EMBEDDING_MODEL: &str = "hellord/mxbai-embed-large-v1:f16";
 
 #[async_trait]
-pub trait Embedder {
+pub trait Embedder: Send + Sync {
     async fn generate_embeddings(&self, prompt: &str) -> Result<Vec<f32>, EmbeddingError>;
     async fn generate_query_embeddings(&self, query: &str) -> Result<Vec<f32>, EmbeddingError>;
 }
