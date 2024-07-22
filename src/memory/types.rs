@@ -1,12 +1,12 @@
+use serde::{Deserialize, Serialize};
 use std::fmt;
-
 pub type ID = String;
 pub type StackPage = Vec<Entry>;
 pub type FilePage = (String, Vec<f32>);
 
 /// Entry is an enum that can be either a String or a Json Value.
 /// It is used for I/O operations in the memory module.
-#[derive(Debug, serde::Deserialize, PartialEq)]
+#[derive(Debug, Serialize, serde::Deserialize, PartialEq)]
 pub enum Entry {
     String(String),
     Json(serde_json::Value),
@@ -39,7 +39,7 @@ impl Clone for Entry {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MemoryReturnType {
     //<'a>
     //EntryRef(Option<&'a Entry>),
@@ -54,6 +54,10 @@ impl MemoryReturnType {
             MemoryReturnType::Entry(entry) => entry.is_none(),
             MemoryReturnType::EntryVec(entry_vec) => entry_vec.is_none(),
         }
+    }
+
+    pub fn to_json(&self) -> serde_json::Result<String> {
+        serde_json::to_string(&self)
     }
 }
 

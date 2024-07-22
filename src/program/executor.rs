@@ -206,6 +206,13 @@ impl Executor {
                 };
             }
         }
+
+        if rv.to_json.is_some() && rv.to_json.unwrap() {
+            let res = return_value.to_json();
+            if res.is_ok() {
+                return_string = res.unwrap();
+            }
+        }
         return_string
     }
 
