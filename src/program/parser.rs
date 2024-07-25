@@ -2,9 +2,6 @@ use serde::{Serialize, Deserialize};
 use nom::{
     branch::alt, bytes::complete::{tag, take_while}, character::complete::{  digit1, multispace0}, combinator::{map, map_res, opt},  sequence::{ preceded, tuple}, IResult
 };
-use serde::{Deserialize, Serialize};
-use std::fs::File;
-use std::io::{self, BufRead};
 use std::str::FromStr;
 
 
@@ -263,7 +260,19 @@ fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
     tasks.push(current_task);
     tasks
 }
+fn parse_steps(){
+    let mut steps = Vec::new();
 
+    for line in reader.lines() {
+        let line = line.expect("Unable to read line");
+        if !line.trim().is_empty() {
+            let (_, step) = parse_step(&line).expect("Failed to parse step");
+            steps.push(step);
+        }
+    }
+
+    let steps_file: StepsFile = StepsFile { steps };
+}
 fn parse_step(input: &str) -> IResult<&str, Step> {
     let (input, source) = parse_identifier(input)?;
     let (input, _) = tag("->")(input)?;
@@ -335,7 +344,7 @@ fn parse_condition(input: &str) -> IResult<&str, Condition> {
         },
     ))
 }
-
+ // test purpose removed later
 fn main() {
     let input = r#"
         {

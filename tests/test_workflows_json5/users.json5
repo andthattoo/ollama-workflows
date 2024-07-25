@@ -1,0 +1,101 @@
+{
+    name: "Generate Personas",
+    description: "This is a workflow for creating random user persona for sentiment dataset.",
+    config:{
+        max_steps: 30,
+        max_time: 200,
+        tools: []
+    },
+    external_memory:{
+        random_vars:[
+            "preferred_airline_class",
+            "travel_frequency",
+            "income_level",
+            "marital_status",
+            "age",
+            "frequent_flier_program_membership",
+            "gender",
+            "occupation",
+            "primary_motivation_for_travel",
+            "nationality"
+        ],
+        preferred_airline_class: ["Economy", "Business", "First Class", "Premium Economy"],
+        travel_frequency: ["Weekly", "Monthly", "Quarterly", "Semi-Annually", "Annually", "Occasionally", "Business Traveler", "Leisure Traveler"],
+        income_level: ["15000", "20000", "25000", "30000", "35000", "40000", "45000", "50000", "55000", "60000", "65000", "70000", "75000", "80000", "85000", "90000", "95000", "100000", "105000", "110000", "115000", "120000", "125000", "130000", "135000", "140000", "145000", "150000", "155000", "160000", "165000", "170000", "175000", "180000", "185000", "190000", "195000", "200000", "205000", "210000", "215000", "220000", "225000", "230000", "235000", "240000", "245000", "250000"],
+        marital_status: ["Single", "Married", "Divorced", "Widowed"],
+        nationality: ["American", "British", "Canadian", "Chinese", "German", "Indian", "Japanese", "Mexican", "French", "Italian", "Brazilian", "Australian", "Russian", "South Korean", "Spanish", "Turkish", "Saudi Arabian", "South African", "Argentinian", "Nigerian", "Egyptian", "Indonesian", "Malaysian", "Vietnamese"],
+        gender: ["Male", "Female", "Non-binary"],
+        occupation: ["Executive", "Frequent Business Traveler", "Airline Pilot", "Flight Attendant", "Travel Blogger", "Sales Manager", "IT Consultant", "Marketing Executive", "CEO", "Freelancer", "Entrepreneur", "Customer Service Manager", "Airport Ground Staff", "Tour Operator", "Finance Analyst", "Engineer", "Doctor", "Lawyer", "Small Business Owner", "Graphic Designer", "Project Manager", "Real Estate Agent", "Teacher", "University Professor", "Student"],
+        primary_motivation_for_travel: ["Vacation", "Business", "Family Visit", "Conference", "Medical", "Education", "Relocation", "Sightseeing", "Honeymoon", "Sporting Event"],
+        frequent_flier_program_membership: ["Silver", "Gold", "Platinum", "Diamond", "Silver", "Gold", "Platinum", "Gold", "Silver", "Diamond"],
+        age: ["32", "45", "28", "60", "25", "37"]
+      },
+    tasks:[
+        {
+            id: "A",
+            name: "PickVar",
+            description: "",
+            prompt: "{random_var}",
+            operator: "sample",
+            input_output:[
+                {
+                    input:{
+                        "random_var.pop(random_vars)"
+                    },
+                    output:{
+                        "push(final_prompt(__result))"
+                    }
+                }
+            ]
+        },
+        {
+            id: "B",
+            name: "Generate Review",
+            description: "Validates random variables w.r.t. task at hand",
+            prompt: "You are a synthetic user. Write a review for the airline you traveled with. 
+                The review should be based on your experience and should be a minimum of 10 words. 
+                <persona>{persona}</persona> ###Output:",
+            
+            operator: "generation",
+            input_output:[
+                {
+                    input:{
+                        "persona.get_all(final_prompt)"
+                    },
+                    output:{
+                        "write(reviews(__result))"
+                    }
+                }
+            ]
+        
+        },
+        {
+            id: "__end",
+            name: "end",
+            description: "End of the task",
+            prompt: "End of the task",
+            operator: "end",
+            intput_output:[
+                {
+                    input:{},
+                    output:{}
+                }
+            ]
+        }
+    ],
+    steps:[
+        {
+            "
+            A->B ! if(random_vars.size == 0) else A
+            B->END ! if(fallback) else A
+            "
+        },
+
+    ],
+    return_value:{
+        input:{
+            "read(population)"
+        }
+   
+    }
+}

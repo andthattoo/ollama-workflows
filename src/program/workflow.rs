@@ -2,7 +2,8 @@ use super::atomics::{Config, Edge, Task, TaskOutput};
 use crate::memory::types::{Entry, StackPage, ID};
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Read};
+use crate::parser; 
 
 /// Custom deserializer for external memory.
 fn deserialize_external_memory<'de, D>(
@@ -75,8 +76,13 @@ impl Workflow {
         reader.read_to_string(&mut workflow5)?;
         let workflow5: Value = json5::from_str(&workflow5)?;
         let config = workflow5.get("config").unwrap();
-        let tasks = workflow5.get("tasks").unwrap();
-        let steps = workflow5.get("steps").unwrap();
+        let mut tasks = workflow5.get("tasks").unwrap();
+        tasks = parser::lexer_tasks(tasks)?;
+        tasks = parser::parse_tasks(tasks)?;
+        let mut steps = workflow5.get("steps").unwrap();
+        steps = parser::parse_steps(steps)?;
+        let steps_file: StepsFile = StepsFile { steps };
+
         let return_value = workflow5.get("return_value").unwrap();
         let external_memory = workflow5.get("external_memory").unwrap();
         let config: Config = serde_json::from_value(config.clone())?;
