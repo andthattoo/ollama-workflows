@@ -70,12 +70,30 @@ impl Workflow {
         }
     }
 
+    fn new_from_json5(reader: std::io::BufReader<std::fs::File>) -> Result<Self, Box<dyn std::error::Error>> {
+        let mut workflow5 = String::new();
+        reader.read_to_string(&mut workflow5)?;
+        let workflow5: Value = json5::from_str(&workflow5)?;
+        let config = workflow5.get("config").unwrap();
+        let tasks = workflow5.get("tasks").unwrap();
+        let steps = workflow5.get("steps").unwrap();
+        let return_value = workflow5.get("return_value").unwrap();
+        let external_memory = workflow5.get("external_memory").unwrap();
+        let config: Config = serde_json::from_value(config.clone())?;
+        let tasks: Vec<Task> = serde_json::from_value(tasks.clone())?;
+        let steps: Vec<Edge> = serde_json::from_value(steps.clone())?;
+        let return_value: TaskOutput = serde_json::from_value(return_value.clone())?;
+        let external_memory: Option<HashMap<ID, StackPage>> = serde_json::from_value(external_memory.clone())?;
+        Ok(Workflow::new(tasks, steps, config, external_memory, return_value))
+    }
     /// Creates a new Workflow from a JSON file.
     pub fn new_from_json(path: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let file = std::fs::File::open(path)?;
         let reader = std::io::BufReader::new(file);
-        let workflow: Workflow = serde_json::from_reader(reader)?;
-        Ok(workflow)
+        // json5 style
+        let workflow5  = Self::new_from_json5(reader)?;
+        //let workflow: Workflow = serde_json::from_reader(reader)?;
+        Ok(workflow5)
     }
 }
 

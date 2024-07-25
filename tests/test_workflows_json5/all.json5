@@ -1,0 +1,62 @@
+{
+    name: "Simple",
+    description: "This is a simple workflow",
+    config:{
+        "max_steps": 5,
+        "max_time": 100,
+        "tools": ["ALL"]
+    },
+    tasks:[
+        {
+            id: "A",
+            name: "Random Query",
+            description: "Writes a random question about Kapadokya.",
+            prompt: "Please write a random question about Kapadokya.",
+            operator: "generation",
+            input_output:[
+                input:{},
+                output:{
+                    "write(query(__result))"
+                }
+            ]
+        },
+        {
+            id: "B",
+            name: "Search",
+            description: "Searches query.",
+            prompt: "Find useful information about the query: {query}",
+            operator: "function_calling",
+            input_output:[
+                input:{
+                    "query.read(query)"
+                },
+                output:{
+                    "write(search(__result))"
+                }
+            ]
+        },
+        {
+            id:"__end",
+            name: "end",
+            description": "End of the task",
+            prompt: "End of the task",
+            operator: "end",
+            input_output:[
+                input:{},
+                output:{}
+            ]
+        },      
+    ]
+    steps:[
+    "
+    A->B
+    B->END
+    "
+    ]
+    
+    return_value:{
+        input:{
+            "read(search)"
+        }
+    }
+}
