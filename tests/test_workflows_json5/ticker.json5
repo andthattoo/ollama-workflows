@@ -1,47 +1,39 @@
 {
-    name: "Ticker",
-    description: "This is a ticker workflow",
-    config:{
-        "max_steps": 5,
-        "max_time": 100,
-        "tools": ["stock"]
+    name: 'Ticker',
+    description: 'This is a ticker workflow',
+    config: {
+        max_steps: 5,
+        max_time: 100,
+        tools: ['stock']
     },
-    tasks:[
+    tasks: [
         {
-            id: "A",
-            name: "APPL",
-            description: "Fetches the current value of $APPL",
-            prompt: "What is the current value of $APPL?",
-            operator: "function_calling",
-            input_output:[
-                input:{},
-                output:{
-                    "write(price(__result))"
+            id: 'A',
+            name: 'APPL',
+            description: 'Fetches the current value of $APPL',
+            prompt: 'What is the current value of $APPL?',
+            operator: 'function_calling',
+            input_output: {
+                input: {},
+                output: {
+                    write: 'price(__result)'
                 }
-            ]
+            }
         },
         {
-            id: "__end",
-            name: "end",
-            description: "End of the task",
-            prompt: "End of the task",
-            operator: "end",
-            input_output:[
-                input:{},
-                output:{}
-            ]
+            id: '__end',
+            name: 'end',
+            description: 'End of the task',
+            prompt: 'End of the task',
+            operator: 'end',
+            input_output: {
+                input: {},
+                output: {}
+            }
         }
     ],
-    steps:[
-        {
-            "
-            A->END
-            "
-        }
-    ],
-    "return_value":{
-        "input":{
-            "read(price)"
-        }
+    steps: 'A->END',
+    return_value: {
+        input: 'read(price)'
     }
 }

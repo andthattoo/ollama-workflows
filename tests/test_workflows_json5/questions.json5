@@ -1,85 +1,46 @@
-{   
-    name: "Create questions",
-    description: "Generate questions related to given topic",
+{
+    name: 'Create questions',
+    description: 'Generate questions related to given topic',
     config: {
         max_steps: 35,
         max_time: 600,
-        tools: ["ALL"]
+        tools: ['ALL']
     },
-    external_memory:{
-        topic:["yield farming strategies"],
+    external_memory: {
+        topic: ['yield farming strategies'],
         perspective: [
-        "Analytical and data-driven approach to evaluating crypto companies and market trends",
-        "Strategic mindset focused on identifying competitive advantages and market positioning",
-        "Technical perspective to assess founder capabilities and protocol functionalities",
-        "Forward-looking attitude to validate company visions and understand market narratives",
-        "Comparative viewpoint for conducting competitor research and market analysis",
-        "Holistic understanding of the blockchain ecosystem to contextualize individual companies",
-        "Categorization-oriented approach to classify and position companies within the industry",
-        "Advisory stance to assist VC firms' Limited Partners (LPs) and General Partners (GPs)",
-        "Objective and critical perspective for evaluating claims and potential in the crypto space"
-    ]
+            'Analytical and data-driven approach to evaluating crypto companies and market trends',
+            'Strategic mindset focused on identifying competitive advantages and market positioning',
+            'Technical perspective to assess founder capabilities and protocol functionalities',
+            'Forward-looking attitude to validate company visions and understand market narratives',
+            'Comparative viewpoint for conducting competitor research and market analysis',
+            'Holistic understanding of the blockchain ecosystem to contextualize individual companies',
+            'Categorization-oriented approach to classify and position companies within the industry',
+            'Advisory stance to assist VC firms\' Limited Partners (LPs) and General Partners (GPs)',
+            'Objective and critical perspective for evaluating claims and potential in the crypto space'
+        ]
     },
-    tasks:[
+    tasks: [
         {
-            id: "A",
-            name: "Web Search Query",
-            description: "Write a web search query to collect useful information for the given question",
-            prompt: "You are a researcher AI tasked with 
-            generating web search queries to aid in the research process
-             on a given topic. Your goal is to formulate questions 
-             that will help explore different aspects of the topic and
-              gather comprehensive knowledge.
-              \n\nThe topic you are researching is:
-              \n<topic>\n{{topic}}\n</topic>\n\n
-              These are your perspectives as a researcher while asking questions:
-              \n<perspectives>\n{{perspectives}}\n</perspectives>\n
-              \nHere is the history of previously asked questions:
-              \n<previous_questions>\n{{previous_questions}}
-              \n</previous_questions>\n
-              \nTo generate a new search query:\n
-              \n1. Analyze the given topic and the history of previous questions.
-              \n2. Identify aspects of the topic that have not been covered or areas that could benefit from deeper exploration.
-              \n3. Consider different perspectives, time periods, or interdisciplinary connections related to the topic.
-              \n4. Formulate a clear, concise, and specific search query that addresses an unexplored or underexplored aspect of the topic.
-              \n5. Ensure your query is distinct from the previous questions and adds value to the research process.\n
-              \nGuidelines for your search query:
-              \n- Keep it between 5-15 words
-              \n- Use specific terms related to the topic
-              \n- Include relevant keywords that will yield informative results
-              \n- Avoid overly broad or vague questions
-              \n- Do not repeat previous questions or ask for information already covered\n
-              \nPresent your final search query within <search_query> tags.\n
-              \nExample output:\n
-              \n<search_query>\n[Your generated search query here]
-              \n</search_query>\n
-              \nNow, based on the given topic and previous questions, generate a new search query following these instructions.",
-            operator: "generation",
-            input_output:{
-                input:{
-                    "topic.peek(topic[0])", // index handling? make it optional add this
-                    "perspectives.get_all(perspectives)",
-                    "previous_questions.get_all(history)?"
-                },
-                output:{
-                    "push(queries(__result))"
-                }
+            id: 'A',
+            name: 'Web Search Query',
+            description: 'Write a web search query to collect useful information for the given question',
+            prompt: 'You are a researcher AI tasked with generating web search queries to aid in the research process on a given topic. Your goal is to formulate questions that will help explore different aspects of the topic and gather comprehensive knowledge. \n\nThe topic you are researching is: \n<topic>{{topic}}</topic>\n\nThese are your perspectives as a researcher while asking questions: \n<perspectives>{{perspectives}}</perspectives>\n\nHere is the history of previously asked questions: \n<previous_questions>{{previous_questions}}</previous_questions>\n\nTo generate a new search query: \n\n1. Analyze the given topic and the history of previous questions. \n2. Identify aspects of the topic that have not been covered or areas that could benefit from deeper exploration. \n3. Consider different perspectives, time periods, or interdisciplinary connections related to the topic. \n4. Formulate a clear, concise, and specific search query that addresses an unexplored or underexplored aspect of the topic. \n5. Ensure your query is distinct from the previous questions and adds value to the research process.\n\nGuidelines for your search query: \n- Keep it between 5-15 words \n- Use specific terms related to the topic \n- Include relevant keywords that will yield informative results \n- Avoid overly broad or vague questions \n- Do not repeat previous questions or ask for information already covered\n\nPresent your final search query within <search_query> tags.\n\nExample output:\n\n<search_query>[Your generated search query here]</search_query>\n\nNow, based on the given topic and previous questions, generate a new search query following these instructions.',
+            operator: 'generation',
+            input_output: {
+                input: [
+                    'topic.peek(topic[0])',
+                    'perspectives.get_all(perspectives)',
+                    'previous_questions.get_all(history)?'
+                ],
+                output: [
+                    'push(queries(__result))'
+                ]
             }
-
         }
     ],
-   steps:[
-    "
-    A->_end ! if(queries.size > 2) else A
-
-    "
-   ],
-   //to json true part missing********
-   return_value:{
-        input:
-        "
-        get_all(queries)
-        "
-
-   }
+    steps: 'A->_end ! if(queries.size > 2) else A',
+    return_value: {
+        input: 'get_all(queries)'
+    }
 }
