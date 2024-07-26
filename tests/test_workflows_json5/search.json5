@@ -1,184 +1,188 @@
 {
-    name: "Searching Agent",
-    description: "Try to answer a given question using data from the web with grounded data.",
+    name: 'Searching Agent',
+    description: 'Try to answer a given question using data from the web with grounded data.',
     config: {
-        "max_steps": 35,
-        "max_time": 600,
-        "tools": ["serper", "jina"]
+        'max_steps': 35,
+        'max_time': 600,
+        'tools': ["serper", "jina"]
     },
     tasks: [
         {
-            id: "A",
-            name: "Web Search Query",
-            description: "Write a web search query to collect useful information for the given question",
-            prompt: "Write down a single search query to collect useful information to answer to 
-                given question. Be creative. 
-                Avoid asking previously asked questions, 
-                keep it concise and clear. 
-                \n###Query: {query} 
-                \n\n ###Previous Questions: {history}
+            id: 'A',
+            name: 'Web Search Query',
+            description: 'Write a web search query to collect useful information for the given question',
+            prompt: "Write down a single search query to collect useful information to answer to \
+                given question. Be creative. \
+                Avoid asking previously asked questions, \
+                keep it concise and clear. \
+                \n###Query: {query} \
+                \n\n ###Previous Questions: {history} \
                 \n\n ###Search Query:",
             operator: "generation",
-            input_output:[
+            input_output:
                 {
-                    "input":{
-                        "query.input()",
-                        history.get_all(history)?"
-                    },
-                    "output":{
-                        "write(web_search_query(__result))",
-                        "push(history(__result))"
-                    }
+                    input:
+                        ['query.input()',
+                        'history.get_all(history)?']
+                    ,
+                    output:
+                        ['write(web_search_query(__result))',
+                        'push(history(__result))']
+                    
                 }
-            ]
-        },
-
-        {
-            id: "B",
-            name: "Web Search",
-            description: "Search the web with the given query",
-            prompt: "{query}",
-            operator: "function_calling",
-            input_output:[
-                {
-                    "input":{
-                        "query.read(web_search_query)"
-                    },
-                    "output":{
-                        "write(web_search_result(__result))",
-                        "push(web_search_result(__result))"
-                    }
-                }
-            ]
-        },
-        {
-            id: "C",
-            name: "Candidate Website",
-            description: "Pick the most useful link from web search results for the given query",
-            prompt: "Pick the most useful URL to scrape information for Query: {query} 
-            \n\n ###Sarch Results:{web_results} 
-            \n\n Only output the selected URL: ###Selected URL:",
-            operator: "generation",
-            input_output:[
-                {
-                    "input":{
-                        "web_results.read(web_search_result)",
-                        "query.input()"
-                    },
-                    "output":{
-                        "write(search_url(__result))"
-                    }
-                }
-            ]
-        },
-        {
-            id: "D",
-            name: "Scrape Website",
-            description: "Scrape the selected website",
-            prompt: "scrape {search_url}",
-            operator: "function_calling",
-            input_output:[
-                {
-                    "input":{
-                        "search_url.read(search_url)" // two required here*howtohandle*
-                    },
-                    "output":{
-                        "push(content(__result))"
-                    }
-                }
-            ]
-        },
-        {
-            id: "E",
-            name: "Summarize Website",
-            description: "Summarize website content",
-            prompt: "Answer given question completely based on following context. Don't assume anything. 
-                Use the provided information to answer the question. 
-                If context is not enough, say 'I dont know.' 
-                ###Content: {content} 
-                \n\n ###Question: {query} 
-                \n\n ###Answer:",
-            operator: "generation",
-            input_output:[
-                {
-                    "input":{
-                        "content.read(content)", // double required again
-                        "query.input()"
-                    },
-                    "output":{
-                        "push(answers(__result))"
-                    }
-                }
-            ]
-           
-        },
-        {
-
-            id: "F",
-            name: "Evaluate Result",
-            description: "Evaluate if the result is satisfying",
-            prompt: "Evaluate the result if it answers the query. 
-                Write 'Yes' if valid, if not 'No'.
-                Write nothing else but strictly 'Yes'|'No'. 
-                query:{query} result:{answer}. ###Evaluation:",
-            operator: "generation",
-            input_output:[
-                {
-                    "input":{
-                        "answers.get_all(answers)",
-                        "query.input()"
-                    },
-                    "output":{
-                        "write(final_result(__result))"
-                    }
-                }
-            ]
-
-        },
-        {
-            id: "G",
-            name: "Check Result",
-            description: "Check if the result is satisfying",
-            prompt: "",
-            operator: "check",
-            input_output:[
-                {
-                    "input":{
-                        "__output.read(final_result)",
-                        "__expected.string("Yes")"
-                    },
-                    "output":{}
-                }
-            ],   
-        },
-        {
-            id: "__end",
-            name: "end",
-            description: "End of the task",
-            prompt: "End of the task",
-            operator: "end",
-            input_output:[
-                {
-                    "input":{},
-                    "output":{}
-                }
-            ]
+            
         }
-    ],
-    steps: [
-        "
-            A->B ! if(fallback) else H
-            B->C ! if(fallback) else A
-            C->D
-            D->E ! if(fallback) else A
-            E->F
-            F->G
-            G->END ! if(fallback) else A
-        "
-    ],
+        ,
+        {
+            id: 'B',
+            name: 'Web Search',
+            description: 'Search the web with the given query',
+            prompt: '{query}',
+            operator: 'function_calling',
+            input_output:
+                {
+                    input:
+                        ['query.read(web_search_query)'
+                        ]
+                    ,
+                    output:[
+                        'write(web_search_result(__result))',
+                        'push(web_search_result(__result))'
+                    ]
+                 }
+
+        }
+        ,
+        {
+            id: 'C',
+            name: 'Candidate Website',
+            description: 'Pick the most useful link from web search results for the given query',
+            prompt: 'Pick',
+            operator: 'generation',
+            input_output:
+                {
+                    input:[
+                        'web_results.read(web_search_result)',
+                        'query.input()'
+                    ]
+                    ,
+                    output:[
+                        'write(search_url(__result))'
+                    ]
+                } 
+
+        }
+        ,
+        {
+            id: 'D',
+            name: 'Scrape Website',
+            description: 'Scrape the selected website',
+            prompt: 'scrape {search_url}',
+            operator: 'function_calling',
+            input_output:
+                {
+                    input:[
+                        'search_url.read(search_url)'
+                    ]
+                    ,
+                    output:[
+                        'push(content(__result))'
+                    ]
+                }
+            
+        }
+        ,
+        {
+            id: 'E',
+            name: 'Summarize Website',
+            description: 'Summarize website content',
+            prompt: 'Answer given question completely based on \ following context. Dont assume anything. \
+                Use the provided information to answer \ the question. \
+                If context is not enough, say I dont \ know.\
+                ###Content: {content} \
+                \n\n ###Question: {query} \
+                \n\n ###Answer:',
+            operator: 'generation',
+            input_output:
+                {
+                    input:[
+                        'content.read(content)', 
+                        'query.input()'
+                    ]
+                    ,
+                    output:[
+                        'push(answers(__result))'
+                    ]
+                }
+            
+        }
+        ,
+        {
+
+            id: 'F',
+            name: 'Evaluate Result',
+            description: 'Evaluate if the result is satisfying',
+            prompt: 'Evaluate the result if it answers the query                Write "Yes" if valid, if not "No"  Write nothing else but strictly Yes|No.                 query:{query} result:{answer}. ###Evaluation:',
+            operator: 'generation',
+            input_output:
+                {
+                    input:[
+                        'answers.get_all(answers)',
+                        'query.input()'
+                    ]
+                    ,
+                    output:[
+                        'write(final_result(__result))'
+                    ]
+                }
+            
+
+        }
+        ,
+        {
+            id: 'G',
+            name: 'Check Result',
+            description: 'Check if the result is satisfying',
+            prompt: '',
+            operator: 'check',
+            input_output:
+                {
+                    input:[
+                        '__output.read(final_result)',
+                        '__expected.string("Yes")'
+                    ]
+                    ,
+                    output:[]
+                }
+               
+        }
+        ,
+        {
+            id: '__end',
+            name: 'end',
+            description: 'End of the task',
+            prompt: 'End of the task',
+            operator: 'end',
+            input_output:
+                {
+                    input:[]
+                    ,
+                    output:[]
+                }
+            
+        }
+    ]
+    ,
+    steps: 'A->B ! if(fallback) else H\
+            B->C ! if(fallback) else A \
+                  C->D \
+                  D->E ! if(fallback) else A \
+                  E->F \
+                  F->G \
+                  G->END ! if(fallback) else A'
+    ,
     return_value:{
-        input:{
-            "read(final_result)"
-        }
+        input:'read(final_result)'
+        
     }
 }
