@@ -173,16 +173,18 @@
         }
     ]
     ,
-    steps: 'A->B ! if(fallback) else H\
-            B->C ! if(fallback) else A \
-                  C->D \
-                  D->E ! if(fallback) else A \
-                  E->F \
-                  F->G \
-                  G->END ! if(fallback) else A'
+    steps:       'A->B ! if(fallback) else H .\
+                  B->C ! if(fallback) else A .\
+                  C->D .\
+                  D->E ! if(fallback) else A .\
+                  E->F .\
+                  F->G .\
+                  G->END ! if(fallback) else A .'
     ,
-    return_value:{
-        input:'read(final_result)'
-        
+   return_value:{
+        "input":{
+            "type": "read",
+            "key": "final_result"
+        }
     }
 }

@@ -1,91 +1,23 @@
-use serde::{Serialize, Deserialize};
+use super::atomics::{Edge,Condition, Expression,InputValue,
+    InputValueType,Task,Operator,Output,OutputType,Input};
+
 use nom::{
-    branch::alt, bytes::complete::{tag, take_while}, character::complete::{  digit1, multispace0}, combinator::{map, map_res, opt},  sequence::{ preceded, tuple}, IResult
+    branch::alt, bytes::complete::{tag, take_while}, 
+    character::complete::{  digit1, multispace0}, 
+    combinator::{map, map_res, opt},  
+    sequence::{ preceded, tuple}, IResult
 };
 use std::str::FromStr;
 
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Task {
-    id: String,
-    name: String,
-    description: String,
-    prompt: String,
-    inputs: Vec<Input>,
-    outputs: Vec<Output>,
-    operator: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Input {
-    name: String,
-    value: Value,
-    required: bool,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Output {
-    type_: String,
-    key: String,
-    value: String,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Value {
-    type_: String,
-    key: String,
-}
-
 #[derive(Debug, Clone)]
-enum Token {
+pub enum Token {
     Identifier(String),
     StringLiteral(String),
     Symbol(char),
     Parenthesis(char), // '(' or ')'
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-struct StepsFile {
-    steps: Vec<Step>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct Step {
-    source: String,
-    target: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    fallback: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    condition: Option<Condition>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct Condition {
-    input: ConditionInput,
-    expression: Expression,
-    expected: String,
-    target_if_not: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-struct ConditionInput {
-    #[serde(rename = "type")]
-    input_type: String,
-    key: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-enum Expression {
-    Equal,
-    NotEqual,
-    Contains,
-    NotContains,
-    GreaterThan,
-    LessThan,
-    GreaterThanOrEqual,
-    LessThanOrEqual,
-    HaveSimilar,
-}
 
 impl FromStr for Expression {
     type Err = ();
@@ -106,8 +38,8 @@ impl FromStr for Expression {
     }
 }
 
-// Used for Tasks 
-fn lexer_tasks(input: &str) -> Vec<Token> {
+// ## TASKS PARSING 
+pub fn lexer_tasks(input: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut iter = input.chars().peekable();
 
@@ -155,9 +87,22 @@ fn parse_input(input_str: &str, task: &mut Task) {
         
         task.inputs.push(Input {
             name: input_name.to_string(),
-            value: Value {
-                type_: method.to_string(),
-                key,
+            value:InputValue {
+                key: key.to_string(),
+                value_type: {
+                    match method {
+                        "input" => InputValueType::Input,
+                        "read" => InputValueType::Read,
+                        "pop" => InputValueType::Pop,
+                        "peek" => InputValueType::Peek,
+                        "get_all" => InputValueType::GetAll,
+                        "size" => InputValueType::Size,
+                        "string" => InputValueType::String,
+                        _ => InputValueType::Input,
+                    }
+                },
+                index: Option::None,
+                search_query: Option::None,
             },
             required,
         });
@@ -182,7 +127,14 @@ fn parse_output(output_str: &str, task: &mut Task) {
         let value = value_with_extra_paren.trim_end_matches(')');
 
         task.outputs.push(Output {
-            type_: output_type.to_string(),
+            output_type:{
+                match output_type {
+                    "insert" => OutputType::Insert,
+                    "write" => OutputType::Write,
+                    "push" => OutputType::Push,
+                    _ => OutputType::Write,
+                }
+            },
             key: key.to_string(),
             value: value.to_string(),
         });
@@ -193,7 +145,7 @@ fn parse_output(output_str: &str, task: &mut Task) {
 }
 
 // Used for Tasks
-fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
+pub fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
     let mut tasks = Vec::new();
     let mut current_task = Task {
         id: "".to_string(),
@@ -202,7 +154,7 @@ fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
         prompt: "".to_string(),
         inputs: Vec::new(),
         outputs: Vec::new(),
-        operator: "".to_string(),
+        operator: Operator::Generation,
     };
 
     let mut i = 0;
@@ -218,7 +170,17 @@ fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
                                     "name" => current_task.name = value.clone(),
                                     "description" => current_task.description = value.clone(),
                                     "prompt" => current_task.prompt = value.clone(),
-                                    "operator" => current_task.operator = value.clone(),
+                                    "operator" => {
+                                        match value.as_str() {
+                                            "generation" => current_task.operator = Operator::Generation,
+                                            "function_calling" => current_task.operator = Operator::FunctionCalling,
+                                            "check" => current_task.operator = Operator::Check,
+                                            "search" => current_task.operator = Operator::Search,
+                                            "sample" => current_task.operator = Operator::Sample,
+                                            "end" => current_task.operator = Operator::End,
+                                            _ => {}
+                                        }
+                                    },
                                     _ => {}
                                 }
                                 i += 2; // Skip past the identifier and its value
@@ -260,20 +222,8 @@ fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
     tasks.push(current_task);
     tasks
 }
-fn parse_steps(){
-    let mut steps = Vec::new();
-
-    for line in reader.lines() {
-        let line = line.expect("Unable to read line");
-        if !line.trim().is_empty() {
-            let (_, step) = parse_step(&line).expect("Failed to parse step");
-            steps.push(step);
-        }
-    }
-
-    let steps_file: StepsFile = StepsFile { steps };
-}
-fn parse_step(input: &str) -> IResult<&str, Step> {
+// ## STEPS PARSING
+pub fn parse_step(input: &str) -> IResult<&str, Edge> {
     let (input, source) = parse_identifier(input)?;
     let (input, _) = tag("->")(input)?;
     let (input, target) = parse_identifier(input)?;
@@ -283,7 +233,7 @@ fn parse_step(input: &str) -> IResult<&str, Step> {
 
     Ok((
         input,
-        Step {
+        Edge {
             source: source.to_string(),
             target: target.to_string(),
             condition,
@@ -318,6 +268,14 @@ fn parse_expression(input: &str) -> IResult<&str, Expression> {
     )(input)
 }
 
+fn parse_fallback(input: &str) -> IResult<&str, String> {
+    let (input, _) = map(tag("fallback"), |_| ())(input)?;
+    let (input, _) = map(tag(") else "), |_| ())(input)?;
+    let (input, fallback_target) = parse_identifier(input)?;
+
+    Ok((input, fallback_target.to_string()))
+}
+
 fn parse_condition(input: &str) -> IResult<&str, Condition> {
     let (input, (key, _, input_type, _, expression, _, expected, _, target_if_not)) = tuple((
         parse_identifier,
@@ -334,41 +292,16 @@ fn parse_condition(input: &str) -> IResult<&str, Condition> {
     Ok((
         input,
         Condition {
-            input: ConditionInput {
-                input_type: input_type.to_string(),
+            input: InputValue {
                 key: key.to_string(),
+                value_type: InputValueType::Input, // steps does it have dif input?
+                index: Option::None,
+                search_query: Option::None,
+
             },
             expression,
             expected: expected.to_string(),
             target_if_not: target_if_not.to_string(),
         },
     ))
-}
- // test purpose removed later
-fn main() {
-    let input = r#"
-        {
-            id: "A",
-            name: "Web Search Query",
-            description: "Collect info",
-            prompt: "Query?",
-            operator: "generation"
-            input_output: [
-                input:{
-                    "query.input()",
-                    "history.get_all(“history”)?"
-			    },
-	            output:{
-                    "write(web_search_query(__result)",
-                    "push(history(__result))"
-			}
-            ],
-        }
-    "#;
-
-    let tokens = lexer_tasks(input);
-    let tasks = parse_tasks(tokens);
-
-    let output_json5 = serde_json::to_string_pretty(&tasks).unwrap();
-    println!("{}", output_json5);
 }
