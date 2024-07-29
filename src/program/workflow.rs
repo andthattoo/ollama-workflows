@@ -76,8 +76,8 @@ where
     let mut tasks = Vec::<Task>::new();
     for lines in split_strings {
        let tokens = lexer_tasks(&lines);
-       let tasks = parse_tasks(tokens);
-       print!("{:?}",tasks);
+       let task = parse_tasks(tokens);
+       tasks.push(task)
     }
 
    

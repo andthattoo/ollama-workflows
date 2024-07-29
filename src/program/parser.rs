@@ -16,6 +16,8 @@ pub enum Token {
     StringLiteral(String),
     Symbol(char),
     Parenthesis(char), // '(' or ')'
+    CurlyBrace(char), // '{' or '}'
+    Other(char),
 }
 
 
@@ -42,11 +44,45 @@ impl FromStr for Expression {
 pub fn lexer_tasks(input: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut iter = input.chars().peekable();
+    let mut context_stack = Vec::new(); // Stack to track contexts like arrays
+
+    enum ParseState {
+        ExpectingKey,
+        ExpectingValue,
+    }
+
+    let mut state = ParseState::ExpectingKey;
 
     while let Some(c) = iter.next() {
         match c {
-            '=' | '?' | ',' => tokens.push(Token::Symbol(c)),
-            '(' | ')' => tokens.push(Token::Parenthesis(c)),
+            '[' => {
+                // Entering an array context
+                context_stack.push('[');
+                tokens.push(Token::Symbol(c));
+            },
+            ']' => {
+                // Exiting an array context
+                if context_stack.pop().is_some() {
+                    tokens.push(Token::Symbol(c));
+                }
+            },
+            ',' => {
+                tokens.push(Token::Symbol(c));
+                // Only transition state if not within an array context
+                if context_stack.is_empty() {
+                    state = ParseState::ExpectingKey;
+                }
+            },
+            ':' => {
+                tokens.push(Token::Symbol(c));
+                // Switch state after a colon, as it separates keys and values
+                if context_stack.is_empty() { // Ensure we're not in an array
+                    state = match state {
+                        ParseState::ExpectingKey => ParseState::ExpectingValue,
+                        ParseState::ExpectingValue => ParseState::ExpectingKey,
+                    };
+                }
+            },
             '"' => {
                 let mut value = String::new();
                 while let Some(ch) = iter.next() {
@@ -56,24 +92,20 @@ pub fn lexer_tasks(input: &str) -> Vec<Token> {
                         value.push(ch);
                     }
                 }
-                tokens.push(Token::StringLiteral(value));
-            },
-            _ if c.is_alphanumeric() || c == '_' => {
-                let mut ident = c.to_string();
-                while let Some(&next) = iter.peek() {
-                    if next.is_alphanumeric() || next == '_' {
-                        ident.push(iter.next().unwrap());
-                    } else {
-                        break;
-                    }
-                }
-                tokens.push(Token::Identifier(ident));
+                if value == "input" || value == "output"{
+                    tokens.push(Token::Identifier(value));
+                } 
+                else{
+                tokens.push(match state {
+                    ParseState::ExpectingKey => Token::Identifier(value),
+                    ParseState::ExpectingValue => Token::StringLiteral(value),
+                });
+            }
             },
             _ if c.is_whitespace() => continue,
-            _ => (), // Ignore unknown or irrelevant characters
+            _ => tokens.push(Token::Other(c)), // Handle other characters appropriately
         }
     }
-
     tokens
 }
 // Used for Tasks input 
@@ -145,8 +177,7 @@ fn parse_output(output_str: &str, task: &mut Task) {
 }
 
 // Used for Tasks
-pub fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
-    let mut tasks = Vec::new();
+pub fn parse_tasks(tokens: Vec<Token>) -> Task {
     let mut current_task = Task {
         id: "".to_string(),
         name: "".to_string(),
@@ -156,7 +187,7 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
         outputs: Vec::new(),
         operator: Operator::Generation,
     };
-
+  
     let mut i = 0;
     while i < tokens.len() {
         match tokens.get(i) {
@@ -164,7 +195,7 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
                 match ident.as_str() {
                     "id" | "name" | "description" | "prompt" | "operator" => {
                         if i + 1 < tokens.len() {
-                            if let Some(Token::StringLiteral(value)) = tokens.get(i + 1) {
+                            if let Some(Token::StringLiteral(value)) = tokens.get(i + 2) {
                                 match ident.as_str() {
                                     "id" => current_task.id = value.clone(),
                                     "name" => current_task.name = value.clone(),
@@ -189,28 +220,41 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
                         }
                         i += 1; // Move past the identifier even if no valid value was found
                     },
-                    "input_output" => {
-                        i += 1; // Move past "input_output"
-                        while i < tokens.len() && matches!(tokens.get(i), Some(Token::Identifier(_))) {
-                            if let Some(Token::Identifier(section)) = tokens.get(i) {
-                                i += 1; // Move to either the input or output list
-                                while i < tokens.len() && matches!(tokens.get(i), Some(Token::StringLiteral(_))) {
-                                    if let Some(Token::StringLiteral(io_str)) = tokens.get(i) {
-                                        if section == "input" {
-                                            parse_input(io_str, &mut current_task);
-                                        } else if section == "output" {
-                                            parse_output(io_str, &mut current_task);
-                                        }
+"input_output" => {
+    i += 2; // Move past "input_output" and the following ":"
+    if matches!(tokens.get(i), Some(Token::Other('{'))) {
+        i += 1; // Skip the opening curly brace
+        while i < tokens.len() {
+            match tokens.get(i) {
+                Some(Token::CurlyBrace('}')) => {
+                    i += 1; // Move past the closing curly brace
+                    break; // Exit the loop as we've found the closing curly brace
+                },
+                Some(Token::Identifier(section)) => {
+                    i += 2; // Move past the section identifier and the following ":"
+                    if matches!(tokens.get(i), Some(Token::Symbol('['))) {
+                        i += 1; // Skip the opening bracket
+                        while i < tokens.len() && !matches!(tokens.get(i), Some(Token::Symbol(']'))) {
+                            match tokens.get(i) {
+                                Some(Token::StringLiteral(io_str)) | Some(Token::Identifier(io_str)) => {
+                                    if section == "input" {
+                                        parse_input(io_str, &mut current_task);
+                                    } else if section == "output" {
+                                        parse_output(io_str, &mut current_task);
                                     }
-                                    i += 1; // Move past the current input or output string
-                                    if i < tokens.len() && matches!(tokens.get(i), Some(Token::Symbol(','))) {
-                                        i += 1; // Skip comma between items
-                                    }
-                                }
+                                },
+                                _ => {}
                             }
+                            i += 1; // Move to the next token, could be a comma or the closing bracket
                         }
-                    },
-                   
+                        // No need to increment i here as it should now be on the closing bracket
+                    }
+                },
+                _ => i += 1, // Default increment for other tokens
+            }
+        }
+    }
+},
                     _ => i += 1,
                 }
             },
@@ -219,8 +263,7 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Vec<Task> {
         }
     }
 
-    tasks.push(current_task);
-    tasks
+    current_task
 }
 // ## STEPS PARSING
 pub fn parse_step(input: &str) -> IResult<&str, Edge> {
@@ -277,7 +320,7 @@ fn parse_fallback(input: &str) -> IResult<&str, String> {
 }
 
 fn parse_condition(input: &str) -> IResult<&str, Condition> {
-    let (input, (key, _, input_type, _, expression, _, expected, _, target_if_not)) = tuple((
+    let (input, (key, _, _input_type, _, expression, _, expected, _, target_if_not)) = tuple((
         parse_identifier,
         tag("."),
         parse_identifier,

@@ -149,7 +149,7 @@
                 {
                     input:[
                         '__output.read(final_result)',
-                        '__expected.string("Yes")'
+                        '__expected.string(Yes)'
                     ]
                     ,
                     output:[]
