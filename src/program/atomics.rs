@@ -236,6 +236,7 @@ pub enum Model {
     /// [Nous's Hermes-2-Theta model](https://ollama.com/adrienbrault/nous-hermes2theta-llama3-8b), q8_0 quantized
     #[serde(rename = "adrienbrault/nous-hermes2theta-llama3-8b:q8_0")]
     NousTheta,
+    #[default]
     /// [Microsoft's Phi3 Medium model](https://ollama.com/library/phi3:medium), q4_1 quantized
     #[serde(rename = "phi3:14b-medium-4k-instruct-q4_1")]
     Phi3Medium,
@@ -243,9 +244,11 @@ pub enum Model {
     #[serde(rename = "phi3:14b-medium-128k-instruct-q4_1")]
     Phi3Medium128k,
     /// [Microsoft's Phi3 Mini model](https://ollama.com/library/phi3:3.8b), 3.8b parameters
-    #[default]
     #[serde(rename = "phi3:3.8b")]
     Phi3Mini,
+    /// [Ollama's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
+    #[serde(rename = "llama3.1:latest")]
+    Llama3_1_8B,
     // OpenAI models
     /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3-5-turbo)
     #[serde(rename = "gpt-3.5-turbo")]
@@ -278,6 +281,7 @@ impl From<Model> for ModelProvider {
             Model::Phi3Medium => ModelProvider::Ollama,
             Model::Phi3Medium128k => ModelProvider::Ollama,
             Model::Phi3Mini => ModelProvider::Ollama,
+            Model::Llama3_1_8B => ModelProvider::Ollama,
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,

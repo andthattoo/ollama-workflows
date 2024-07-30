@@ -29,7 +29,7 @@ use ollama_rs::{
     generation::functions::tools::StockScraper,
     generation::functions::tools::Tool,
     generation::functions::{
-        DDGSearcher, FunctionCallRequest, NousFunctionCall, OpenAIFunctionCall, Scraper,
+        DDGSearcher, FunctionCallRequest, NousFunctionCall, LlamaFunctionCall, OpenAIFunctionCall, Scraper,
     },
     generation::options::GenerationOptions,
     Ollama,
@@ -465,6 +465,7 @@ impl Executor {
     async fn function_call(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
         let oai_parser = Arc::new(OpenAIFunctionCall {});
         let nous_parser = Arc::new(NousFunctionCall {});
+        let llama_parser = Arc::new(LlamaFunctionCall {});
         let tools = self
             .get_tools(config.tools.clone(), config.custom_tool.clone())
             .unwrap();
@@ -481,6 +482,7 @@ impl Executor {
                         ),
                         match self.model {
                             Model::NousTheta => nous_parser.clone(),
+                            Model::Llama3_1_8B => llama_parser.clone(),
                             _ => oai_parser.clone(),
                         },
                     )

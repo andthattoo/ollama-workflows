@@ -11,7 +11,7 @@
             "id": "A",
             "name": "Web Search Query",
             "description": "Write a web search query to collect useful information for the given question",
-            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions, keep it concise and clear. \n###Query: {query} \n\n ###Previous Questions: {history} \n\n ###Search Query:",
+            "prompt": "You are tasked with generating a single search query to gather useful information for answering a given question. Your goal is to create a concise, clear, and creative query that avoids repeating previously asked questions.\n\nHere is the query you need to address:\n<query>\n{{query}}\n</query>\n\nHere are the previous questions that have been asked:\n<history>\n{{history}}\n</history>\n\nWhen creating your search query, follow these guidelines:\n1. Analyze the given query and identify key concepts or terms.\n2. Review the previous questions to avoid repetition.\n3. Be creative in your approach, considering alternative phrasings or related concepts.\n4. Keep the query concise and clear, typically no more than 5-7 words.\n5. Focus on gathering information that will be most useful in answering the original query.\n\nProvide your search query inside <search_query> tags. Do not include any explanation or additional text outside these tags.",
             "inputs": [
                 {
                     "name": "query",
