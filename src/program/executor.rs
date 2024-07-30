@@ -29,7 +29,8 @@ use ollama_rs::{
     generation::functions::tools::StockScraper,
     generation::functions::tools::Tool,
     generation::functions::{
-        DDGSearcher, FunctionCallRequest, NousFunctionCall, LlamaFunctionCall, OpenAIFunctionCall, Scraper,
+        DDGSearcher, FunctionCallRequest, LlamaFunctionCall, NousFunctionCall, OpenAIFunctionCall,
+        Scraper,
     },
     generation::options::GenerationOptions,
     Ollama,
