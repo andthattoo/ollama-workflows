@@ -1,0 +1,43 @@
+{
+    name: 'Simple',
+    description: 'This is a simple workflow',
+    config: {
+        max_steps: 5,
+        max_time: 100,
+        tools: []
+    },
+    tasks: [
+        {
+            id: 'A',
+            name: 'Random Poem',
+            description: 'Writes a poem about Kapadokya.',
+            prompt: 'Please write a poem about Kapadokya.',
+            operator: 'generation',
+            input_output: [
+                {
+                    input: {},
+                    output: {
+                        write: 'poem(__result)'
+                    }
+                }
+            ]
+        },
+        {
+            id: '__end',
+            name: 'end',
+            description: 'End of the task',
+            prompt: 'End of the task',
+            operator: 'end',
+            input_output: [
+                {
+                    input: {},
+                    output: {}
+                }
+            ]
+        }
+    ],
+    steps: 'A->END',
+    return_value: {
+        input: 'read(poem)'
+    }
+}
