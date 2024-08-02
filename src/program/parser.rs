@@ -187,9 +187,9 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Task {
         outputs: Vec::new(),
         operator: Operator::Generation,
     };
-  
+    let mut depth = 0; // Depth counter for nested structures
     let mut i = 0;
-    while i < tokens.len() {
+    while i < tokens.len()  {
         match tokens.get(i) {
             Some(Token::Identifier(ident)) => {
                 match ident.as_str() {
@@ -224,7 +224,7 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Task {
     i += 2; // Move past "input_output" and the following ":"
     if matches!(tokens.get(i), Some(Token::Other('{'))) {
         i += 1; // Skip the opening curly brace
-        while i < tokens.len() {
+        while i < tokens.len() &&  depth != 2 {
             match tokens.get(i) {
                 Some(Token::CurlyBrace('}')) => {
                     i += 1; // Move past the closing curly brace
@@ -234,6 +234,7 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Task {
                     i += 2; // Move past the section identifier and the following ":"
                     if matches!(tokens.get(i), Some(Token::Symbol('['))) {
                         i += 1; // Skip the opening bracket
+            
                         while i < tokens.len() && !matches!(tokens.get(i), Some(Token::Symbol(']'))) {
                             match tokens.get(i) {
                                 Some(Token::StringLiteral(io_str)) | Some(Token::Identifier(io_str)) => {
@@ -247,6 +248,10 @@ pub fn parse_tasks(tokens: Vec<Token>) -> Task {
                             }
                             i += 1; // Move to the next token, could be a comma or the closing bracket
                         }
+                        if matches!(tokens.get(i), Some(Token::Symbol(']'))) {
+                            depth +=1; // Decrement depth to track nested structures
+                        }
+                        
                         // No need to increment i here as it should now be on the closing bracket
                     }
                 },
