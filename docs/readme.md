@@ -76,7 +76,7 @@ Workflows can use certain operators to perform specific tasks:
 
 - `Generation`: Text generation with LLMs
 - `FunctionCalling`: Function calling using LLMs. LLMs select the most suitable function based on the query, generate input parameters, and run the tool.
-- `Check`: Compare two strings for equality
+- `Check`: Compare two strings for equality (obsolete, replaced with conditions)
 - `Search`: Perform vector search on `ProgramMemory`
 - `End`: Ending operator
 
@@ -85,16 +85,37 @@ Workflows can use certain operators to perform specific tasks:
 You can determine the model to use with the `Model` enum:
 
 ```rust
-#[derive(Debug, Clone)]
 pub enum Model {
+    // Ollama models
+    /// [Nous's Hermes-2-Theta model](https://ollama.com/adrienbrault/nous-hermes2theta-llama3-8b), q8_0 quantized
+    #[serde(rename = "adrienbrault/nous-hermes2theta-llama3-8b:q8_0")]
     NousTheta,
+    #[default]
+    /// [Microsoft's Phi3 Medium model](https://ollama.com/library/phi3:medium), q4_1 quantized
+    #[serde(rename = "phi3:14b-medium-4k-instruct-q4_1")]
     Phi3Medium,
+    /// [Microsoft's Phi3 Medium model, 128k context length](https://ollama.com/library/phi3:medium-128k), q4_1 quantized
+    #[serde(rename = "phi3:14b-medium-128k-instruct-q4_1")]
     Phi3Medium128k,
+    /// [Microsoft's Phi3 Mini model](https://ollama.com/library/phi3:3.8b), 3.8b parameters
+    #[serde(rename = "phi3:3.8b")]
     Phi3Mini,
+    /// [Ollama's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
+    #[serde(rename = "llama3.1:latest")]
+    Llama3_1_8B,
+    // OpenAI models
+    /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3-5-turbo)
+    #[serde(rename = "gpt-3.5-turbo")]
     GPT3_5Turbo,
+    /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4)
+    #[serde(rename = "gpt-4-turbo")]
     GPT4Turbo,
+    /// [OpenAI's GPT-4o model](https://platform.openai.com/docs/models/gpt-4o)
+    #[serde(rename = "gpt-4o")]
     GPT4o,
-    GPT4oMini
+    /// [OpenAI's GPT-4o mini model](https://platform.openai.com/docs/models/gpt-4o-mini)
+    #[serde(rename = "gpt-4o-mini")]
+    GPT4oMini,
 }
 ```
 
