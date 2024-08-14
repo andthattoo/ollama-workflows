@@ -1,0 +1,62 @@
+{
+    name: 'Insertion Workflow',
+    description: 'This is a workflow testing insertion, search & conditions',
+    config: {
+        max_steps: 5,
+        max_time: 100,
+        tools: []
+    },
+    tasks: [
+        {
+            id: 'A',
+            name: 'Random Facts about Kapadokya',
+            description: 'Write down facts about Kapadokya.',
+            prompt: 'Please write facts about Kapadokya. Refrain from generating previously generated facts.\n\n###History:{history}',
+            operator: 'generation',
+            input_output: [
+                {
+                    input: [
+                        'history.get_all(history)?'
+                    ],
+                    output: [
+                        'write(__result)',
+                        'push(history(__result))'
+                    ]
+                }
+            ]
+        },
+        {
+            id: 'B',
+            name: 'Search',
+            description: 'Perform search on Kapadokya',
+            prompt: 'What are the unique geographic features of Kapadokya?',
+            operator: 'search',
+            input_output: [
+                {
+                    input: {},
+                    output: {
+                        write: 'final_result(__result)'
+                    }
+                }
+            ]
+        },
+        {
+            id: '__end',
+            name: 'end',
+            description: 'End of the task',
+            prompt: 'End of the task',
+            operator: 'end',
+            input_output: [
+                {
+                    input: {},
+                    output: {}
+                }
+            ]
+        }
+    ],
+    steps: 'A->B ! if(history.size >= 3) else A \
+    B->END',
+    return_value: {
+        input: 'read(final_result)'
+    }
+}
