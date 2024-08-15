@@ -28,9 +28,9 @@ mod memory;
 mod program;
 mod tools;
 
-pub use ollama_rs;
 pub use memory::types::Entry;
 pub use memory::ProgramMemory;
+pub use ollama_rs;
 pub use program::{
     atomics::{Model, ModelProvider},
     executor::Executor,
