@@ -133,3 +133,27 @@ async fn test_user_workflow() {
     let mut memory = ProgramMemory::new();
     exe.execute(None, workflow, &mut memory).await;
 }
+
+#[tokio::test]
+async fn test_function_call_phi3_5() {
+    dotenv().ok();
+    let env = Env::default().filter_or("LOG_LEVEL", "info");
+    env_logger::Builder::from_env(env).init();
+    let exe = Executor::new(Model::Phi3_5Mini);
+    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
+    let mut memory = ProgramMemory::new();
+    let input = Entry::try_value_or_str("How would does reiki work?");
+    exe.execute(Some(&input), workflow, &mut memory).await;
+}
+
+#[tokio::test]
+async fn test_function_call_phi3_5_fp16() {
+    dotenv().ok();
+    let env = Env::default().filter_or("LOG_LEVEL", "info");
+    env_logger::Builder::from_env(env).init();
+    let exe = Executor::new(Model::Phi3_5MiniFp16);
+    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
+    let mut memory = ProgramMemory::new();
+    let input = Entry::try_value_or_str("How would does reiki work?");
+    exe.execute(Some(&input), workflow, &mut memory).await;
+}
