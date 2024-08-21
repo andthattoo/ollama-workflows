@@ -246,6 +246,12 @@ pub enum Model {
     /// [Microsoft's Phi3 Mini model](https://ollama.com/library/phi3:3.8b), 3.8b parameters
     #[serde(rename = "phi3:3.8b")]
     Phi3Mini,
+    /// [Microsoft's Phi3.5 Mini model](https://ollama.com/library/phi3.5), 3.8b parameters
+    #[serde(rename = "phi3.5:3.8b")]
+    Phi3_5Mini,
+    /// /// [Microsoft's Phi3.5 Mini model](https://ollama.com/library/phi3.5:3.8b-mini-instruct-fp16), 3.8b parameters
+    #[serde(rename = "phi3.5:3.8b-mini-instruct-fp16")]
+    Phi3_5MiniFp16,
     /// [Ollama's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
     #[serde(rename = "llama3.1:latest")]
     Llama3_1_8B,
@@ -263,6 +269,9 @@ pub enum Model {
     #[serde(rename = "gpt-4o-mini")]
     GPT4oMini,
 }
+// phi3.5:3.8b
+
+// phi3.5:3.8b-mini-instruct-fp16
 
 impl From<Model> for String {
     fn from(model: Model) -> Self {
@@ -313,6 +322,8 @@ impl From<Model> for ModelProvider {
             Model::Phi3Medium => ModelProvider::Ollama,
             Model::Phi3Medium128k => ModelProvider::Ollama,
             Model::Phi3Mini => ModelProvider::Ollama,
+            Model::Phi3_5Mini => ModelProvider::Ollama,
+            Model::Phi3_5MiniFp16 => ModelProvider::Ollama,
             Model::Llama3_1_8B => ModelProvider::Ollama,
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
             Model::GPT4Turbo => ModelProvider::OpenAI,
