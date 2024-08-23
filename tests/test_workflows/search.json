@@ -1,274 +1,274 @@
 {
-    "name": "Searching Agent",
-    "description": "Try to answer a given question using data from the web with grounded data.",
-    "config": {
-        "max_steps": 35,
-        "max_time": 600,
-        "tools": ["serper", "jina"]
+  "name": "Searching Agent",
+  "description": "Try to answer a given question using data from the web with grounded data.",
+  "config": {
+    "max_steps": 35,
+    "max_time": 600,
+    "tools": ["ALL"]
+  },
+  "tasks": [
+    {
+      "id": "A",
+      "name": "Web Search Query",
+      "description": "Write a web search query to collect useful information for the given question",
+      "prompt": "You are tasked with generating a single search query to gather useful information for answering a given question. Your goal is to create a concise, clear, and creative query that avoids repeating previously asked questions.\n\nHere is the query you need to address:\n<query>\n{{query}}\n</query>\n\nHere are the previous questions that have been asked:\n<history>\n{{history}}\n</history>\n\nWhen creating your search query, follow these guidelines:\n1. Analyze the given query and identify key concepts or terms.\n2. Review the previous questions to avoid repetition.\n3. Be creative in your approach, considering alternative phrasings or related concepts.\n4. Keep the query concise and clear, typically no more than 5-7 words.\n5. Focus on gathering information that will be most useful in answering the original query.\n\nProvide your search query inside <search_query> tags. Do not include any explanation or additional text outside these tags.",
+      "inputs": [
+        {
+          "name": "query",
+          "value": {
+            "type": "input",
+            "key": ""
+          },
+          "required": true
+        },
+        {
+          "name": "history",
+          "value": {
+            "type": "get_all",
+            "key": "history"
+          },
+          "required": false
+        }
+      ],
+      "operator": "generation",
+      "outputs": [
+        {
+          "type": "write",
+          "key": "web_search_query",
+          "value": "__result"
+        },
+        {
+          "type": "push",
+          "key": "history",
+          "value": "__result"
+        }
+      ]
     },
-    "tasks": [
+    {
+      "id": "B",
+      "name": "Web Search",
+      "description": "Search the web with the given query",
+      "prompt": "{query}",
+      "inputs": [
         {
-            "id": "A",
-            "name": "Web Search Query",
-            "description": "Write a web search query to collect useful information for the given question",
-            "prompt": "You are tasked with generating a single search query to gather useful information for answering a given question. Your goal is to create a concise, clear, and creative query that avoids repeating previously asked questions.\n\nHere is the query you need to address:\n<query>\n{{query}}\n</query>\n\nHere are the previous questions that have been asked:\n<history>\n{{history}}\n</history>\n\nWhen creating your search query, follow these guidelines:\n1. Analyze the given query and identify key concepts or terms.\n2. Review the previous questions to avoid repetition.\n3. Be creative in your approach, considering alternative phrasings or related concepts.\n4. Keep the query concise and clear, typically no more than 5-7 words.\n5. Focus on gathering information that will be most useful in answering the original query.\n\nProvide your search query inside <search_query> tags. Do not include any explanation or additional text outside these tags.",
-            "inputs": [
-                {
-                    "name": "query",
-                    "value": {
-                        "type": "input",
-                        "key": ""
-                    },
-                    "required": true
-                },
-                {
-                    "name": "history",
-                    "value": {
-                        "type": "get_all",
-                        "key": "history"
-                    },
-                    "required": false
-                }
-            ],
-            "operator": "generation",
-            "outputs": [
-                {
-                    "type": "write",
-                    "key": "web_search_query",
-                    "value": "__result"
-                },
-                {
-                    "type": "push",
-                    "key": "history",
-                    "value": "__result"
-                }
-            ]
-        },
-        {
-            "id": "B",
-            "name": "Web Search",
-            "description": "Search the web with the given query",
-            "prompt": "{query}",
-            "inputs": [
-                {
-                    "name": "query",
-                    "value": {
-                        "type": "read",
-                        "key": "web_search_query"
-                    },
-                    "required": true
-                }
-            ],
-            "operator": "function_calling",
-            "outputs": [
-                {
-                    "type": "write",
-                    "key": "web_search_result",
-                    "value": "__result"
-                },
-                {
-                    "type": "push",
-                    "key": "web_search_result",
-                    "value": "__result"
-                }
-            ]
-        },
-        {
-            "id": "C",
-            "name": "Candidate Website",
-            "description": "Pick the most useful link from web search results for the given query",
-            "prompt": "Pick the most useful URL to scrape information for Query: {query} \n\n ###Sarch Results:{web_results} \n\n Only output the selected URL: ###Selected URL:",
-            "inputs": [
-                {
-                    "name": "web_results",
-                    "value": {
-                        "type": "read",
-                        "key": "web_search_result"
-                    },
-                    "required": true
-                },
-                {
-                    "name": "query",
-                    "value": {
-                        "type": "input",
-                        "key": ""
-                    },
-                    "required": true
-                }
-            ],
-            "operator": "generation",
-            "outputs": [
-                {
-                    "type": "write",
-                    "key": "search_url",
-                    "value": "__result"
-                }
-            ]
-        },
-        {
-            "id": "D",
-            "name": "Scrape Website",
-            "description": "Scrape the selected website",
-            "prompt": "scrape {search_url}",
-            "inputs": [
-                {
-                    "name": "search_url",
-                    "value": {
-                        "type": "read",
-                        "key": "search_url",
-                        "required": true
-                    },
-                    "required": true
-                }
-            ],
-            "operator": "function_calling",
-            "outputs": [
-                {
-                    "type": "push",
-                    "key": "content",
-                    "value": "__result"
-                }
-            ]
-        },
-        {
-            "id": "E",
-            "name": "Summarize Website",
-            "description": "Summarize website content",
-            "prompt": "Answer given question completely based on following context. Don't assume anything. Use the provided information to answer the question. If context is not enough, say 'I dont know.' ###Content: {content} \n\n ###Question: {query} \n\n ###Answer:",
-            "inputs": [
-                {
-                    "name": "content",
-                    "value": {
-                        "type": "pop",
-                        "key": "content",
-                        "required": true
-                    },
-                    "required": true
-                },
-                {
-                    "name": "query",
-                    "value": {
-                        "type": "input",
-                        "key": ""
-                    },
-                    "required": true
-                }
-            ],
-            "operator": "generation",
-            "outputs": [
-                {
-                    "type": "push",
-                    "key": "answers",
-                    "value": "__result"
-                }
-            ]
-        },
-        {
-            "id": "F",
-            "name": "Evaluate Result",
-            "description": "Evaluate if the result is satisfying",
-            "prompt": "Evaluate the result if it answers the query. Write 'Yes' if valid, if not 'No'.Write nothing else but strictly 'Yes'|'No'. query:{query} result:{answer}. ###Evaluation:",
-            "inputs": [
-                {
-                    "name": "answer",
-                    "value": {
-                        "type": "get_all",
-                        "key": "answers"
-                    },
-                    "required": true
-                },
-                {
-                    "name": "query",
-                    "value": {
-                        "type": "input",
-                        "key": ""
-                    },
-                    "required": true
-                }
-            ],
-            "operator": "generation",
-            "outputs": [
-                {
-                    "type": "write",
-                    "key": "final_result",
-                    "value": "__result"
-                }
-            ]
-        },
-        {
-            "id": "G",
-            "name": "Check Result",
-            "description": "Check if the result is satisfying",
-            "prompt": "",
-            "inputs": [
-                {
-                    "name": "__output",
-                    "value": {
-                        "type": "read",
-                        "key": "final_result"
-                    },
-                    "required": true
-                },
-                {
-                    "name": "__expected",
-                    "value": {
-                        "type": "string",
-                        "key": "Yes"
-                    },
-                    "required": true
-                }
-            ],
-            "operator": "check",
-            "outputs": []
-        },
-        {
-            "id": "__end",
-            "name": "end",
-            "description": "End of the task",
-            "prompt": "End of the task",
-            "inputs": [],
-            "operator": "end",
-            "outputs": []
+          "name": "query",
+          "value": {
+            "type": "read",
+            "key": "web_search_query"
+          },
+          "required": true
         }
-    ],
-    "steps": [
+      ],
+      "operator": "function_calling",
+      "outputs": [
         {
-            "source": "A",
-            "target": "B",
-            "fallback": "H"
+          "type": "write",
+          "key": "web_search_result",
+          "value": "__result"
         },
         {
-            "source": "B",
-            "target": "C",
-            "fallback": "A"
-        },
-        {
-            "source": "C",
-            "target": "D"
-        },
-        {
-            "source": "D",
-            "target": "E",
-            "fallback": "A"
-        },
-        {
-            "source": "E",
-            "target": "F"
-        },
-        {
-            "source": "F",
-            "target": "G"
-        },
-        {
-            "source": "G",
-            "target": "end",
-            "fallback": "A"
+          "type": "push",
+          "key": "web_search_result",
+          "value": "__result"
         }
-    ],
-    "return_value":{
-        "input":{
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Candidate Website",
+      "description": "Pick the most useful link from web search results for the given query",
+      "prompt": "Pick the most useful URL to scrape information for Query: {query} \n\n ###Sarch Results:{web_results} \n\n Only output the selected URL: ###Selected URL:",
+      "inputs": [
+        {
+          "name": "web_results",
+          "value": {
+            "type": "read",
+            "key": "web_search_result"
+          },
+          "required": true
+        },
+        {
+          "name": "query",
+          "value": {
+            "type": "input",
+            "key": ""
+          },
+          "required": true
+        }
+      ],
+      "operator": "generation",
+      "outputs": [
+        {
+          "type": "write",
+          "key": "search_url",
+          "value": "__result"
+        }
+      ]
+    },
+    {
+      "id": "D",
+      "name": "Scrape Website",
+      "description": "Scrape the selected website",
+      "prompt": "scrape {search_url}",
+      "inputs": [
+        {
+          "name": "search_url",
+          "value": {
+            "type": "read",
+            "key": "search_url",
+            "required": true
+          },
+          "required": true
+        }
+      ],
+      "operator": "function_calling",
+      "outputs": [
+        {
+          "type": "push",
+          "key": "content",
+          "value": "__result"
+        }
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Summarize Website",
+      "description": "Summarize website content",
+      "prompt": "Answer given question completely based on following context. Don't assume anything. Use the provided information to answer the question. If context is not enough, say 'I dont know.' ###Content: {content} \n\n ###Question: {query} \n\n ###Answer:",
+      "inputs": [
+        {
+          "name": "content",
+          "value": {
+            "type": "pop",
+            "key": "content",
+            "required": true
+          },
+          "required": true
+        },
+        {
+          "name": "query",
+          "value": {
+            "type": "input",
+            "key": ""
+          },
+          "required": true
+        }
+      ],
+      "operator": "generation",
+      "outputs": [
+        {
+          "type": "push",
+          "key": "answers",
+          "value": "__result"
+        }
+      ]
+    },
+    {
+      "id": "F",
+      "name": "Evaluate Result",
+      "description": "Evaluate if the result is satisfying",
+      "prompt": "Evaluate the result if it answers the query. Write 'Yes' if valid, if not 'No'.Write nothing else but strictly 'Yes'|'No'. query:{query} result:{answer}. ###Evaluation:",
+      "inputs": [
+        {
+          "name": "answer",
+          "value": {
+            "type": "get_all",
+            "key": "answers"
+          },
+          "required": true
+        },
+        {
+          "name": "query",
+          "value": {
+            "type": "input",
+            "key": ""
+          },
+          "required": true
+        }
+      ],
+      "operator": "generation",
+      "outputs": [
+        {
+          "type": "write",
+          "key": "final_result",
+          "value": "__result"
+        }
+      ]
+    },
+    {
+      "id": "G",
+      "name": "Check Result",
+      "description": "Check if the result is satisfying",
+      "prompt": "",
+      "inputs": [
+        {
+          "name": "__output",
+          "value": {
             "type": "read",
             "key": "final_result"
+          },
+          "required": true
+        },
+        {
+          "name": "__expected",
+          "value": {
+            "type": "string",
+            "key": "Yes"
+          },
+          "required": true
         }
+      ],
+      "operator": "check",
+      "outputs": []
+    },
+    {
+      "id": "__end",
+      "name": "end",
+      "description": "End of the task",
+      "prompt": "End of the task",
+      "inputs": [],
+      "operator": "end",
+      "outputs": []
     }
+  ],
+  "steps": [
+    {
+      "source": "A",
+      "target": "B",
+      "fallback": "H"
+    },
+    {
+      "source": "B",
+      "target": "C",
+      "fallback": "A"
+    },
+    {
+      "source": "C",
+      "target": "D"
+    },
+    {
+      "source": "D",
+      "target": "E",
+      "fallback": "A"
+    },
+    {
+      "source": "E",
+      "target": "F"
+    },
+    {
+      "source": "F",
+      "target": "G"
+    },
+    {
+      "source": "G",
+      "target": "end",
+      "fallback": "A"
+    }
+  ],
+  "return_value": {
+    "input": {
+      "type": "read",
+      "key": "final_result"
+    }
+  }
 }
