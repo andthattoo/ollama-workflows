@@ -1,0 +1,66 @@
+{
+    "name": "Simple",
+    "description": "This is a simple workflow",
+    "config":{
+        "max_steps": 30,
+        "max_time": 100,
+        "tools": []
+    },
+    "tasks":[
+        {
+            "id": "A",
+            "name": "Random Poem",
+            "description": "Writes a poem about Kapadokya.",
+            "prompt": "Here are the previous lines of the poem: {poem}. Please write the next line. If there are no previous lines, write the first line. Only output your poem sentence",
+            "inputs":[
+                {
+                    "name": "poem",
+                    "value": {
+                        "type": "get_all",
+                        "key": "poem"
+                    },
+                    "required": false
+                }
+            ],
+            "operator": "generation",
+            "outputs":[
+                {
+                    "type": "push",
+                    "key": "poem",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "__end",
+            "name": "end",
+            "description": "End of the task",
+            "prompt": "End of the task",
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
+        }
+    ],
+    "steps":[
+        {
+            "source":"A",
+            "target":"end",
+            "condition": {
+                "input":{
+                    "type":"size",
+                    "key": "poem"
+                },
+                "expression": "GreaterThan",
+                "expected": "19",
+                "target_if_not": "A"
+            }
+        }
+    ],
+    "return_value":{
+        "input":{
+            "type": "get_all",
+            "key": "poem"
+        },
+        "to_json":true
+    }
+}
