@@ -2,7 +2,7 @@ use super::atomics::*;
 use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
-use crate::program::errors::ToolError;
+use crate::program::errors::{ExecutionError, ToolError};
 use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
 
 use rand::Rng;
@@ -82,7 +82,7 @@ impl Executor {
         input: Option<&Entry>,
         workflow: Workflow,
         memory: &mut ProgramMemory,
-    ) -> String {
+    ) -> Result<String, ExecutionError> {
         let config = workflow.get_config();
         let max_steps = config.max_steps;
         let max_time = config.max_time;
@@ -113,9 +113,9 @@ impl Executor {
                 }
 
                 if let Some(task) = workflow.get_tasks_by_id(&edge.source) {
-                    let is_done = self.execute_task(task, memory.borrow_mut(), config).await;
+                    let result = self.execute_task(task, memory.borrow_mut(), config).await;
 
-                    current_step = if is_done {
+                    current_step = if result.is_ok() {
                         //if there are conditions, check them
                         if let Some(condition) = &edge.condition {
                             let value = self.handle_input(&condition.input, memory).await;
@@ -156,9 +156,11 @@ impl Executor {
                         }
                     } else if let Some(fallback) = &edge.fallback {
                         warn!("[{}] failed, stepping into [{}]", &edge.source, &fallback);
+                        error!("Task execution failed: {}", result.unwrap_err());
                         workflow.get_step_by_id(fallback)
                     } else {
                         warn!("{} failed, halting beacause of no fallback", &edge.source);
+                        error!("Task execution failed: {}", result.unwrap_err());
                         break;
                     };
                 } else {
@@ -177,7 +179,7 @@ impl Executor {
         if rv.to_json.is_some() && rv.to_json.unwrap() {
             let res = return_value.to_json();
             if let Some(result) = res {
-                return result;
+                return Ok(result);
             }
         }
 
@@ -214,10 +216,15 @@ impl Executor {
                 };
             }
         }
-        return_string
+        Ok(return_string)
     }
 
-    async fn execute_task(&self, task: &Task, memory: &mut ProgramMemory, config: &Config) -> bool {
+    async fn execute_task(
+        &self,
+        task: &Task,
+        memory: &mut ProgramMemory,
+        config: &Config,
+    ) -> Result<(), ExecutionError> {
         info!("Executing task: {} with id {}", &task.name, &task.id);
         info!("Using operator: {:?}", &task.operator);
 
@@ -225,7 +232,7 @@ impl Executor {
         for input in &task.inputs {
             let value = self.handle_input(&input.value, memory).await;
             if input.required && value.is_none() {
-                return false;
+                return Err(ExecutionError::InvalidInput);
             }
             input_map.insert(input.name.clone(), value.clone());
         }
@@ -236,7 +243,7 @@ impl Executor {
                 let result = self.generate_text(&prompt, config).await;
                 if result.is_err() {
                     error!("Error generating text: {:?}", result.err().unwrap());
-                    return false;
+                    return Err(ExecutionError::GenerationFailed);
                 }
                 debug!("Prompt: {}", &prompt);
                 log_colored(
@@ -250,8 +257,8 @@ impl Executor {
                 info!("Prompt: {}", &prompt);
                 let result = self.function_call(&prompt, config).await;
                 if result.is_err() {
-                    error!("Error generating text: {:?}", result.err().unwrap());
-                    return false;
+                    error!("Error function calling: {:?}", result.err().unwrap());
+                    return Err(ExecutionError::FunctionCallFailed);
                 }
                 debug!("Prompt: {}", &prompt);
                 log_colored(
@@ -260,17 +267,12 @@ impl Executor {
                 let result_entry = Entry::try_value_or_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
-            Operator::Check => {
-                let input = self.prepare_check(&input_map);
-                let result = self.check(&input.0, &input.1);
-                return result;
-            }
             Operator::Search => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
                 let result = memory.search(&Entry::try_value_or_str(&prompt)).await;
                 if result.is_none() {
                     error!("Error searching: {:?}", "No results found");
-                    return false;
+                    return Err(ExecutionError::VectorSearchFailed);
                 }
                 log_colored(
                     format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
@@ -291,13 +293,13 @@ impl Executor {
                     let v = Vec::<Entry>::from(value.clone());
                     if !v.is_empty() {
                         error!("Input for Sample operator cannot be GetAll");
-                        return false;
+                        return Err(ExecutionError::InvalidGetAllError);
                     } else {
                         let stack_lookup = value.to_string();
                         let entry = memory.get_all(&stack_lookup);
                         if entry.is_none() {
                             error!("Error sampling: {:?}", key);
-                            return false;
+                            return Err(ExecutionError::SamplingError);
                         }
                         let sample = self.sample(&entry.unwrap());
                         prompt.push_str(&format!(": {}", sample));
@@ -310,7 +312,7 @@ impl Executor {
             Operator::End => {}
         };
 
-        true
+        Ok(())
     }
 
     fn fill_prompt(
@@ -324,29 +326,6 @@ impl Executor {
                 filled_prompt.replace(&format!("{{{}}}", key), value.to_string().as_str());
         }
         filled_prompt
-    }
-
-    fn prepare_check(&self, input_map: &HashMap<String, MemoryReturnType>) -> (String, String) {
-        let input = input_map.get(R_OUTPUTS);
-        let expected = input_map.get(R_EXPECTED);
-
-        if let Some(i) = input {
-            if let Some(e) = expected {
-                return (
-                    i.to_string()
-                        .trim()
-                        .replace('\n', "")
-                        .to_lowercase()
-                        .clone(),
-                    e.to_string()
-                        .trim()
-                        .replace('\n', "")
-                        .to_lowercase()
-                        .clone(),
-                );
-            }
-        }
-        ("+".to_string(), "-".to_string())
     }
 
     fn get_tools(
@@ -585,11 +564,6 @@ impl Executor {
         }
 
         Ok(())
-    }
-
-    #[inline]
-    fn check(&self, input: &str, expected: &str) -> bool {
-        input == expected
     }
 
     //randomly sample list of entries

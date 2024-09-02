@@ -12,5 +12,8 @@ async fn main() {
     let mut memory = ProgramMemory::new();
     let input = Entry::try_value_or_str("How would does reiki work?");
     let return_value = exe.execute(Some(&input), workflow, &mut memory).await;
-    println!("{}", return_value);
+    match return_value {
+        Ok(value) => println!("{}", value),
+        Err(err) => eprintln!("Error: {:?}", err),
+    }
 }

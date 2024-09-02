@@ -7,6 +7,7 @@ pub enum CustomError {
     FileSystemError(FileSystemError),
     EmbeddingError(EmbeddingError),
     ToolError(ToolError),
+    ExecutionError(ExecutionError),
 }
 
 #[allow(dead_code)]
@@ -31,12 +32,26 @@ pub enum ToolError {
     ToolDoesNotExist,
 }
 
+#[derive(Debug)]
+pub enum ExecutionError {
+    WorkflowFailed(String),
+    InvalidInput,
+    GenerationFailed,
+    FunctionCallFailed,
+    VectorSearchFailed,
+    StringCheckFailed,
+    SamplingError,
+    InvalidGetAllError,
+    UnexpectedOutput,
+}
+
 impl fmt::Display for CustomError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             CustomError::FileSystemError(err) => write!(f, "File system error: {}", err),
             CustomError::EmbeddingError(err) => write!(f, "Embedding error: {}", err),
             CustomError::ToolError(err) => write!(f, "Tool error: {}", err),
+            CustomError::ExecutionError(err) => write!(f, "Execution error: {}", err),
         }
     }
 }
@@ -74,10 +89,32 @@ impl fmt::Display for ToolError {
     }
 }
 
+impl fmt::Display for ExecutionError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            ExecutionError::WorkflowFailed(cmd) => write!(f, "Workflow execution failed: {}", cmd),
+            ExecutionError::InvalidInput => write!(f, "Invalid input provided"),
+            ExecutionError::UnexpectedOutput => write!(f, "Unexpected output from command"),
+            ExecutionError::GenerationFailed => write!(f, "Text generation failed"),
+            ExecutionError::FunctionCallFailed => write!(f, "Function call failed"),
+            ExecutionError::VectorSearchFailed => write!(f, "Vector search failed"),
+            ExecutionError::StringCheckFailed => write!(f, "Vector search failed"),
+            ExecutionError::SamplingError => {
+                write!(f, "Error sampling because value array is empty")
+            }
+            ExecutionError::InvalidGetAllError => write!(
+                f,
+                "Error sampling because value is not get_all compatible (array)"
+            ),
+        }
+    }
+}
+
 impl Error for CustomError {}
 impl Error for FileSystemError {}
 impl Error for EmbeddingError {}
 impl Error for ToolError {}
+impl Error for ExecutionError {}
 
 impl From<FileSystemError> for CustomError {
     fn from(err: FileSystemError) -> CustomError {
@@ -94,5 +131,11 @@ impl From<EmbeddingError> for CustomError {
 impl From<ToolError> for CustomError {
     fn from(err: ToolError) -> CustomError {
         CustomError::ToolError(err)
+    }
+}
+
+impl From<ExecutionError> for CustomError {
+    fn from(err: ExecutionError) -> CustomError {
+        CustomError::ExecutionError(err)
     }
 }

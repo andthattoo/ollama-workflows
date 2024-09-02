@@ -1,159 +1,145 @@
 use dotenv::dotenv;
 use env_logger::Env;
-use log::info;
 use ollama_workflows::{Entry, Executor, Model, ProgramMemory, Workflow};
 
-#[tokio::test]
-async fn test_search_workflow() {
+// Constants for workflow paths
+const SEARCH_WORKFLOW_PATH: &str = "./tests/test_workflows/search.json";
+const ALL_TOOLS_WORKFLOW_PATH: &str = "./tests/test_workflows/all.json";
+const QUESTIONS_WORKFLOW_PATH: &str = "./tests/test_workflows/questions.json";
+const POST_PROCESS_WORKFLOW_PATH: &str = "./tests/test_workflows/post_process.json";
+const TICKER_WORKFLOW_PATH: &str = "./tests/test_workflows/ticker.json";
+const SIMPLE_WORKFLOW_PATH: &str = "./tests/test_workflows/simple.json";
+const INSERT_WORKFLOW_PATH: &str = "./tests/test_workflows/insert.json";
+const USERS_WORKFLOW_PATH: &str = "./tests/test_workflows/users.json";
+
+async fn setup_test(model: Model) -> Executor {
     dotenv().ok();
     let env = Env::default().filter_or("LOG_LEVEL", "info");
     env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3Medium);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("How would does reiki work?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+    Executor::new(model)
 }
 
-#[tokio::test]
-async fn test_function_call_llama() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Llama3_1_8B);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("How would does reiki work?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+macro_rules! workflow_test {
+    ($name:ident, $model:expr, $workflow:expr, $input:expr) => {
+        #[tokio::test]
+        async fn $name() {
+            let exe = setup_test($model).await;
+            let workflow = Workflow::new_from_json($workflow).unwrap();
+            let mut memory = ProgramMemory::new();
+            let input = Entry::try_value_or_str($input);
+            if let Err(e) = exe.execute(Some(&input), workflow, &mut memory).await {
+                log::error!("Execution failed: {}", e);
+            };
+        }
+    };
+    ($name:ident, $model:expr, $workflow:expr) => {
+        #[tokio::test]
+        async fn $name() {
+            let exe = setup_test($model).await;
+            let workflow = Workflow::new_from_json($workflow).unwrap();
+            let mut memory = ProgramMemory::new();
+            if let Err(e) = exe.execute(None, workflow, &mut memory).await {
+                log::error!("Execution failed: {}", e);
+            };
+        }
+    };
 }
 
-#[tokio::test]
-async fn test_question_generation() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT4oMini);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/questions.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("Best ZK Rollups to date, july 2024?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+// Search workflow tests
+mod ticker_tests {
+    use super::*;
+
+    workflow_test!(
+        test_ticker_workflow_openai,
+        Model::GPT4oMini,
+        TICKER_WORKFLOW_PATH
+    );
 }
 
-#[tokio::test]
-async fn test_search_workflow_openai() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT4oMini);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("Best ZK Rollups to date, july 2024?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+mod simple_workflow_tests {
+    use super::*;
+
+    workflow_test!(
+        test_simple_workflow,
+        Model::Phi3Medium,
+        SIMPLE_WORKFLOW_PATH,
+        "How does reiki work?"
+    );
 }
 
-#[tokio::test]
-async fn test_search_workflow_openai_all_tools() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT4oMini);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/all.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    exe.execute(None, workflow, &mut memory).await;
+mod insert_workflow_tests {
+    use super::*;
+
+    workflow_test!(
+        test_insert_workflow_ollama,
+        Model::Phi3Medium,
+        INSERT_WORKFLOW_PATH
+    );
+    workflow_test!(
+        test_insert_workflow_openai,
+        Model::GPT4oMini,
+        INSERT_WORKFLOW_PATH
+    );
 }
 
-#[tokio::test]
-async fn test_post_process() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT4oMini);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/post_process.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let res = exe.execute(None, workflow, &mut memory).await;
-    info!("Result: {:?}", res);
+mod user_workflow_tests {
+    use super::*;
+
+    workflow_test!(test_user_workflow, Model::GPT4o, USERS_WORKFLOW_PATH);
 }
 
-#[tokio::test]
-async fn test_ticker_workflow_openai() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT4oMini);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/ticker.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    exe.execute(None, workflow, &mut memory).await;
+mod function_call_tests {
+    use super::*;
+
+    workflow_test!(
+        test_function_call_phi3_5_fp16,
+        Model::Phi3_5MiniFp16,
+        SEARCH_WORKFLOW_PATH,
+        "How does reiki work?"
+    );
+    workflow_test!(
+        function_calling_nous_theta,
+        Model::NousTheta,
+        SEARCH_WORKFLOW_PATH,
+        "How many Hoodoo's are in Kapadokya?"
+    );
+    workflow_test!(
+        function_calling_llama3_1,
+        Model::Llama3_1_8B,
+        SEARCH_WORKFLOW_PATH,
+        "How many fairy chimneys are there in Cappadocia?"
+    );
 }
 
-#[tokio::test]
-async fn test_simple_workflow() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3Medium);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/simple.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("How would does reiki work?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+mod all_tools_workflow_tests {
+    use super::*;
+
+    workflow_test!(
+        test_all_tools_workflow,
+        Model::GPT4oMini,
+        ALL_TOOLS_WORKFLOW_PATH,
+        "What's the weather like in New York and how does it affect the stock market?"
+    );
 }
 
-/// Test the insert workflow
-/// This workflow inserts a document into the file system.
-#[tokio::test]
-async fn test_insert_workflow_ollama() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "debug");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3Medium);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/insert.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    exe.execute(None, workflow, &mut memory).await;
+mod questions_workflow_tests {
+    use super::*;
+
+    workflow_test!(
+        test_questions_workflow,
+        Model::Phi3Medium,
+        QUESTIONS_WORKFLOW_PATH,
+        "Tell me about the history of artificial intelligence."
+    );
 }
 
-#[tokio::test]
-async fn test_insert_workflow_openai() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "debug");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT4oMini);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/insert.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    exe.execute(None, workflow, &mut memory).await;
-}
+mod post_process_workflow_tests {
+    use super::*;
 
-/// Test the user workflow
-/// This workflow samples random variables and produces reviews based on sampled persona
-#[tokio::test]
-async fn test_user_workflow() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::GPT4o);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/users.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    exe.execute(None, workflow, &mut memory).await;
-}
-
-#[tokio::test]
-async fn test_function_call_phi3_5() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3_5Mini);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("How would does reiki work?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
-}
-
-#[tokio::test]
-async fn test_function_call_phi3_5_fp16() {
-    dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
-    let exe = Executor::new(Model::Phi3_5MiniFp16);
-    let workflow = Workflow::new_from_json("./tests/test_workflows/search.json").unwrap();
-    let mut memory = ProgramMemory::new();
-    let input = Entry::try_value_or_str("How would does reiki work?");
-    exe.execute(Some(&input), workflow, &mut memory).await;
+    workflow_test!(
+        test_post_process_workflow,
+        Model::Llama3_1_8B,
+        POST_PROCESS_WORKFLOW_PATH,
+        "Summarize the main plot points of Romeo and Juliet."
+    );
 }

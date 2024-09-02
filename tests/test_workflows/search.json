@@ -196,32 +196,6 @@
       ]
     },
     {
-      "id": "G",
-      "name": "Check Result",
-      "description": "Check if the result is satisfying",
-      "prompt": "",
-      "inputs": [
-        {
-          "name": "__output",
-          "value": {
-            "type": "read",
-            "key": "final_result"
-          },
-          "required": true
-        },
-        {
-          "name": "__expected",
-          "value": {
-            "type": "string",
-            "key": "Yes"
-          },
-          "required": true
-        }
-      ],
-      "operator": "check",
-      "outputs": []
-    },
-    {
       "id": "__end",
       "name": "end",
       "description": "End of the task",
@@ -257,12 +231,16 @@
     },
     {
       "source": "F",
-      "target": "G"
-    },
-    {
-      "source": "G",
       "target": "end",
-      "fallback": "A"
+      "condition": {
+        "input":{
+            "type":"read",
+            "key": "final_result"
+        },
+        "expression": "Equal",
+        "expected": "Yes",
+        "target_if_not": "A"
+    }
     }
   ],
   "return_value": {

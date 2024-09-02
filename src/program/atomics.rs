@@ -9,8 +9,6 @@ use crate::ProgramMemory;
 pub static R_INPUT: &str = "__input";
 pub static R_OUTPUT: &str = "__result";
 pub static R_END: &str = "__end";
-pub static R_EXPECTED: &str = "__expected";
-pub static R_OUTPUTS: &str = "__output";
 
 pub static TOOLS: [&str; 6] = [
     "browserless",
@@ -112,7 +110,6 @@ pub struct Output {
 pub enum Operator {
     Generation,
     FunctionCalling,
-    Check,
     Search,
     Sample,
     End,
@@ -252,9 +249,12 @@ pub enum Model {
     /// /// [Microsoft's Phi3.5 Mini model](https://ollama.com/library/phi3.5:3.8b-mini-instruct-fp16), 3.8b parameters
     #[serde(rename = "phi3.5:3.8b-mini-instruct-fp16")]
     Phi3_5MiniFp16,
-    /// [Ollama's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
+    /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
     #[serde(rename = "llama3.1:latest")]
     Llama3_1_8B,
+    /// [Meta's Llama3.1 model q8](https://ollama.com/library/llama3.1:8b-text-q8_0)
+    #[serde(rename = "llama3.1:8b-instruct-q8_0")]
+    Llama3_1_8Bq8,
     // OpenAI models
     /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3-5-turbo)
     #[serde(rename = "gpt-3.5-turbo")]
@@ -325,6 +325,7 @@ impl From<Model> for ModelProvider {
             Model::Phi3_5Mini => ModelProvider::Ollama,
             Model::Phi3_5MiniFp16 => ModelProvider::Ollama,
             Model::Llama3_1_8B => ModelProvider::Ollama,
+            Model::Llama3_1_8Bq8 => ModelProvider::Ollama,
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
