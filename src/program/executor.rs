@@ -172,6 +172,14 @@ impl Executor {
             }
             num_steps += 1;
         }
+        // log if elapsed time is bigger the max time
+        if start.elapsed().as_secs() >= max_time {
+            warn!("Max time exceeded, halting");
+        }
+        // log if max steps is reached
+        if num_steps >= max_steps {
+            warn!("Max steps reached, halting");
+        }
         let rv = workflow.get_return_value();
         let return_value = self.handle_input(&rv.input, memory).await;
         let mut return_string = return_value.to_string().clone();

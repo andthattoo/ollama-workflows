@@ -11,6 +11,7 @@ const TICKER_WORKFLOW_PATH: &str = "./tests/test_workflows/ticker.json";
 const SIMPLE_WORKFLOW_PATH: &str = "./tests/test_workflows/simple.json";
 const INSERT_WORKFLOW_PATH: &str = "./tests/test_workflows/insert.json";
 const USERS_WORKFLOW_PATH: &str = "./tests/test_workflows/users.json";
+const CONTEXT_SIZE_WORKFLOW_PATH: &str = "./tests/test_workflows/context_size.json";
 
 async fn setup_test(model: Model) -> Executor {
     dotenv().ok();
@@ -141,5 +142,20 @@ mod post_process_workflow_tests {
         Model::Llama3_1_8B,
         POST_PROCESS_WORKFLOW_PATH,
         "Summarize the main plot points of Romeo and Juliet."
+    );
+}
+
+mod context_size_tests {
+    use super::*;
+
+    workflow_test!(
+        context_size_phi3_5,
+        Model::Phi3_5Mini,
+        CONTEXT_SIZE_WORKFLOW_PATH
+    );
+    workflow_test!(
+        context_size_llama,
+        Model::Llama3_1_8B,
+        CONTEXT_SIZE_WORKFLOW_PATH
     );
 }
