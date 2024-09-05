@@ -1,5 +1,5 @@
 use super::atomics::{Config, Edge, Task, TaskOutput};
-use crate::memory::types::{Entry, StackPage, ID};
+use crate::memory::types::{self, Entry, MemoryInputType, ID};
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
 use std::collections::HashMap;
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 /// Custom deserializer for external memory.
 fn deserialize_external_memory<'de, D>(
     deserializer: D,
-) -> Result<Option<HashMap<ID, StackPage>>, D::Error>
+) -> Result<Option<HashMap<ID, MemoryInputType>>, D::Error>
 where
     D: Deserializer<'de>,
 {
@@ -32,7 +32,19 @@ where
                         return Err(serde::de::Error::custom("Invalid entry format"));
                     }
                 }
-                external_memory.insert(key.clone(), stack_page);
+                external_memory.insert(key.clone(), MemoryInputType::Page(stack_page));
+            } else if let Some(s) = val.as_str() {
+                external_memory.insert(
+                    key.clone(),
+                    MemoryInputType::Entry(Entry::String(s.to_string())),
+                );
+            } else if val.is_object() {
+                external_memory.insert(
+                    key.clone(),
+                    MemoryInputType::Entry(Entry::Json(val.clone())),
+                );
+            } else {
+                return Err(serde::de::Error::custom("Invalid entry format"));
             }
         }
 
@@ -47,7 +59,7 @@ where
 pub struct Workflow {
     config: Config,
     #[serde(default, deserialize_with = "deserialize_external_memory")]
-    pub external_memory: Option<HashMap<ID, StackPage>>,
+    pub external_memory: Option<HashMap<ID, types::MemoryInputType>>,
     tasks: Vec<Task>,
     steps: Vec<Edge>,
     return_value: TaskOutput,
@@ -58,7 +70,7 @@ impl Workflow {
         tasks: Vec<Task>,
         steps: Vec<Edge>,
         config: Config,
-        external_memory: Option<HashMap<ID, StackPage>>,
+        external_memory: Option<HashMap<ID, MemoryInputType>>,
         return_value: TaskOutput,
     ) -> Self {
         Workflow {

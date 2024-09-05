@@ -1,0 +1,81 @@
+{
+"name": "Custom Tool",
+"description": "This is a simple workflow for custom tools",
+"config":{
+    "max_steps": 5,
+    "max_time": 100,
+    "tools": [],
+    "custom_tools":[{
+        "name": "PriceFeedRequest",
+        "description": "Fetches price feed from Gemini API",
+        "url": "https://api.gemini.com/v1/pricefeed",
+        "method": "GET"
+      }]
+},
+"tasks":[
+    {
+        "id": "A",
+        "name": "Get prices",
+        "description": "Get price feed",
+        "prompt": "What are the current prices?",
+        "inputs":[],
+        "operator": "function_calling",
+        "outputs":[
+            {
+                "type": "write",
+                "key": "prices",
+                "value": "__result"
+            }
+        ]
+    },
+    {
+        "id": "B",
+        "name": "Analyze prices",
+        "description": "Anzlye price feed",
+        "prompt": "<prices>{prices}</prices> \n\n Which ticker pair had the highest price change in 24 that is above $300?",
+        "inputs":[
+            {
+                "name": "prices",
+                "value": {
+                    "type": "read",
+                    "key": "prices"
+                },
+                "required": true
+            }
+        ],
+        "operator": "generation",
+        "outputs":[
+            {
+                "type": "write",
+                "key": "result",
+                "value": "__result"
+            }
+        ]
+    },
+    {
+        "id": "__end",
+        "name": "end",
+        "description": "End of the task",
+        "prompt": "End of the task",
+        "inputs": [],
+        "operator": "end",
+        "outputs": []
+    }
+],
+"steps":[
+    {
+        "source":"A",
+        "target":"B"
+    },
+    {
+        "source":"B",
+        "target":"end"
+    }
+],
+"return_value":{
+    "input":{
+        "type": "read",
+        "key": "result"
+    }
+}
+}

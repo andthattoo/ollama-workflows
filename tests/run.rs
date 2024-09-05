@@ -12,6 +12,7 @@ const SIMPLE_WORKFLOW_PATH: &str = "./tests/test_workflows/simple.json";
 const INSERT_WORKFLOW_PATH: &str = "./tests/test_workflows/insert.json";
 const USERS_WORKFLOW_PATH: &str = "./tests/test_workflows/users.json";
 const CONTEXT_SIZE_WORKFLOW_PATH: &str = "./tests/test_workflows/context_size.json";
+const CUSTOM_TOOL_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tools.json";
 
 async fn setup_test(model: Model) -> Executor {
     dotenv().ok();
@@ -51,7 +52,7 @@ mod ticker_tests {
     use super::*;
 
     workflow_test!(
-        test_ticker_workflow_openai,
+        ticker_workflow_openai,
         Model::GPT4oMini,
         TICKER_WORKFLOW_PATH
     );
@@ -61,7 +62,7 @@ mod simple_workflow_tests {
     use super::*;
 
     workflow_test!(
-        test_simple_workflow,
+        simple_workflow,
         Model::Phi3Medium,
         SIMPLE_WORKFLOW_PATH,
         "How does reiki work?"
@@ -72,12 +73,12 @@ mod insert_workflow_tests {
     use super::*;
 
     workflow_test!(
-        test_insert_workflow_ollama,
+        insert_workflow_ollama,
         Model::Phi3Medium,
         INSERT_WORKFLOW_PATH
     );
     workflow_test!(
-        test_insert_workflow_openai,
+        insert_workflow_openai,
         Model::GPT4oMini,
         INSERT_WORKFLOW_PATH
     );
@@ -86,14 +87,14 @@ mod insert_workflow_tests {
 mod user_workflow_tests {
     use super::*;
 
-    workflow_test!(test_user_workflow, Model::GPT4o, USERS_WORKFLOW_PATH);
+    workflow_test!(user_workflow, Model::GPT4o, USERS_WORKFLOW_PATH);
 }
 
 mod function_call_tests {
     use super::*;
 
     workflow_test!(
-        test_function_call_phi3_5_fp16,
+        function_call_phi3_5_fp16,
         Model::Phi3_5MiniFp16,
         SEARCH_WORKFLOW_PATH,
         "How does reiki work?"
@@ -116,7 +117,7 @@ mod all_tools_workflow_tests {
     use super::*;
 
     workflow_test!(
-        test_all_tools_workflow,
+        all_tools_workflow,
         Model::GPT4oMini,
         ALL_TOOLS_WORKFLOW_PATH,
         "What's the weather like in New York and how does it affect the stock market?"
@@ -127,7 +128,7 @@ mod questions_workflow_tests {
     use super::*;
 
     workflow_test!(
-        test_questions_workflow,
+        questions_workflow,
         Model::Phi3Medium,
         QUESTIONS_WORKFLOW_PATH,
         "Tell me about the history of artificial intelligence."
@@ -138,7 +139,7 @@ mod post_process_workflow_tests {
     use super::*;
 
     workflow_test!(
-        test_post_process_workflow,
+        post_process_workflow,
         Model::Llama3_1_8B,
         POST_PROCESS_WORKFLOW_PATH,
         "Summarize the main plot points of Romeo and Juliet."
@@ -157,5 +158,15 @@ mod context_size_tests {
         context_size_llama,
         Model::Llama3_1_8B,
         CONTEXT_SIZE_WORKFLOW_PATH
+    );
+}
+
+mod custom_tool_tests {
+    use super::*;
+
+    workflow_test!(
+        custom_tool_workflow,
+        Model::GPT4o,
+        CUSTOM_TOOL_WORKFLOW_PATH
     );
 }

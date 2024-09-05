@@ -40,6 +40,12 @@ impl Clone for Entry {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum MemoryInputType {
+    Entry(Entry),
+    Page(StackPage),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum MemoryReturnType {
     //<'a>
     //EntryRef(Option<&'a Entry>),

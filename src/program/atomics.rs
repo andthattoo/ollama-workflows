@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use serde::Deserialize;
 use crate::program::io::{Input, InputValue, Output};
 use crate::ProgramMemory;
+use serde::Deserialize;
+use std::collections::HashMap;
 
 pub static R_INPUT: &str = "__input";
 pub static R_OUTPUT: &str = "__result";
@@ -31,8 +31,8 @@ pub struct CustomToolTemplate {
     pub description: String,
     pub url: String,
     pub method: String,
-    pub headers: HashMap<String, String>,
-    pub body: HashMap<String, String>,
+    pub headers: Option<HashMap<String, String>>,
+    pub body: Option<HashMap<String, String>>,
 }
 
 /// Configuration for the workflow
@@ -113,6 +113,14 @@ pub struct Edge {
     pub fallback: Option<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct Condition {
+    pub input: InputValue,
+    pub expected: String,
+    pub expression: Expression,
+    pub target_if_not: String,
+}
+
 #[derive(Debug, Deserialize, PartialEq)]
 pub enum Expression {
     Equal,
@@ -156,12 +164,4 @@ impl Expression {
             }
         }
     }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Condition {
-    pub input: InputValue,
-    pub expected: String,
-    pub expression: Expression,
-    pub target_if_not: String,
 }

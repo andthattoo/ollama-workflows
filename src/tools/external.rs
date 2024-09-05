@@ -23,8 +23,8 @@ impl CustomTool {
             description: template.description,
             url: template.url,
             method: template.method,
-            headers: template.headers,
-            body: template.body,
+            headers: template.headers.unwrap_or_default(),
+            body: template.body.unwrap_or_default(),
         }
     }
 }

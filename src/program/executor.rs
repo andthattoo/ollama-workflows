@@ -371,8 +371,8 @@ impl Executor {
 
         if let Some(templates) = custom_templates {
             for template in templates {
-            let custom_tool = Arc::new(CustomTool::new_from_template(template));
-            tools.push(custom_tool);
+                let custom_tool = Arc::new(CustomTool::new_from_template(template));
+                tools.push(custom_tool);
             }
         }
 

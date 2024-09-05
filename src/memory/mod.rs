@@ -36,10 +36,21 @@ impl Default for ProgramMemory {
 
 impl ProgramMemory {
     /// Read external memory into Stack
-    pub fn read_external_memory(&mut self, external_memory: &HashMap<types::ID, types::StackPage>) {
+    pub fn read_external_memory(
+        &mut self,
+        external_memory: &HashMap<types::ID, types::MemoryInputType>,
+    ) {
+        //match MemoryInputtype enumr
         for (key, value) in external_memory {
-            for entry in value {
-                self.push(key.clone(), entry.clone());
+            match value {
+                types::MemoryInputType::Entry(entry) => {
+                    self.write(key.clone(), entry.clone());
+                }
+                types::MemoryInputType::Page(page) => {
+                    for entry in page {
+                        self.push(key.clone(), entry.clone());
+                    }
+                }
             }
         }
     }

@@ -31,7 +31,7 @@ pub use memory::types::Entry;
 pub use memory::ProgramMemory;
 pub use ollama_rs;
 pub use program::{
-    models::{Model, ModelProvider},
     executor::Executor,
+    models::{Model, ModelProvider},
     workflow::Workflow,
 };

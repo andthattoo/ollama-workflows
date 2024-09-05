@@ -1,6 +1,6 @@
-use std::fmt;
-use serde::{Serialize, Deserialize};
 use ollama_rs::models::LocalModel;
+use serde::{Deserialize, Serialize};
+use std::fmt;
 
 /// Enum for the models that can be used in the workflow
 /// Import the model to executor using:
