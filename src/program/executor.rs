@@ -1,4 +1,6 @@
 use super::atomics::*;
+use super::io::*;
+use super::models::*;
 use super::workflow::Workflow;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
@@ -339,7 +341,7 @@ impl Executor {
     fn get_tools(
         &self,
         tool_names: Vec<String>,
-        custom_template: Option<CustomToolTemplate>,
+        custom_templates: Option<Vec<CustomToolTemplate>>,
     ) -> Result<Vec<Arc<dyn Tool>>, ToolError> {
         let mut tools: Vec<Arc<dyn Tool>> = vec![];
 
@@ -367,9 +369,11 @@ impl Executor {
             tools.extend(_tools);
         }
 
-        if let Some(template) = custom_template {
+        if let Some(templates) = custom_templates {
+            for template in templates {
             let custom_tool = Arc::new(CustomTool::new_from_template(template));
             tools.push(custom_tool);
+            }
         }
 
         Ok(tools)
@@ -455,7 +459,7 @@ impl Executor {
         let nous_parser = Arc::new(NousFunctionCall {});
         let llama_parser = Arc::new(LlamaFunctionCall {});
         let tools = self
-            .get_tools(config.tools.clone(), config.custom_tool.clone())
+            .get_tools(config.tools.clone(), config.custom_tools.clone())
             .unwrap();
 
         let result = match self.model.clone().into() {

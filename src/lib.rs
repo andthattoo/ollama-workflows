@@ -11,14 +11,13 @@
 //! #[tokio::main]
 //! async fn main() {
 //!    dotenv().ok();
-//!   let env = Env::default().filter_or("LOG_LEVEL", "info");
-//!   env_logger.Builder::from_env(env).init();
-//!   let exe = Executor::new(Model::Phi3Medium);
-//!   let workflow = Workflow::new_from_json( "./workflows/search.json").unwrap();
-//!   let mut memory = ProgramMemory::new();
-//!   let input = Entry::try_value_or_str("How would does reiki work?");
-//!   exe.execute(Some(&input), workflow, &mut memory).await;
-//!   println!("{:?}", memory.read(&"final_result".to_string()));
+//!    let exe = setup_test($model).await;
+//!    let workflow = Workflow::new_from_json($workflow).unwrap();
+//!    let mut memory = ProgramMemory::new();
+//!    let input = Entry::try_value_or_str($input);
+//!    if let Err(e) = exe.execute(Some(&input), workflow, &mut memory).await {
+//!        log::error!("Execution failed: {}", e);
+//!    };
 //! }
 //!
 //! ```
@@ -32,7 +31,7 @@ pub use memory::types::Entry;
 pub use memory::ProgramMemory;
 pub use ollama_rs;
 pub use program::{
-    atomics::{Model, ModelProvider},
+    models::{Model, ModelProvider},
     executor::Executor,
     workflow::Workflow,
 };
