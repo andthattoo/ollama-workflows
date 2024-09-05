@@ -12,8 +12,8 @@ use std::fmt;
 #[derive(Default, Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub enum Model {
     // Ollama models
-    /// [Nous's Hermes-2-Theta model](https://ollama.com/adrienbrault/nous-hermes2theta-llama3-8b), q8_0 quantized
-    #[serde(rename = "adrienbrault/nous-hermes2theta-llama3-8b:q8_0")]
+    /// [Nous's Hermes-2-Theta model](https://ollama.com/finalend/hermes-3-llama-3.1:8b-q8_0), q8_0 quantized
+    #[serde(rename = "finalend/hermes-3-llama-3.1:8b-q8_0")]
     NousTheta,
     #[default]
     /// [Microsoft's Phi3 Medium model](https://ollama.com/library/phi3:medium), q4_1 quantized
@@ -22,15 +22,15 @@ pub enum Model {
     /// [Microsoft's Phi3 Medium model, 128k context length](https://ollama.com/library/phi3:medium-128k), q4_1 quantized
     #[serde(rename = "phi3:14b-medium-128k-instruct-q4_1")]
     Phi3Medium128k,
-    /// [Microsoft's Phi3 Mini model](https://ollama.com/library/phi3:3.8b), 3.8b parameters
-    #[serde(rename = "phi3:3.8b")]
-    Phi3Mini,
     /// [Microsoft's Phi3.5 Mini model](https://ollama.com/library/phi3.5), 3.8b parameters
     #[serde(rename = "phi3.5:3.8b")]
     Phi3_5Mini,
-    /// /// [Microsoft's Phi3.5 Mini model](https://ollama.com/library/phi3.5:3.8b-mini-instruct-fp16), 3.8b parameters
+    /// [Microsoft's Phi3.5 Mini model](https://ollama.com/library/phi3.5:3.8b-mini-instruct-fp16), 3.8b parameters
     #[serde(rename = "phi3.5:3.8b-mini-instruct-fp16")]
     Phi3_5MiniFp16,
+    /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters
+    #[serde(rename = "gemma2:9b-instruct-q8_0")]
+    Gemma2_9B,
     /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
     #[serde(rename = "llama3.1:latest")]
     Llama3_1_8B,
@@ -103,11 +103,11 @@ impl From<Model> for ModelProvider {
             Model::NousTheta => ModelProvider::Ollama,
             Model::Phi3Medium => ModelProvider::Ollama,
             Model::Phi3Medium128k => ModelProvider::Ollama,
-            Model::Phi3Mini => ModelProvider::Ollama,
             Model::Phi3_5Mini => ModelProvider::Ollama,
             Model::Phi3_5MiniFp16 => ModelProvider::Ollama,
             Model::Llama3_1_8B => ModelProvider::Ollama,
             Model::Llama3_1_8Bq8 => ModelProvider::Ollama,
+            Model::Gemma2_9B => ModelProvider::Ollama,
             Model::GPT3_5Turbo => ModelProvider::OpenAI,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
@@ -143,7 +143,7 @@ mod tests {
     const PROVIDER_NAME: &str = "openai";
     #[test]
     fn test_model_string_conversion() {
-        let model = Model::Phi3Mini;
+        let model = Model::Phi3_5Mini;
 
         // convert to string
         let model_str: String = model.clone().into();
@@ -160,7 +160,7 @@ mod tests {
 
     #[test]
     fn test_model_string_serde() {
-        let model = Model::Phi3Mini;
+        let model = Model::Phi3_5Mini;
 
         // serialize to string via serde
         let model_str = serde_json::to_string(&model).expect("should serialize");

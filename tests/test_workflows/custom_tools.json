@@ -4,6 +4,7 @@
 "config":{
     "max_steps": 5,
     "max_time": 100,
+    "max_tokens": 1024,
     "tools": [],
     "custom_tools":[{
         "name": "PriceFeedRequest",
@@ -32,7 +33,7 @@
         "id": "B",
         "name": "Analyze prices",
         "description": "Anzlye price feed",
-        "prompt": "<prices>{prices}</prices> \n\n Which ticker pair had the highest price change in 24 that is above $300?",
+        "prompt": "<prices>{prices}</prices> \n\n Which ticker pair had the highest price change in 24 that is above $300? Don't write code. Let's think step by step",
         "inputs":[
             {
                 "name": "prices",

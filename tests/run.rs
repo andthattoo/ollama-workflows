@@ -166,7 +166,7 @@ mod custom_tool_tests {
 
     workflow_test!(
         custom_tool_workflow,
-        Model::GPT4o,
+        Model::NousTheta,
         CUSTOM_TOOL_WORKFLOW_PATH
     );
 }

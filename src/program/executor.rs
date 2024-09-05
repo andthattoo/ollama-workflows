@@ -456,7 +456,6 @@ impl Executor {
 
     async fn function_call(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
         let oai_parser = Arc::new(OpenAIFunctionCall {});
-        let nous_parser = Arc::new(NousFunctionCall {});
         let llama_parser = Arc::new(LlamaFunctionCall {});
         let tools = self
             .get_tools(config.tools.clone(), config.custom_tools.clone())
@@ -473,7 +472,7 @@ impl Executor {
                             vec![ChatMessage::user(prompt.to_string())],
                         ),
                         match self.model {
-                            Model::NousTheta => nous_parser.clone(),
+                            Model::NousTheta => llama_parser.clone(),
                             Model::Llama3_1_8B => llama_parser.clone(),
                             _ => oai_parser.clone(),
                         },
@@ -592,7 +591,7 @@ mod tests {
     #[tokio::test]
     #[ignore = "run this manually"]
     async fn test_pull() {
-        let executor = Executor::new(Model::Phi3Mini);
+        let executor = Executor::new(Model::Phi3_5Mini);
         let locals = executor
             .list_local_models()
             .await
