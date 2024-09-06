@@ -234,14 +234,19 @@ impl FileSystem {
     fn brute_force_top_n(&self, query: &[f32], n: usize) -> Vec<(String, f32)> {
         let mut similarities = Vec::new();
         for (_, v) in &self.entries {
+            #[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
+            let similarity = f32::cosine(query, v).unwrap_or(0.0) as f32;
+
+            #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
             let similarity = f32::cosine(query, v).unwrap_or(0.0);
+
             similarities.push(similarity);
         }
 
         let mut indices: Vec<usize> = (0..similarities.len()).collect();
         indices.sort_by(|&a, &b| similarities[b].partial_cmp(&similarities[a]).unwrap());
         let top_indices: Vec<usize> = indices.into_iter().take(n).collect();
-        //Collect into (String, f32)
+
         let top_results: Vec<(String, f32)> = top_indices
             .iter()
             .map(|&i| (self.entries[i].0.clone(), similarities[i]))
