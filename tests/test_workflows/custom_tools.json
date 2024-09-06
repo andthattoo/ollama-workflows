@@ -33,7 +33,7 @@
         "id": "B",
         "name": "Analyze prices",
         "description": "Anzlye price feed",
-        "prompt": "<prices>{prices}</prices> \n\n Which ticker pair had the highest price change in 24 that is above $300? Don't write code. Let's think step by step",
+        "prompt": "Context: <prices>{prices}</prices> \n\n Use the context to find which ticker pair had the highest price change in 24 and has a price above $300?",
         "inputs":[
             {
                 "name": "prices",

@@ -11,8 +11,41 @@ use openai_dive::v1::resources::embedding::{
     EmbeddingEncodingFormat, EmbeddingInput, EmbeddingOutput, EmbeddingParametersBuilder,
 };
 use serde_json::json;
+#[cfg(not(any(target_arch = "arm", target_arch = "aarch64")))]
 use simsimd::SpatialSimilarity;
+
 use text_splitter::TextSplitter;
+
+#[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+mod arm_compat {
+    pub trait SimpleSpatialSimilarity {
+        fn cosine(a: &[f32], b: &[f32]) -> Option<f32>;
+    }
+    
+    impl SimpleSpatialSimilarity for f32 {
+        fn cosine(a: &[f32], b: &[f32]) -> Option<f32> {
+            if a.len() != b.len() {
+                return None;
+            }
+            let mut dot_product = 0.0;
+            let mut mag_a = 0.0;
+            let mut mag_b = 0.0;
+            for i in 0..a.len() {
+                dot_product += a[i] * b[i];
+                mag_a += a[i] * a[i];
+                mag_b += b[i] * b[i];
+            }
+            let magnitude = mag_a.sqrt() * mag_b.sqrt();
+            if magnitude == 0.0 {
+                None
+            } else {
+                Some((dot_product / magnitude).clamp(-1.0, 1.0))
+            }
+        }
+    }
+}
+#[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+use self::arm_compat::SimpleSpatialSimilarity;
 
 pub static EMBEDDING_MODEL: &str = "hellord/mxbai-embed-large-v1:f16";
 

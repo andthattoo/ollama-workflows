@@ -32,4 +32,7 @@ log = "0.4"
 env_logger = "0.9"
 colored = "2.0"
 dotenv = "0.15"
-simsimd = "4.3.1"
+simsimd = { version = "4.3.1", optional = true }
+
+[features]
+default = ["simsimd"]
