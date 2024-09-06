@@ -21,7 +21,7 @@ mod arm_compat {
     pub trait SimpleSpatialSimilarity {
         fn cosine(a: &[f32], b: &[f32]) -> Option<f32>;
     }
-    
+
     impl SimpleSpatialSimilarity for f32 {
         fn cosine(a: &[f32], b: &[f32]) -> Option<f32> {
             if a.len() != b.len() {
@@ -234,7 +234,7 @@ impl FileSystem {
     fn brute_force_top_n(&self, query: &[f32], n: usize) -> Vec<(String, f32)> {
         let mut similarities = Vec::new();
         for (_, v) in &self.entries {
-            let similarity = f32::cosine(query, v).unwrap_or(0.0) as f32;
+            let similarity = f32::cosine(query, v).unwrap_or(0.0);
             similarities.push(similarity);
         }
 
