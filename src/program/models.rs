@@ -31,8 +31,8 @@ pub enum Model {
     /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters
     #[serde(rename = "gemma2:9b-instruct-q8_0")]
     Gemma2_9B,
-    /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters, fp16
-    #[serde(rename = "9b-instruct-fp16")]
+    /// [Google's Gemma2 model](https://ollama.com/library/gemma2:9b-instruct-fp16), 9B parameters, fp16
+    #[serde(rename = "gemma2:9b-instruct-fp16")]
     Gemma2_9BFp16,
     /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
     #[serde(rename = "llama3.1:latest")]
@@ -59,10 +59,10 @@ pub enum Model {
     /// [OpenAI's GPT-4o mini model](https://platform.openai.com/docs/models/gpt-4o-mini)
     #[serde(rename = "gpt-4o-mini")]
     GPT4oMini,
-    /// [OpenAI's o1 mini model](https://platform.openai.com/docs/models/o1-mini)
+    /// [OpenAI's o1 mini model](https://platform.openai.com/docs/models/o1)
     #[serde(rename = "o1-mini")]
     O1Mini,
-    /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3.5-turbo)
+    /// [OpenAI's o1 preview model](https://platform.openai.com/docs/models/o1)
     #[serde(rename = "o1-preview")]
     O1Preview,
 }
