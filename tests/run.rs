@@ -67,6 +67,8 @@ mod simple_workflow_tests {
         SIMPLE_WORKFLOW_PATH,
         "How does reiki work?"
     );
+
+    workflow_test!(simple_o1, Model::O1Mini, SIMPLE_WORKFLOW_PATH);
 }
 
 mod insert_workflow_tests {

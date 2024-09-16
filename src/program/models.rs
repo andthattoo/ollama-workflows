@@ -66,9 +66,25 @@ pub enum Model {
     #[serde(rename = "o1-preview")]
     O1Preview,
 }
-// phi3.5:3.8b
 
-// phi3.5:3.8b-mini-instruct-fp16
+impl Model {
+    pub fn supports_tool_calling(&self) -> bool {
+        match self {
+            // OpenAI models that support tool calling
+            Model::GPT4Turbo | Model::GPT4o | Model::GPT4oMini => true,
+            // Ollama models that support tool calling
+            Model::Llama3_1_8B
+            | Model::Llama3_1_8Bq8
+            | Model::Llama3_1_8Bf16
+            | Model::Phi3Medium
+            | Model::Phi3Medium128k
+            | Model::Gemma2_9BFp16
+            | Model::Qwen2_7Bf16
+            | Model::Qwen2_7B => true,
+            _ => false,
+        }
+    }
+}
 
 impl From<Model> for String {
     fn from(model: Model) -> Self {
