@@ -15,13 +15,13 @@ pub enum Model {
     /// [Nous's Hermes-2-Theta model](https://ollama.com/finalend/hermes-3-llama-3.1:8b-q8_0), q8_0 quantized
     #[serde(rename = "finalend/hermes-3-llama-3.1:8b-q8_0")]
     NousTheta,
-    #[default]
     /// [Microsoft's Phi3 Medium model](https://ollama.com/library/phi3:medium), q4_1 quantized
     #[serde(rename = "phi3:14b-medium-4k-instruct-q4_1")]
     Phi3Medium,
     /// [Microsoft's Phi3 Medium model, 128k context length](https://ollama.com/library/phi3:medium-128k), q4_1 quantized
     #[serde(rename = "phi3:14b-medium-128k-instruct-q4_1")]
     Phi3Medium128k,
+    #[default]
     /// [Microsoft's Phi3.5 Mini model](https://ollama.com/library/phi3.5), 3.8b parameters
     #[serde(rename = "phi3.5:3.8b")]
     Phi3_5Mini,
@@ -31,16 +31,25 @@ pub enum Model {
     /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters
     #[serde(rename = "gemma2:9b-instruct-q8_0")]
     Gemma2_9B,
+    /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters, fp16
+    #[serde(rename = "9b-instruct-fp16")]
+    Gemma2_9BFp16,
     /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
     #[serde(rename = "llama3.1:latest")]
     Llama3_1_8B,
     /// [Meta's Llama3.1 model q8](https://ollama.com/library/llama3.1:8b-text-q8_0)
     #[serde(rename = "llama3.1:8b-instruct-q8_0")]
     Llama3_1_8Bq8,
+    /// [Meta's Llama3.1 model fp16](https://ollama.com/library/llama3.1:8b-instruct-fp16)
+    #[serde(rename = "llama3.1:8b-instruct-fp16")]
+    Llama3_1_8Bf16,
+    /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters
+    #[serde(rename = "qwen2:7b-instruct-q5_0")]
+    Qwen2_7B,
+    /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters, fp16
+    #[serde(rename = "qwen2:7b-instruct-fp16")]
+    Qwen2_7Bf16,
     // OpenAI models
-    /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3-5-turbo)
-    #[serde(rename = "gpt-3.5-turbo")]
-    GPT3_5Turbo,
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]
     GPT4Turbo,
@@ -50,6 +59,12 @@ pub enum Model {
     /// [OpenAI's GPT-4o mini model](https://platform.openai.com/docs/models/gpt-4o-mini)
     #[serde(rename = "gpt-4o-mini")]
     GPT4oMini,
+    /// [OpenAI's o1 mini model](https://platform.openai.com/docs/models/o1-mini)
+    #[serde(rename = "o1-mini")]
+    O1Mini,
+    /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3.5-turbo)
+    #[serde(rename = "o1-preview")]
+    O1Preview,
 }
 // phi3.5:3.8b
 
@@ -107,11 +122,16 @@ impl From<Model> for ModelProvider {
             Model::Phi3_5MiniFp16 => ModelProvider::Ollama,
             Model::Llama3_1_8B => ModelProvider::Ollama,
             Model::Llama3_1_8Bq8 => ModelProvider::Ollama,
+            Model::Llama3_1_8Bf16 => ModelProvider::Ollama,
             Model::Gemma2_9B => ModelProvider::Ollama,
-            Model::GPT3_5Turbo => ModelProvider::OpenAI,
+            Model::Gemma2_9BFp16 => ModelProvider::Ollama,
+            Model::Qwen2_7B => ModelProvider::Ollama,
+            Model::Qwen2_7Bf16 => ModelProvider::Ollama,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
             Model::GPT4oMini => ModelProvider::OpenAI,
+            Model::O1Mini => ModelProvider::OpenAI,
+            Model::O1Preview => ModelProvider::OpenAI,
         }
     }
 }
