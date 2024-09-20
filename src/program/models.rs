@@ -32,7 +32,7 @@ pub enum Model {
     #[serde(rename = "gemma2:9b-instruct-q8_0")]
     Gemma2_9B,
     /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters, fp16
-    #[serde(rename = "9b-instruct-fp16")]
+    #[serde(rename = "gemma2:9b-instruct-fp16")]
     Gemma2_9BFp16,
     /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
     #[serde(rename = "llama3.1:latest")]
@@ -43,12 +43,21 @@ pub enum Model {
     /// [Meta's Llama3.1 model fp16](https://ollama.com/library/llama3.1:8b-instruct-fp16)
     #[serde(rename = "llama3.1:8b-instruct-fp16")]
     Llama3_1_8Bf16,
+    /// 
+    #[serde(rename = "llama3.1:70b-instruct-q4_0")]
+    Llama3_1_70B,
+    /// 
+    #[serde(rename = "llama3.1:70b-instruct-q8_0")]
+    Llama3_1_70Bq8,
     /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters
-    #[serde(rename = "qwen2:7b-instruct-q5_0")]
-    Qwen2_7B,
+    #[serde(rename = "qwen2.5:7b-instruct-q5_0")]
+    Qwen2_5_7B,
     /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters, fp16
-    #[serde(rename = "qwen2:7b-instruct-fp16")]
-    Qwen2_7Bf16,
+    #[serde(rename = "qwen2.5:7b-instruct-fp16")]
+    Qwen2_5_7Bf16,
+    /// []
+    #[serde(rename = "qwen2.5:32b-instruct-fp16")]
+    Qwen2_5_32Bf16,
     // OpenAI models
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]
@@ -59,10 +68,10 @@ pub enum Model {
     /// [OpenAI's GPT-4o mini model](https://platform.openai.com/docs/models/gpt-4o-mini)
     #[serde(rename = "gpt-4o-mini")]
     GPT4oMini,
-    /// [OpenAI's o1 mini model](https://platform.openai.com/docs/models/o1-mini)
+    /// [OpenAI's o1 mini model](https://platform.openai.com/docs/models/o1)
     #[serde(rename = "o1-mini")]
     O1Mini,
-    /// [OpenAI's GPT-3.5 Turbo model](https://platform.openai.com/docs/models/gpt-3.5-turbo)
+    /// [OpenAI's o1 preview model](https://platform.openai.com/docs/models/o1)
     #[serde(rename = "o1-preview")]
     O1Preview,
 }
@@ -79,8 +88,9 @@ impl Model {
             | Model::Phi3Medium
             | Model::Phi3Medium128k
             | Model::Gemma2_9BFp16
-            | Model::Qwen2_7Bf16
-            | Model::Qwen2_7B => true,
+            | Model::Qwen2_5_7B
+            | Model::Qwen2_5_7Bf16 => true,
+            | Model::Qwen2_5_32Bf16 => true,
             _ => false,
         }
     }
@@ -139,10 +149,13 @@ impl From<Model> for ModelProvider {
             Model::Llama3_1_8B => ModelProvider::Ollama,
             Model::Llama3_1_8Bq8 => ModelProvider::Ollama,
             Model::Llama3_1_8Bf16 => ModelProvider::Ollama,
+            Model::Llama3_1_70B => ModelProvider::Ollama,
+            Model::Llama3_1_70Bq8 => ModelProvider::Ollama,
             Model::Gemma2_9B => ModelProvider::Ollama,
             Model::Gemma2_9BFp16 => ModelProvider::Ollama,
-            Model::Qwen2_7B => ModelProvider::Ollama,
-            Model::Qwen2_7Bf16 => ModelProvider::Ollama,
+            Model::Qwen2_5_7B => ModelProvider::Ollama,
+            Model::Qwen2_5_7Bf16 => ModelProvider::Ollama,
+            Model::Qwen2_5_32Bf16 => ModelProvider::Ollama,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
             Model::GPT4oMini => ModelProvider::OpenAI,
