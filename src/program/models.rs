@@ -55,7 +55,7 @@ pub enum Model {
     /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters, fp16
     #[serde(rename = "qwen2.5:7b-instruct-fp16")]
     Qwen2_5_7Bf16,
-    /// []
+    /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 32B parameters, fp16
     #[serde(rename = "qwen2.5:32b-instruct-fp16")]
     Qwen2_5_32Bf16,
     // OpenAI models
