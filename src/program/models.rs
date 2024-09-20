@@ -43,10 +43,10 @@ pub enum Model {
     /// [Meta's Llama3.1 model fp16](https://ollama.com/library/llama3.1:8b-instruct-fp16)
     #[serde(rename = "llama3.1:8b-instruct-fp16")]
     Llama3_1_8Bf16,
-    /// 
+    /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:70b), 70B parameters
     #[serde(rename = "llama3.1:70b-instruct-q4_0")]
     Llama3_1_70B,
-    /// 
+    /// [Meta's Llama3.1 model q8](https://ollama.com/library/llama3.1:70b-instruct-q8_0)
     #[serde(rename = "llama3.1:70b-instruct-q8_0")]
     Llama3_1_70Bq8,
     /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters
@@ -90,7 +90,7 @@ impl Model {
             | Model::Gemma2_9BFp16
             | Model::Qwen2_5_7B
             | Model::Qwen2_5_7Bf16 => true,
-            | Model::Qwen2_5_32Bf16 => true,
+            Model::Qwen2_5_32Bf16 => true,
             _ => false,
         }
     }
