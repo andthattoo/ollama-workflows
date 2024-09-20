@@ -31,7 +31,7 @@ pub enum Model {
     /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters
     #[serde(rename = "gemma2:9b-instruct-q8_0")]
     Gemma2_9B,
-    /// [Google's Gemma2 model](https://ollama.com/library/gemma2), 9B parameters, fp16
+    /// [Google's Gemma2 model](https://ollama.com/library/gemma2:9b-instruct-fp16), 9B parameters, fp16
     #[serde(rename = "gemma2:9b-instruct-fp16")]
     Gemma2_9BFp16,
     /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:latest), 8B parameters
