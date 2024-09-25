@@ -49,6 +49,12 @@ pub enum Model {
     /// [Meta's Llama3.1 model q8](https://ollama.com/library/llama3.1:70b-instruct-q8_0)
     #[serde(rename = "llama3.1:70b-instruct-q8_0")]
     Llama3_1_70Bq8,
+    /// [Meta's LLama3.2 Edge models](https://ollama.com/library/llama3.2/tags), 1B parameters
+    #[serde(rename = "llama3.2:1b")]
+    Llama3_2_1B,
+    /// [Meta's LLama3.2 Edge models](https://ollama.com/library/llama3.2/tags), 3B parameters
+    #[serde(rename = "llama3.2:3b")]
+    Llama3_2_3B,
     /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters
     #[serde(rename = "qwen2.5:7b-instruct-q5_0")]
     Qwen2_5_7B,
@@ -151,6 +157,8 @@ impl From<Model> for ModelProvider {
             Model::Llama3_1_8Bf16 => ModelProvider::Ollama,
             Model::Llama3_1_70B => ModelProvider::Ollama,
             Model::Llama3_1_70Bq8 => ModelProvider::Ollama,
+            Model::Llama3_2_1B => ModelProvider::Ollama,
+            Model::Llama3_2_3B => ModelProvider::Ollama,
             Model::Gemma2_9B => ModelProvider::Ollama,
             Model::Gemma2_9BFp16 => ModelProvider::Ollama,
             Model::Qwen2_5_7B => ModelProvider::Ollama,

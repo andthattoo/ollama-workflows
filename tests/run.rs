@@ -63,7 +63,7 @@ mod simple_workflow_tests {
 
     workflow_test!(
         simple_workflow,
-        Model::Phi3Medium,
+        Model::Llama3_2_1B,
         SIMPLE_WORKFLOW_PATH,
         "How does reiki work?"
     );
@@ -96,10 +96,10 @@ mod function_call_tests {
     use super::*;
 
     workflow_test!(
-        function_call_phi3_5_fp16,
-        Model::Phi3_5MiniFp16,
+        function_call_llama3_2_3b,
+        Model::Llama3_2_3B,
         SEARCH_WORKFLOW_PATH,
-        "How does reiki work?"
+        "What is the most famous street in Istanbul?"
     );
     workflow_test!(
         function_calling_nous_theta,
