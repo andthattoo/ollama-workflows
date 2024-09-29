@@ -64,7 +64,9 @@ pub enum Model {
     /// [Alibaba's Qwen2.5 model](https://ollama.com/library/qwen2), 32B parameters, fp16
     #[serde(rename = "qwen2.5:32b-instruct-fp16")]
     Qwen2_5_32Bf16,
-    /// [Alibaba's Qwen2.5 ]
+    /// [Alibaba's Qwen2.5 Coder]
+    #[serde(rename = "qwen2.5-coder:1.5b")]
+    Qwen2_5Coder1_5B,
     /// [DeepSeek Coding models]
     #[serde(rename = "deepseek-coder:6.7b")]
     DeepSeekCoder6_7B,
@@ -171,6 +173,9 @@ impl From<Model> for ModelProvider {
             Model::Qwen2_5_7B => ModelProvider::Ollama,
             Model::Qwen2_5_7Bf16 => ModelProvider::Ollama,
             Model::Qwen2_5_32Bf16 => ModelProvider::Ollama,
+            Model::Qwen2_5Coder1_5B => ModelProvider::Ollama,
+            Model::DeepSeekCoder6_7B => ModelProvider::Ollama,
+            Model::Mixtral8_7b => ModelProvider::Ollama,
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
             Model::GPT4oMini => ModelProvider::OpenAI,
