@@ -13,7 +13,9 @@ const SIMPLE_WORKFLOW_PATH: &str = "./tests/test_workflows/simple.json";
 const INSERT_WORKFLOW_PATH: &str = "./tests/test_workflows/insert.json";
 const USERS_WORKFLOW_PATH: &str = "./tests/test_workflows/users.json";
 const CONTEXT_SIZE_WORKFLOW_PATH: &str = "./tests/test_workflows/context_size.json";
-const CUSTOM_TOOL_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tools.json";
+const CUSTOM_TOOL_HTTP_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tools_http.json";
+const CUSTOM_TOOL_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tool.json";
+const CODER_PATH: &str = "./tests/test_workflows/coding.json";
 
 async fn setup_test(model: Model) -> Executor {
     dotenv().ok();
@@ -68,6 +70,8 @@ mod simple_workflow_tests {
         SIMPLE_WORKFLOW_PATH,
         "How does reiki work?"
     );
+
+    workflow_test!(simple_coder, Model::Qwen2_5Coder1_5B, CODER_PATH);
 
     workflow_test!(simple_o1, Model::O1Mini, SIMPLE_WORKFLOW_PATH);
 }
@@ -173,6 +177,12 @@ mod context_size_tests {
 
 mod custom_tool_tests {
     use super::*;
+
+    workflow_test!(
+        http_custom_tool_workflow,
+        Model::Llama3_1_8B,
+        CUSTOM_TOOL_HTTP_WORKFLOW_PATH
+    );
 
     workflow_test!(
         custom_tool_workflow,

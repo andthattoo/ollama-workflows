@@ -1,6 +1,7 @@
 use crate::program::io::{Input, InputValue, Output};
 use crate::ProgramMemory;
 use serde::Deserialize;
+use serde_json::Value;
 use std::collections::HashMap;
 
 pub static R_INPUT: &str = "__input";
@@ -26,13 +27,27 @@ pub fn in_tools(tools: &Vec<String>) -> bool {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+#[serde(tag = "mode", rename_all = "snake_case")]
+pub enum CustomToolModeTemplate {
+    Custom {
+        parameters: Value,
+    },
+    HttpRequest {
+        url: String,
+        method: String,
+        #[serde(default)]
+        headers: Option<HashMap<String, String>>,
+        #[serde(default)]
+        body: Option<HashMap<String, String>>,
+    },
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct CustomToolTemplate {
     pub name: String,
     pub description: String,
-    pub url: String,
-    pub method: String,
-    pub headers: Option<HashMap<String, String>>,
-    pub body: Option<HashMap<String, String>>,
+    #[serde(flatten)]
+    pub mode: CustomToolModeTemplate,
 }
 
 /// Configuration for the workflow

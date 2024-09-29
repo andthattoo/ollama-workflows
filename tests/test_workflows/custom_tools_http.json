@@ -9,6 +9,7 @@
     "custom_tools":[{
         "name": "PriceFeedRequest",
         "description": "Fetches price feed from Gemini API",
+        "mode":"http_request",
         "url": "https://api.gemini.com/v1/pricefeed",
         "method": "GET"
       }]

@@ -1,0 +1,49 @@
+{
+    "config": {
+      "max_steps": 50,
+      "max_time": 200,
+      "tools": [
+        "ALL"
+      ]
+    },
+    "external_memory": {},
+    "tasks": [
+      {
+        "id": "fibonacci",
+        "name": "Task",
+        "description": "Task Description",
+        "prompt": "Write fibonnaci sequence method with memoization in rust",
+        "inputs": [],
+        "operator": "generation",
+        "outputs": [
+          {
+            "type": "push",
+            "key": "code",
+            "value": "__result"
+          }
+        ]
+      },
+      {
+        "id": "_end",
+        "name": "Task",
+        "description": "Task Description",
+        "prompt": "",
+        "inputs": [],
+        "operator": "end",
+        "outputs": []
+      }
+    ],
+    "steps": [
+      {
+        "source": "fibonacci",
+        "target": "_end"
+      }
+    ],
+    "return_value": {
+      "input": {
+        "type": "get_all",
+        "key": "code"
+      },
+      "to_json": true
+    }
+  }
