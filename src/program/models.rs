@@ -55,15 +55,22 @@ pub enum Model {
     /// [Meta's LLama3.2 Edge models](https://ollama.com/library/llama3.2/tags), 3B parameters
     #[serde(rename = "llama3.2:3b")]
     Llama3_2_3B,
-    /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters
+    /// [Alibaba's Qwen2.5 model](https://ollama.com/library/qwen2), 7B parameters
     #[serde(rename = "qwen2.5:7b-instruct-q5_0")]
     Qwen2_5_7B,
-    /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 7B parameters, fp16
+    /// [Alibaba's Qwen2.5 model](https://ollama.com/library/qwen2), 7B parameters, fp16
     #[serde(rename = "qwen2.5:7b-instruct-fp16")]
     Qwen2_5_7Bf16,
-    /// [Alibaba's Qwen2 model](https://ollama.com/library/qwen2), 32B parameters, fp16
+    /// [Alibaba's Qwen2.5 model](https://ollama.com/library/qwen2), 32B parameters, fp16
     #[serde(rename = "qwen2.5:32b-instruct-fp16")]
     Qwen2_5_32Bf16,
+    /// [Alibaba's Qwen2.5 ]
+    /// [DeepSeek Coding models]
+    #[serde(rename = "deepseek-coder:6.7b")]
+    DeepSeekCoder6_7B,
+    /// [Mistral's MoE Models]
+    #[serde(rename = "mixtral:8x7b")]
+    Mixtral8_7b,
     // OpenAI models
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]

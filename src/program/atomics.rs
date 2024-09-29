@@ -56,6 +56,7 @@ pub struct Config {
 pub enum Operator {
     Generation,
     FunctionCalling,
+    FunctionCallingRaw,
     Search,
     Sample,
     End,

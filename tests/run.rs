@@ -4,6 +4,7 @@ use ollama_workflows::{Entry, Executor, Model, ProgramMemory, Workflow};
 
 // Constants for workflow paths
 const SEARCH_WORKFLOW_PATH: &str = "./tests/test_workflows/search.json";
+const RAW_TOOLS_PATH: &str = "./tests/test_workflows/raw_tools.json";
 const ALL_TOOLS_WORKFLOW_PATH: &str = "./tests/test_workflows/all.json";
 const QUESTIONS_WORKFLOW_PATH: &str = "./tests/test_workflows/questions.json";
 const POST_PROCESS_WORKFLOW_PATH: &str = "./tests/test_workflows/post_process.json";
@@ -94,6 +95,13 @@ mod user_workflow_tests {
 
 mod function_call_tests {
     use super::*;
+
+    workflow_test!(
+        function_call_raw_llama,
+        Model::Llama3_1_8B,
+        RAW_TOOLS_PATH,
+        "Google the most famous street in Istanbul and google longest river in the world."
+    );
 
     workflow_test!(
         function_call_llama3_2_3b,

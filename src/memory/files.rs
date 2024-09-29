@@ -4,6 +4,7 @@ use super::types::{Entry, FilePage};
 use crate::program::errors::{EmbeddingError, FileSystemError};
 use async_trait::async_trait;
 use log::debug;
+use ollama_rs::generation::embeddings::request::{EmbeddingsInput, GenerateEmbeddingsRequest};
 use ollama_rs::Ollama;
 use openai_dive::v1::api::Client;
 use openai_dive::v1::models::EmbeddingsEngine;
@@ -70,10 +71,13 @@ impl Embedder for OllamaEmbedder {
     async fn generate_embeddings(&self, prompt: &str) -> Result<Vec<f32>, EmbeddingError> {
         let ollama = Ollama::default();
         let res = ollama
-            .generate_embeddings(EMBEDDING_MODEL.to_string(), prompt.to_string(), None)
+            .generate_embeddings(GenerateEmbeddingsRequest::new(
+                EMBEDDING_MODEL.to_string(),
+                EmbeddingsInput::Single(prompt.to_string()),
+            ))
             .await;
         match res {
-            Ok(res) => Ok(res.embeddings.iter().map(|&x| x as f32).collect()),
+            Ok(res) => Ok(res.embeddings[0].clone()),
             Err(_) => Err(EmbeddingError::DocumentEmbedding(prompt.to_string())),
         }
     }

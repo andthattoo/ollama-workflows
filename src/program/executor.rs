@@ -261,10 +261,12 @@ impl Executor {
                 let result_entry = Entry::try_value_or_str(&result.unwrap());
                 self.handle_output(task, result_entry, memory).await;
             }
-            Operator::FunctionCalling => {
+            Operator::FunctionCalling | Operator::FunctionCallingRaw => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
                 info!("Prompt: {}", &prompt);
-                let result = self.function_call(&prompt, config).await;
+
+                let raw_mode = matches!(task.operator, Operator::FunctionCallingRaw);
+                let result = self.function_call(&prompt, config, raw_mode).await;
                 if result.is_err() {
                     error!("Error function calling: {:?}", result.err().unwrap());
                     return Err(ExecutionError::FunctionCallFailed);
@@ -453,7 +455,12 @@ impl Executor {
         Ok(response)
     }
 
-    async fn function_call(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
+    async fn function_call(
+        &self,
+        prompt: &str,
+        config: &Config,
+        raw_mode: bool,
+    ) -> Result<String, OllamaError> {
         let oai_parser = Arc::new(OpenAIFunctionCall {});
         let llama_parser = Arc::new(LlamaFunctionCall {});
         let tools = self
@@ -462,14 +469,21 @@ impl Executor {
 
         let result = match self.model.clone().into() {
             ModelProvider::Ollama => {
+                //if raw mode is enabled, return only the calls
+                let mut request = FunctionCallRequest::new(
+                    self.model.to_string(),
+                    tools.clone(),
+                    vec![ChatMessage::user(prompt.to_string())],
+                );
+
+                if raw_mode {
+                    request = request.raw_mode();
+                }
+
                 let res = self
                     .llm
                     .send_function_call(
-                        FunctionCallRequest::new(
-                            self.model.to_string(),
-                            tools,
-                            vec![ChatMessage::user(prompt.to_string())],
-                        ),
+                        request,
                         match self.model {
                             Model::NousTheta => llama_parser.clone(),
                             Model::Llama3_1_8B => llama_parser.clone(),
@@ -509,6 +523,20 @@ impl Executor {
 
                 let result = client.chat().create(parameters).await.expect("msg");
                 let message = result.choices[0].message.clone();
+
+                //if raw mode, parse tool calls to string and return
+                if raw_mode {
+                    let mut raw_calls = Vec::new();
+                    if let Some(tool_calls) = message.tool_calls {
+                        for tool_call in tool_calls {
+                            raw_calls.push(format!(
+                                "Function: {}\nArguments: {}",
+                                tool_call.function.name, tool_call.function.arguments
+                            ));
+                        }
+                    }
+                    return Ok(raw_calls.join("\n\n"));
+                }
 
                 let mut results = Vec::<String>::new();
                 if let Some(tool_calls) = message.tool_calls {
