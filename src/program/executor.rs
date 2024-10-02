@@ -539,7 +539,6 @@ impl Executor {
                                 "arguments": serde_json::from_str::<serde_json::Value>(&tool_call.function.arguments)?
                             });
                             raw_calls.push(serde_json::to_string(&call_json)?);
-
                         }
                     }
                     return Ok(raw_calls.join("\n\n"));
