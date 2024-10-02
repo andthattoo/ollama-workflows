@@ -1,6 +1,5 @@
 use crate::program::atomics::{CustomToolModeTemplate, CustomToolTemplate};
 use async_trait::async_trait;
-use log::info;
 use ollama_rs::generation::functions::tools::Tool;
 use reqwest::Client;
 use serde_json::{json, Value};
@@ -63,10 +62,7 @@ impl Tool for CustomTool {
 
     fn parameters(&self) -> Value {
         match &self.mode {
-            CustomToolMode::Custom { parameters } => {
-                info!("helloooo");
-                parameters.clone()
-            }
+            CustomToolMode::Custom { parameters } => parameters.clone(),
             CustomToolMode::HttpRequest { body, .. } => {
                 let properties: HashMap<_, _> = body.iter().map(|(k, _)| {
                     (k.clone(), json!({ "type": "string", "description": format!("The value for {}", k) }))

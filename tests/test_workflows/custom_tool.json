@@ -1,63 +1,70 @@
 {
-    "name": "Custom Tool",
-    "description": "This is a simple workflow for custom tools",
-    "config":{
-        "max_steps": 5,
-        "max_time": 100,
-        "max_tokens": 1024,
-        "tools": [],
-        "custom_tools":[{
-            "name": "google_search_tool",
-            "description": "Conducts a web search using a specified search type and returns the results.",
-            "mode":"custom",
-            "parameters":{
-                "type": "object",
-                "properties": {
-                    "website": {
-                        "type": "string",
-                        "description": "The URL of the website to scrape"
-                    }
-                },
-                "required": ["website"]
+  "config": {
+    "max_steps": 50,
+    "max_time": 200,
+    "tools": [
+      "ALL"
+    ],
+    "custom_tools": [
+      {
+        "name": "calculator",
+        "description": "A tool sums integers",
+        "mode": "custom",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "lfs": {
+              "type": "integer",
+              "description": "Left hand side of sum"
+            },
+            "rhs": {
+              "type": "integer",
+              "description": "Right hand side of sum"
             }
-          }]
+          },
+          "required": []
+        }
+      }
+    ]
+  },
+  "external_memory": {},
+  "tasks": [
+    {
+      "id": "sum",
+      "name": "Task",
+      "description": "Task Description",
+      "prompt": "What is 10932 + 20934?",
+      "inputs": [],
+      "operator": "function_calling_raw",
+      "outputs": [
+        {
+          "type": "write",
+          "key": "call",
+          "value": "__result"
+        }
+      ]
     },
-    "tasks":[
-        {
-            "id": "A",
-            "name": "Get prices",
-            "description": "Get price feed",
-            "prompt": "What are the current prices for $APPL?",
-            "inputs":[],
-            "operator": "function_calling_raw",
-            "outputs":[
-                {
-                    "type": "write",
-                    "key": "prices",
-                    "value": "__result"
-                }
-            ]
-        },
-        {
-            "id": "__end",
-            "name": "end",
-            "description": "End of the task",
-            "prompt": "End of the task",
-            "inputs": [],
-            "operator": "end",
-            "outputs": []
-        }
-    ],
-    "steps":[
-        {
-            "source":"A",
-            "target":"_end"
-        }
-    ],
-    "return_value":{
-        "input":{
-            "type": "read",
-            "key": "prices"
-        }
+    {
+      "id": "_end",
+      "name": "Task",
+      "description": "Task Description",
+      "prompt": "",
+      "inputs": [],
+      "operator": "end",
+      "outputs": []
     }
+  ],
+  "steps": [
+    {
+      "source": "sum",
+      "target": "_end"
     }
+  ],
+  "return_value": {
+    "input": {
+      "type": "read",
+      "key": "call"
+    },
+    "to_json": false
+  }
+}

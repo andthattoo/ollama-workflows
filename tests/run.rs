@@ -186,7 +186,7 @@ mod custom_tool_tests {
 
     workflow_test!(
         custom_tool_workflow,
-        Model::Llama3_1_8B,
+        Model::GPT4o,
         CUSTOM_TOOL_WORKFLOW_PATH
     );
 }

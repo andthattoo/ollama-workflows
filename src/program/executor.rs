@@ -8,7 +8,7 @@ use crate::program::errors::{ExecutionError, ToolError};
 use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
 
 use rand::Rng;
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -486,7 +486,12 @@ impl Executor {
                         request,
                         match self.model {
                             Model::NousTheta => llama_parser.clone(),
-                            Model::Llama3_1_8B => llama_parser.clone(),
+                            Model::Llama3_1_8B
+                            | Model::Llama3_1_8Bf16
+                            | Model::Llama3_1_8Bq8
+                            | Model::Llama3_2_3B
+                            | Model::Llama3_1_70Bq8
+                            | Model::Llama3_1_70B => llama_parser.clone(),
                             _ => oai_parser.clone(),
                         },
                     )
@@ -529,10 +534,12 @@ impl Executor {
                     let mut raw_calls = Vec::new();
                     if let Some(tool_calls) = message.tool_calls {
                         for tool_call in tool_calls {
-                            raw_calls.push(format!(
-                                "Function: {}\nArguments: {}",
-                                tool_call.function.name, tool_call.function.arguments
-                            ));
+                            let call_json = json!({
+                                "name": tool_call.function.name,
+                                "arguments": serde_json::from_str::<serde_json::Value>(&tool_call.function.arguments)?
+                            });
+                            raw_calls.push(serde_json::to_string(&call_json)?);
+
                         }
                     }
                     return Ok(raw_calls.join("\n\n"));
