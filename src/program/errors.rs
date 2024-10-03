@@ -95,8 +95,12 @@ impl fmt::Display for ExecutionError {
             ExecutionError::WorkflowFailed(cmd) => write!(f, "Workflow execution failed: {}", cmd),
             ExecutionError::InvalidInput => write!(f, "Invalid input provided"),
             ExecutionError::UnexpectedOutput => write!(f, "Unexpected output from command"),
-            ExecutionError::GenerationFailed(detail) => write!(f, "Text generation failed {}", detail),
-            ExecutionError::FunctionCallFailed(detail) => write!(f, "Function call failed {}", detail),
+            ExecutionError::GenerationFailed(detail) => {
+                write!(f, "Text generation failed {}", detail)
+            }
+            ExecutionError::FunctionCallFailed(detail) => {
+                write!(f, "Function call failed {}", detail)
+            }
             ExecutionError::VectorSearchFailed => write!(f, "Vector search failed"),
             ExecutionError::StringCheckFailed => write!(f, "Vector search failed"),
             ExecutionError::SamplingError => {

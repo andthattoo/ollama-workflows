@@ -162,10 +162,16 @@ impl Executor {
                     } else {
                         warn!("{} failed, halting beacause of no fallback", &edge.source);
                         error!("Task execution failed");
-                        return Err(ExecutionError::WorkflowFailed(format!("{:?}", result.unwrap_err())));
+                        return Err(ExecutionError::WorkflowFailed(format!(
+                            "{:?}",
+                            result.unwrap_err()
+                        )));
                     };
                 } else {
-                    return Err(ExecutionError::WorkflowFailed(format!("Task with id [{}] not found", &edge.source)));
+                    return Err(ExecutionError::WorkflowFailed(format!(
+                        "Task with id [{}] not found",
+                        &edge.source
+                    )));
                 }
             } else {
                 break;
@@ -175,12 +181,16 @@ impl Executor {
         // log if elapsed time is bigger the max time
         if start.elapsed().as_secs() >= max_time {
             warn!("Max time exceeded, halting");
-            return Err(ExecutionError::WorkflowFailed("Max execution time exceeded".to_string()));
+            return Err(ExecutionError::WorkflowFailed(
+                "Max execution time exceeded".to_string(),
+            ));
         }
         // log if max steps is reached
         if num_steps >= max_steps {
             warn!("Max steps reached, halting");
-            return Err(ExecutionError::WorkflowFailed("Max steps reached".to_string()));
+            return Err(ExecutionError::WorkflowFailed(
+                "Max steps reached".to_string(),
+            ));
         }
         let rv = workflow.get_return_value();
         let return_value = self.handle_input(&rv.input, memory).await;
@@ -253,7 +263,10 @@ impl Executor {
                 let result = self.generate_text(&prompt, config).await;
                 if result.is_err() {
                     error!("Error generating text");
-                    return Err(ExecutionError::GenerationFailed(format!("{:?}", result.err().unwrap())));
+                    return Err(ExecutionError::GenerationFailed(format!(
+                        "{:?}",
+                        result.err().unwrap()
+                    )));
                 }
                 debug!("Prompt: {}", &prompt);
                 log_colored(
@@ -270,7 +283,10 @@ impl Executor {
                 let result = self.function_call(&prompt, config, raw_mode).await;
                 if result.is_err() {
                     error!("Error function calling");
-                    return Err(ExecutionError::FunctionCallFailed(format!("{:?}", result.err().unwrap())));
+                    return Err(ExecutionError::FunctionCallFailed(format!(
+                        "{:?}",
+                        result.err().unwrap()
+                    )));
                 }
                 debug!("Prompt: {}", &prompt);
                 log_colored(
