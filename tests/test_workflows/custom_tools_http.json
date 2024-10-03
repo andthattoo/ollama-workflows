@@ -1,83 +1,58 @@
 {
-"name": "Custom Tool",
-"description": "This is a simple workflow for custom tools",
-"config":{
-    "max_steps": 5,
-    "max_time": 100,
-    "max_tokens": 1024,
-    "tools": [],
-    "custom_tools":[{
-        "name": "PriceFeedRequest",
-        "description": "Fetches price feed from Gemini API",
-        "mode":"http_request",
-        "url": "https://api.gemini.com/v1/pricefeed",
-        "method": "GET"
-      }]
-},
-"tasks":[
-    {
-        "id": "A",
-        "name": "Get prices",
-        "description": "Get price feed",
-        "prompt": "What are the current prices?",
-        "inputs":[],
-        "operator": "function_calling",
-        "outputs":[
-            {
-                "type": "write",
-                "key": "prices",
-                "value": "__result"
-            }
-        ]
-    },
-    {
-        "id": "B",
-        "name": "Analyze prices",
-        "description": "Anzlye price feed",
-        "prompt": "Context: <prices>{prices}</prices> \n\n Use the context to find which ticker pair had the highest price change in 24 and has a price above $300?",
-        "inputs":[
-            {
-                "name": "prices",
-                "value": {
-                    "type": "read",
-                    "key": "prices"
-                },
-                "required": true
-            }
+    "config": {
+        "max_steps": 50,
+        "max_time": 200,
+        "tools": [
+            "ALL"
         ],
-        "operator": "generation",
-        "outputs":[
+        "custom_tools": [
             {
-                "type": "write",
-                "key": "result",
-                "value": "__result"
+                "name": "PriceFeedRequest",
+                "description": "Fetches price feed from Gemini API",
+                "mode": "http_request",
+                "url": "https://api.gemini.com/v1/pricefeed",
+                "method": "GET"
             }
         ]
     },
-    {
-        "id": "__end",
-        "name": "end",
-        "description": "End of the task",
-        "prompt": "End of the task",
-        "inputs": [],
-        "operator": "end",
-        "outputs": []
+    "external_memory": {},
+    "tasks": [
+        {
+            "id": "get_prices",
+            "name": "Task",
+            "description": "Task Description",
+            "prompt": "What is the current BTC/USDT parity?",
+            "inputs": [],
+            "operator": "function_calling",
+            "outputs": [
+                {
+                    "type": "write",
+                    "key": "prices",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "_end",
+            "name": "Task",
+            "description": "Task Description",
+            "prompt": "",
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
+        }
+    ],
+    "steps": [
+        {
+            "source": "get_prices",
+            "target": "_end"
+        }
+    ],
+    "return_value": {
+        "input": {
+            "type": "read",
+            "key": "prices"
+        },
+        "to_json": false
     }
-],
-"steps":[
-    {
-        "source":"A",
-        "target":"B"
-    },
-    {
-        "source":"B",
-        "target":"end"
-    }
-],
-"return_value":{
-    "input":{
-        "type": "read",
-        "key": "result"
-    }
-}
 }

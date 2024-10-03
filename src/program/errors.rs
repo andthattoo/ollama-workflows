@@ -36,8 +36,8 @@ pub enum ToolError {
 pub enum ExecutionError {
     WorkflowFailed(String),
     InvalidInput,
-    GenerationFailed,
-    FunctionCallFailed,
+    GenerationFailed(String),
+    FunctionCallFailed(String),
     VectorSearchFailed,
     StringCheckFailed,
     SamplingError,
@@ -95,8 +95,8 @@ impl fmt::Display for ExecutionError {
             ExecutionError::WorkflowFailed(cmd) => write!(f, "Workflow execution failed: {}", cmd),
             ExecutionError::InvalidInput => write!(f, "Invalid input provided"),
             ExecutionError::UnexpectedOutput => write!(f, "Unexpected output from command"),
-            ExecutionError::GenerationFailed => write!(f, "Text generation failed"),
-            ExecutionError::FunctionCallFailed => write!(f, "Function call failed"),
+            ExecutionError::GenerationFailed(detail) => write!(f, "Text generation failed {}", detail),
+            ExecutionError::FunctionCallFailed(detail) => write!(f, "Function call failed {}", detail),
             ExecutionError::VectorSearchFailed => write!(f, "Vector search failed"),
             ExecutionError::StringCheckFailed => write!(f, "Vector search failed"),
             ExecutionError::SamplingError => {
