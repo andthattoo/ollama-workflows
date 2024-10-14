@@ -17,8 +17,12 @@ impl Stack {
     }
 
     pub fn peek(&self, key: &str, index: usize) -> Option<Entry> {
+        // TODO: add -1 for last element, use isize instead of usize
         let vec = self.pages.get(key);
         if let Some(vec) = vec {
+            if index >= vec.len() {
+                return None;
+            }
             return vec.get(index).cloned();
         }
         None

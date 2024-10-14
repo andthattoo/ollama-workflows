@@ -67,6 +67,15 @@ pub enum Model {
     /// [Alibaba's Qwen2.5 Coder]
     #[serde(rename = "qwen2.5-coder:1.5b")]
     Qwen2_5Coder1_5B,
+    /// [AliBaba's Qwen2.5 7b]
+    #[serde(rename = "qwen2.5-coder:7b-instruct-q8_0")]
+    Qwen2_5coder7B,
+    /// [AliBaba's Qwen2.5 7b 8bit]
+    #[serde(rename = "qwen2.5-coder:7b-instruct-q8_0")]
+    Qwen2_5oder7Bq8,
+    /// [AliBaba's Qwen2.5 7b 16bit]
+    #[serde(rename = "qwen2.5-coder:7b-instruct-fp16")]
+    Qwen2_5coder7Bf16,
     /// [DeepSeek Coding models]
     #[serde(rename = "deepseek-coder:6.7b")]
     DeepSeekCoder6_7B,
@@ -174,6 +183,9 @@ impl From<Model> for ModelProvider {
             Model::Qwen2_5_7Bf16 => ModelProvider::Ollama,
             Model::Qwen2_5_32Bf16 => ModelProvider::Ollama,
             Model::Qwen2_5Coder1_5B => ModelProvider::Ollama,
+            Model::Qwen2_5coder7B => ModelProvider::Ollama,
+            Model::Qwen2_5oder7Bq8 => ModelProvider::Ollama,
+            Model::Qwen2_5coder7Bf16 => ModelProvider::Ollama,
             Model::DeepSeekCoder6_7B => ModelProvider::Ollama,
             Model::Mixtral8_7b => ModelProvider::Ollama,
             Model::GPT4Turbo => ModelProvider::OpenAI,
