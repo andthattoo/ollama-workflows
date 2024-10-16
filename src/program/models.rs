@@ -68,7 +68,7 @@ pub enum Model {
     #[serde(rename = "qwen2.5-coder:1.5b")]
     Qwen2_5Coder1_5B,
     /// [AliBaba's Qwen2.5 7b]
-    #[serde(rename = "qwen2.5-coder:7b-instruct-q8_0")]
+    #[serde(rename = "qwen2.5-coder:7b-instruct")]
     Qwen2_5coder7B,
     /// [AliBaba's Qwen2.5 7b 8bit]
     #[serde(rename = "qwen2.5-coder:7b-instruct-q8_0")]
