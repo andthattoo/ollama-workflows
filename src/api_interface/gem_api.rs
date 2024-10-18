@@ -10,14 +10,16 @@ pub struct GeminiExecutor {
     model: String,
     api_key: String,
     client: Client,
+    max_tokens: i32,
 }
 
 impl GeminiExecutor {
-    pub fn new(model: String, api_key: String) -> Self {
+    pub fn new(model: String, api_key: String, max_tokens: i32) -> Self {
         Self {
             model,
             api_key,
             client: Client::new(),
+            max_tokens,
         }
     }
 
@@ -41,7 +43,7 @@ impl GeminiExecutor {
             ],
             "generationConfig": {
                 "temperature": 1.0,
-                "maxOutputTokens": 800,
+                "maxOutputTokens": self.max_tokens,
                 "topP": 0.8,
                 "topK": 10
             }
