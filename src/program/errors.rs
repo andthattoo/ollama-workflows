@@ -43,6 +43,7 @@ pub enum ExecutionError {
     SamplingError,
     InvalidGetAllError,
     UnexpectedOutput,
+    Cancelled,
 }
 
 impl fmt::Display for CustomError {
@@ -110,6 +111,7 @@ impl fmt::Display for ExecutionError {
                 f,
                 "Error sampling because value is not get_all compatible (array)"
             ),
+            ExecutionError::Cancelled => write!(f, "Execution cancelled"),
         }
     }
 }

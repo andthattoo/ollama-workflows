@@ -4,7 +4,6 @@ use ollama_workflows::{Entry, Executor, Model, ProgramMemory, Workflow};
 
 // Constants for workflow paths
 const SEARCH_WORKFLOW_PATH: &str = "./tests/test_workflows/search.json";
-const RAW_TOOLS_PATH: &str = "./tests/test_workflows/raw_tools.json";
 const ALL_TOOLS_WORKFLOW_PATH: &str = "./tests/test_workflows/all.json";
 const QUESTIONS_WORKFLOW_PATH: &str = "./tests/test_workflows/questions.json";
 const POST_PROCESS_WORKFLOW_PATH: &str = "./tests/test_workflows/post_process.json";
@@ -19,8 +18,9 @@ const CODER_PATH: &str = "./tests/test_workflows/coding.json";
 
 async fn setup_test(model: Model) -> Executor {
     dotenv().ok();
-    let env = Env::default().filter_or("LOG_LEVEL", "info");
-    env_logger::Builder::from_env(env).init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("info"))
+        .filter_module("gem_rs", log::LevelFilter::Warn)
+        .init();
     Executor::new(model)
 }
 
@@ -66,7 +66,7 @@ mod simple_workflow_tests {
 
     workflow_test!(
         simple_workflow,
-        Model::Llama3_2_1B,
+        Model::Gemini15Flash,
         SIMPLE_WORKFLOW_PATH,
         "How does reiki work?"
     );
@@ -101,10 +101,10 @@ mod function_call_tests {
     use super::*;
 
     workflow_test!(
-        function_call_raw_llama,
-        Model::Llama3_1_8B,
-        RAW_TOOLS_PATH,
-        "Google the most famous street in Istanbul and google longest river in the world."
+        gemini_function_call,
+        Model::Gemini15Pro,
+        SEARCH_WORKFLOW_PATH,
+        "What is the most crowded street in Istanbul?"
     );
 
     workflow_test!(
@@ -114,8 +114,8 @@ mod function_call_tests {
         "What is the most famous street in Istanbul?"
     );
     workflow_test!(
-        function_calling_nous_theta,
-        Model::NousTheta,
+        function_calling_openai,
+        Model::GPT4o,
         SEARCH_WORKFLOW_PATH,
         "How many Hoodoo's are in Kapadokya?"
     );
@@ -129,6 +129,13 @@ mod function_call_tests {
 
 mod all_tools_workflow_tests {
     use super::*;
+
+    workflow_test!(
+        gemini_all_tools_workflow,
+        Model::Gemini15Flash,
+        ALL_TOOLS_WORKFLOW_PATH,
+        "What's the weather like in New York and how does it affect the stock market?"
+    );
 
     workflow_test!(
         all_tools_workflow,
@@ -173,10 +180,22 @@ mod context_size_tests {
         Model::Llama3_1_8B,
         CONTEXT_SIZE_WORKFLOW_PATH
     );
+
+    workflow_test!(
+        context_size_gemini,
+        Model::Gemini15Flash,
+        CONTEXT_SIZE_WORKFLOW_PATH
+    );
 }
 
 mod custom_tool_tests {
     use super::*;
+
+    workflow_test!(
+        gemini_custom_tool_workflow,
+        Model::Gemini15Pro,
+        CUSTOM_TOOL_WORKFLOW_PATH
+    );
 
     workflow_test!(
         http_custom_tool_workflow,

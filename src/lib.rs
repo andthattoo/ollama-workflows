@@ -23,6 +23,7 @@
 //! ```
 //! This crate provides a simple execution pipeline and enables users to create and execute workflows with JSON files.
 //! Creating specific JSON for you purpose should suffice.
+mod api_interface;
 mod memory;
 mod program;
 mod tools;

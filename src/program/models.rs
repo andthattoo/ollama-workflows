@@ -98,6 +98,32 @@ pub enum Model {
     /// [OpenAI's o1 preview model](https://platform.openai.com/docs/models/o1)
     #[serde(rename = "o1-preview")]
     O1Preview,
+
+    #[serde(rename = "gemini-1.5-pro-exp-0827")]
+    Gemini15ProExp0827,
+
+    #[serde(rename = "gemini-1.5-pro")]
+    Gemini15Pro,
+
+    /// Gemini 1.5 Flash model
+    #[serde(rename = "gemini-1.5-flash")]
+    Gemini15Flash,
+
+    /// Gemini 1.0 Pro model
+    #[serde(rename = "gemini-1.0-pro")]
+    Gemini10Pro,
+
+    /// Gemma 2 2B IT model
+    #[serde(rename = "gemma-2-2b-it")]
+    Gemma2_2bIt,
+
+    /// Gemma 2 9B IT model
+    #[serde(rename = "gemma-2-9b-it")]
+    Gemma2_9bIt,
+
+    /// Gemma 2 27B IT model
+    #[serde(rename = "gemma-2-27b-it")]
+    Gemma2_27bIt,
 }
 
 impl Model {
@@ -160,6 +186,8 @@ pub enum ModelProvider {
     Ollama,
     #[serde(rename = "openai")]
     OpenAI,
+    #[serde(rename = "gemini")]
+    Gemini,
 }
 
 impl From<Model> for ModelProvider {
@@ -193,6 +221,13 @@ impl From<Model> for ModelProvider {
             Model::GPT4oMini => ModelProvider::OpenAI,
             Model::O1Mini => ModelProvider::OpenAI,
             Model::O1Preview => ModelProvider::OpenAI,
+            Model::Gemini10Pro => ModelProvider::Gemini,
+            Model::Gemini15Flash => ModelProvider::Gemini,
+            Model::Gemini15Pro => ModelProvider::Gemini,
+            Model::Gemini15ProExp0827 => ModelProvider::Gemini,
+            Model::Gemma2_2bIt => ModelProvider::Gemini,
+            Model::Gemma2_9bIt => ModelProvider::Gemini,
+            Model::Gemma2_27bIt => ModelProvider::Gemini,
         }
     }
 }

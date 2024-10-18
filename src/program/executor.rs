@@ -2,13 +2,14 @@ use super::atomics::*;
 use super::io::*;
 use super::models::*;
 use super::workflow::Workflow;
+use crate::api_interface::gem_api::GeminiExecutor;
+use crate::api_interface::openai_api::OpenAIExecutor;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::errors::{ExecutionError, ToolError};
 use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
 
 use rand::Rng;
-use serde_json::{json, Value};
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -17,9 +18,6 @@ use std::time::Instant;
 use colored::*;
 use langchain_rust::language_models::llm::LLM;
 use langchain_rust::llm::OpenAI;
-
-use openai_dive::v1::api::Client;
-use openai_dive::v1::resources::chat::*;
 
 use log::{debug, error, info, warn};
 use rand::seq::SliceRandom;
@@ -268,7 +266,6 @@ impl Executor {
                         result.err().unwrap()
                     )));
                 }
-                debug!("Prompt: {}", &prompt);
                 log_colored(
                     format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
                 );
@@ -277,7 +274,6 @@ impl Executor {
             }
             Operator::FunctionCalling | Operator::FunctionCallingRaw => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
-                info!("Prompt: {}", &prompt);
 
                 let raw_mode = matches!(task.operator, Operator::FunctionCallingRaw);
                 let result = self.function_call(&prompt, config, raw_mode).await;
@@ -467,6 +463,11 @@ impl Executor {
                     .await
                     .map_err(|e| OllamaError::from(format!("Could not generate text: {:?}", e)))?
             }
+            ModelProvider::Gemini => {
+                let api_key = std::env::var("GEMINI_API_KEY").expect("$GEMINI_API_KEY is not set");
+                let executor = GeminiExecutor::new(self.model.to_string(), api_key);
+                executor.generate_text(prompt).await?
+            }
         };
 
         Ok(response)
@@ -517,79 +518,25 @@ impl Executor {
             }
             ModelProvider::OpenAI => {
                 let api_key = std::env::var("OPENAI_API_KEY").expect("$OPENAI_API_KEY is not set");
-                let client = Client::new(api_key);
+                //let client = Client::new(api_key.clone());
 
-                let openai_tools: Vec<_> = tools
-                    .iter()
-                    .map(|tool| ChatCompletionTool {
-                        r#type: ChatCompletionToolType::Function,
-                        function: ChatCompletionFunction {
-                            name: tool.name().to_lowercase().replace(' ', "_"),
-                            description: Some(tool.description()),
-                            parameters: tool.parameters(),
-                        },
-                    })
-                    .collect();
+                let openai_executor = OpenAIExecutor::new(self.model.to_string(), api_key.clone());
+                openai_executor
+                    .function_call(prompt, tools, raw_mode, oai_parser)
+                    .await?
+            }
+            ModelProvider::Gemini => {
+                let api_key = std::env::var("GEMINI_API_KEY").expect("$GEMINI_API_KEY is not set");
 
-                let messages = vec![ChatMessageBuilder::default()
-                    .content(ChatMessageContent::Text(prompt.to_string()))
-                    .build()
-                    .expect("OpenAI function call message build error")];
-
-                let parameters = ChatCompletionParametersBuilder::default()
-                    .model(self.model.to_string())
-                    .messages(messages)
-                    .tools(openai_tools)
-                    .build()
-                    .expect("Error while building tools.");
-
-                let result = client.chat().create(parameters).await.expect("msg");
-                let message = result.choices[0].message.clone();
-
-                //if raw mode, parse tool calls to string and return
-                if raw_mode {
-                    let mut raw_calls = Vec::new();
-                    if let Some(tool_calls) = message.tool_calls {
-                        for tool_call in tool_calls {
-                            let call_json = json!({
-                                "name": tool_call.function.name,
-                                "arguments": serde_json::from_str::<serde_json::Value>(&tool_call.function.arguments)?
-                            });
-                            raw_calls.push(serde_json::to_string(&call_json)?);
-                        }
+                match self.model{
+                    Model::Gemini15Flash | Model::Gemini15Pro => {
+                        let executor = GeminiExecutor::new(self.model.to_string(), api_key);
+                        executor
+                            .function_call(prompt, tools, raw_mode, oai_parser)
+                            .await?
                     }
-                    return Ok(raw_calls.join("\n\n"));
+                    _ => return Err(OllamaError::from(format!("Gemini doesn't support function calling for {}. Try using either: Gemini15Flash or Gemini15Pro", self.model)))
                 }
-
-                let mut results = Vec::<String>::new();
-                if let Some(tool_calls) = message.tool_calls {
-                    for tool_call in tool_calls {
-                        for tool in &tools {
-                            if tool.name().to_lowercase().replace(' ', "_")
-                                == tool_call.function.name
-                            {
-                                let tool_params: Value =
-                                    serde_json::from_str(&tool_call.function.arguments)?;
-                                let res = oai_parser
-                                    .function_call_with_history(
-                                        tool_call.function.name.clone(),
-                                        tool_params,
-                                        tool.clone(),
-                                    )
-                                    .await;
-                                if let Ok(result) = res {
-                                    results.push(result.message.unwrap().content);
-                                } else {
-                                    return Err(OllamaError::from(format!(
-                                        "Could not generate text: {:?}",
-                                        res.err().unwrap()
-                                    )));
-                                }
-                            }
-                        }
-                    }
-                }
-                results.join("\n")
             }
         };
 
