@@ -43,18 +43,30 @@ pub enum Model {
     /// [Meta's Llama3.1 model fp16](https://ollama.com/library/llama3.1:8b-instruct-fp16)
     #[serde(rename = "llama3.1:8b-instruct-fp16")]
     Llama3_1_8Bf16,
+    /// [Meta's Llama3.1 model q4](https://ollama.com/library/llama3.1:8b-text-q4_0)
+    #[serde(rename = "llama3.1:8b-text-q4_K_M")]
+    Llama3_1_8BTextQ4KM,
+    /// [Meta's Llama3.1 model q8](https://ollama.com/library/llama3.1:8b-text-q8_0)
+    #[serde(rename = "llama3.1:8b-text-q8_0")]
+    Llama3_1_8BTextQ8,
     /// [Meta's Llama3.1 model](https://ollama.com/library/llama3.1:70b), 70B parameters
     #[serde(rename = "llama3.1:70b-instruct-q4_0")]
     Llama3_1_70B,
     /// [Meta's Llama3.1 model q8](https://ollama.com/library/llama3.1:70b-instruct-q8_0)
     #[serde(rename = "llama3.1:70b-instruct-q8_0")]
     Llama3_1_70Bq8,
+    /// [Meta's LLama3.1 model fp16](https://ollama.com/library/llama3.1:70b-instruct-fp16)
+    #[serde(rename = "llama3.1:70b-text-q4_0")]
+    Llama3_1_70BTextQ4KM,
     /// [Meta's LLama3.2 Edge models](https://ollama.com/library/llama3.2/tags), 1B parameters
     #[serde(rename = "llama3.2:1b")]
     Llama3_2_1B,
     /// [Meta's LLama3.2 Edge models](https://ollama.com/library/llama3.2/tags), 3B parameters
     #[serde(rename = "llama3.2:3b")]
     Llama3_2_3B,
+    /// [Meta's LLama3.2 Edge models](https://ollama.com/library/llama3.2/tags), 1B parameters, q4
+    #[serde(rename = "llama3.2:1b-text-q4_K_M")]
+    Llama3_2_1BTextQ4KM,
     /// [Alibaba's Qwen2.5 model](https://ollama.com/library/qwen2), 7B parameters
     #[serde(rename = "qwen2.5:7b-instruct-q5_0")]
     Qwen2_5_7B,
@@ -99,9 +111,11 @@ pub enum Model {
     #[serde(rename = "o1-preview")]
     O1Preview,
 
+    /// Gemini 1.5 Pro model
     #[serde(rename = "gemini-1.5-pro-exp-0827")]
     Gemini15ProExp0827,
 
+    /// Gemini 1.5 Pro model
     #[serde(rename = "gemini-1.5-pro")]
     Gemini15Pro,
 
@@ -201,10 +215,14 @@ impl From<Model> for ModelProvider {
             Model::Llama3_1_8B => ModelProvider::Ollama,
             Model::Llama3_1_8Bq8 => ModelProvider::Ollama,
             Model::Llama3_1_8Bf16 => ModelProvider::Ollama,
+            Model::Llama3_1_8BTextQ4KM => ModelProvider::Ollama,
+            Model::Llama3_1_8BTextQ8 => ModelProvider::Ollama,
             Model::Llama3_1_70B => ModelProvider::Ollama,
             Model::Llama3_1_70Bq8 => ModelProvider::Ollama,
+            Model::Llama3_1_70BTextQ4KM => ModelProvider::Ollama,
             Model::Llama3_2_1B => ModelProvider::Ollama,
             Model::Llama3_2_3B => ModelProvider::Ollama,
+            Model::Llama3_2_1BTextQ4KM => ModelProvider::Ollama,
             Model::Gemma2_9B => ModelProvider::Ollama,
             Model::Gemma2_9BFp16 => ModelProvider::Ollama,
             Model::Qwen2_5_7B => ModelProvider::Ollama,

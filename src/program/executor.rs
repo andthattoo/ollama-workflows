@@ -26,6 +26,7 @@ use ollama_rs::{
     error::OllamaError,
     generation::chat::request::ChatMessageRequest,
     generation::chat::ChatMessage,
+    generation::completion::request::GenerationRequest,
     generation::functions::tools::StockScraper,
     generation::functions::tools::Tool,
     generation::functions::{
@@ -446,14 +447,33 @@ impl Executor {
 
         let response = match self.model.clone().into() {
             ModelProvider::Ollama => {
-                let mut msg = ChatMessageRequest::new(self.model.to_string(), vec![user_message]);
-                let mut ops = GenerationOptions::default();
-                ops = ops.num_predict(config.max_tokens.unwrap_or(250));
-                msg = msg.options(ops);
+                return match self.model {
+                    Model::Llama3_1_8BTextQ4KM
+                    | Model::Llama3_1_8BTextQ8
+                    | Model::Llama3_1_70BTextQ4KM
+                    | Model::Llama3_2_1BTextQ4KM => {
+                        let mut msg =
+                            GenerationRequest::new(self.model.to_string(), prompt.to_string());
+                        let mut ops = GenerationOptions::default();
+                        ops = ops.num_predict(config.max_tokens.unwrap_or(250));
+                        msg = msg.options(ops);
 
-                let result = self.llm.send_chat_messages(msg).await?;
+                        let result = self.llm.generate(msg).await?;
 
-                result.message.unwrap().content
+                        Ok(result.response)
+                    }
+                    _ => {
+                        let mut msg =
+                            ChatMessageRequest::new(self.model.to_string(), vec![user_message]);
+                        let mut ops = GenerationOptions::default();
+                        ops = ops.num_predict(config.max_tokens.unwrap_or(250));
+                        msg = msg.options(ops);
+
+                        let result = self.llm.send_chat_messages(msg).await?;
+
+                        Ok(result.message.unwrap().content)
+                    }
+                }
             }
             ModelProvider::OpenAI => {
                 let llm: OpenAI<langchain_rust::llm::OpenAIConfig> =

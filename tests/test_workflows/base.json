@@ -1,6 +1,6 @@
 {
     "name": "Simple",
-    "description": "This is a simple workflow",
+    "description": "This is a simple workflow for base models",
     "config":{
         "max_steps": 100,
         "max_time": 600,
@@ -11,14 +11,14 @@
         {
             "id": "A",
             "name": "Random Poem",
-            "description": "Writes a poem about Kapadokya.",
-            "prompt": "Please write a poem about Kapadokya.",
+            "description": "Completes text",
+            "prompt": "So who am I to",
             "inputs":[],
             "operator": "generation",
             "outputs":[
                 {
                     "type": "write",
-                    "key": "poem",
+                    "key": "generation",
                     "value": "__result"
                 }
             ]
@@ -36,22 +36,13 @@
     "steps":[
         {
             "source":"A",
-            "target":"end",
-            "condition": {
-                "input":{
-                    "type":"read",
-                    "key": "poem"
-                },
-                "expression": "Equal",
-                "expected": "Yes",
-                "target_if_not": "A"
-            }
+            "target":"end"
         }
     ],
     "return_value":{
         "input":{
             "type": "read",
-            "key": "poem"
+            "key": "generation"
         }
     }
 }

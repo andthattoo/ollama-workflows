@@ -15,6 +15,7 @@ const CONTEXT_SIZE_WORKFLOW_PATH: &str = "./tests/test_workflows/context_size.js
 const CUSTOM_TOOL_HTTP_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tools_http.json";
 const CUSTOM_TOOL_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tool.json";
 const CODER_PATH: &str = "./tests/test_workflows/coding.json";
+const BASE_PATH: &str = "./tests/test_workflows/base.json";
 
 async fn setup_test(model: Model) -> Executor {
     dotenv().ok();
@@ -65,7 +66,7 @@ mod simple_workflow_tests {
     use super::*;
 
     workflow_test!(
-        simple_workflow,
+        gemini_simple_workflow,
         Model::Gemini15Flash,
         SIMPLE_WORKFLOW_PATH,
         "How does reiki work?"
@@ -208,4 +209,10 @@ mod custom_tool_tests {
         Model::GPT4o,
         CUSTOM_TOOL_WORKFLOW_PATH
     );
+}
+
+mod base_workflow_tests {
+    use super::*;
+
+    workflow_test!(base_workflow, Model::Llama3_1_8BTextQ4KM, BASE_PATH);
 }
