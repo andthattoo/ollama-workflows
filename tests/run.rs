@@ -33,7 +33,7 @@ macro_rules! workflow_test {
             let workflow = Workflow::new_from_json($workflow).unwrap();
             let mut memory = ProgramMemory::new();
             let input = Entry::try_value_or_str($input);
-            if let Err(e) = exe.execute(Some(&input), workflow, &mut memory).await {
+            if let Err(e) = exe.execute(Some(&input), &workflow, &mut memory).await {
                 log::error!("Execution failed: {}", e);
             };
         }
@@ -44,7 +44,7 @@ macro_rules! workflow_test {
             let exe = setup_test($model).await;
             let workflow = Workflow::new_from_json($workflow).unwrap();
             let mut memory = ProgramMemory::new();
-            if let Err(e) = exe.execute(None, workflow, &mut memory).await {
+            if let Err(e) = exe.execute(None, &workflow, &mut memory).await {
                 log::error!("Execution failed: {}", e);
             };
         }
