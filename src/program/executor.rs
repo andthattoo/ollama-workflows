@@ -80,7 +80,7 @@ impl Executor {
     pub async fn execute(
         &self,
         input: Option<&Entry>,
-        workflow: Workflow,
+        workflow: &Workflow,
         memory: &mut ProgramMemory,
     ) -> Result<String, ExecutionError> {
         let config = workflow.get_config();
