@@ -42,21 +42,20 @@ impl OpenAIExecutor {
         let messages = vec![ChatMessageBuilder::default()
             .content(ChatMessageContent::Text(prompt.to_string()))
             .build()
-            .expect("OpenAI function call message build error")];
+            .map_err(|e| OllamaError::from(format!("Could not build chat message: {:?}", e)))?];
 
         let parameters = ChatCompletionParametersBuilder::default()
             .model(self.model.clone())
             .messages(messages)
             .tools(openai_tools)
             .build()
-            .expect("Error while building tools.");
+            .map_err(|e| {
+                OllamaError::from(format!("Could not build message parameters: {:?}", e))
+            })?;
 
-        let result = self
-            .client
-            .chat()
-            .create(parameters)
-            .await
-            .expect("OpenAI Function call failed");
+        let result = self.client.chat().create(parameters).await.map_err(|e| {
+            OllamaError::from(format!("Failed to parse Gemini API response: {:?}", e))
+        })?;
         let message = result.choices[0].message.clone();
 
         if raw_mode {

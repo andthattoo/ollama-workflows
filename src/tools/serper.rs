@@ -254,7 +254,7 @@ impl Tool for SearchTool {
         }
 
         let client = Client::new();
-        let api_key = env::var("SERPER_API_KEY").expect("SERPER_API_KEY must be set");
+        let api_key = env::var("SERPER_API_KEY")?;
         let response = client
             .post(&url)
             .header("X-API-KEY", api_key)

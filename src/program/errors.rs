@@ -1,6 +1,8 @@
 use std::error::Error;
 use std::fmt;
 
+use openai_dive::v1::resources::embedding::EmbeddingParametersBuilderError;
+
 #[allow(clippy::enum_variant_names)]
 #[derive(Debug)]
 pub enum CustomError {
@@ -25,6 +27,7 @@ pub enum EmbeddingError {
     DocumentEmbedding(String),
     QueryEmbedding(String),
     ModelDoesNotExist,
+    BuilderError(EmbeddingParametersBuilderError),
 }
 
 #[derive(Debug)]
@@ -78,6 +81,7 @@ impl fmt::Display for EmbeddingError {
             EmbeddingError::DocumentEmbedding(doc) => write!(f, "Error while generating embeddings for doc: {}", doc),
             EmbeddingError::QueryEmbedding(query) => write!(f, "Error while generating embeddings for query: {}", query),
             EmbeddingError::ModelDoesNotExist => write!(f, "Model does not exist. run ollama run hellord/mxbai-embed-large-v1:f16 to create it."),
+            EmbeddingError::BuilderError(err) => write!(f, "Embedding builder error: {}", err),
         }
     }
 }

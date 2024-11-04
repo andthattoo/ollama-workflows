@@ -35,8 +35,7 @@ impl Tool for Browserless {
 
     async fn run(&self, input: Value) -> Result<String, Box<dyn Error>> {
         let website = input["website"].as_str().ok_or("Website URL is required")?;
-        let browserless_token =
-            env::var("BROWSERLESS_TOKEN").expect("BROWSERLESS_TOKEN must be set");
+        let browserless_token = env::var("BROWSERLESS_TOKEN")?;
         let url = format!("http://0.0.0.0:3000/content?token={}", browserless_token);
         let payload = json!({
             "url": website
