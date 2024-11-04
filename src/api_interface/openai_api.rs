@@ -54,7 +54,7 @@ impl OpenAIExecutor {
             })?;
 
         let result = self.client.chat().create(parameters).await.map_err(|e| {
-            OllamaError::from(format!("Failed to parse Gemini API response: {:?}", e))
+            OllamaError::from(format!("Failed to parse OpenAI API response: {:?}", e))
         })?;
         let message = result.choices[0].message.clone();
 
