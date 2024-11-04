@@ -105,7 +105,7 @@ impl Embedder for OpenAIEmbedder {
             .input(EmbeddingInput::String(_prompt.to_string()))
             .encoding_format(EmbeddingEncodingFormat::Float)
             .build()
-            .map_err(|e| EmbeddingError::BuilderError(e))?;
+            .map_err(EmbeddingError::BuilderError)?;
 
         let result = client.embeddings().create(parameters).await;
 
