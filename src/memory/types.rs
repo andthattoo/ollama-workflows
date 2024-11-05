@@ -51,6 +51,7 @@ pub enum MemoryReturnType {
     //EntryRef(Option<&'a Entry>),
     Entry(Option<Entry>),
     EntryVec(Option<Vec<Entry>>),
+    Multiple(Vec<MemoryReturnType>),
 }
 
 impl MemoryReturnType {
@@ -59,6 +60,7 @@ impl MemoryReturnType {
             //MemoryReturnType::EntryRef(entry_ref) => entry_ref.is_none(),
             MemoryReturnType::Entry(entry) => entry.is_none(),
             MemoryReturnType::EntryVec(entry_vec) => entry_vec.is_none(),
+            MemoryReturnType::Multiple(returns) => returns.is_empty(),
         }
     }
 
@@ -75,6 +77,10 @@ impl MemoryReturnType {
                     Ok(json) => Some(json),
                     Err(_) => None,
                 }
+            }
+            MemoryReturnType::Multiple(returns) => {
+                let values: Vec<String> = returns.iter().map(|ret| ret.to_string()).collect();
+                serde_json::to_string(&values).ok()
             }
             _ => None,
         }
@@ -97,6 +103,14 @@ impl fmt::Display for MemoryReturnType {
                 for entry in entry_vec.iter().flatten() {
                     result.push_str(&entry.to_string());
                     result.push_str(" \n"); // Add a newline in between strings
+                }
+                write!(f, "{}", result)
+            }
+            MemoryReturnType::Multiple(returns) => {
+                let mut result = String::new();
+                for ret in returns {
+                    result.push_str(&ret.to_string());
+                    result.push_str(" \n");
                 }
                 write!(f, "{}", result)
             }

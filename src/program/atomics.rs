@@ -96,8 +96,15 @@ pub struct Task {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum TaskOutputInput {
+    Single(InputValue),
+    Multiple(Vec<InputValue>),
+}
+
+#[derive(Debug, Deserialize)]
 pub struct TaskOutput {
-    pub input: InputValue,
+    pub input: TaskOutputInput,
     pub to_json: Option<bool>,
     pub post_process: Option<Vec<TaskPostProcess>>,
 }

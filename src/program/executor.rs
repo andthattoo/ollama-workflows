@@ -192,7 +192,18 @@ impl Executor {
             ));
         }
         let rv = workflow.get_return_value();
-        let return_value = self.handle_input(&rv.input, memory).await;
+
+        //let return_value = self.handle_input(&rv.input, memory).await;
+        let return_value = match &rv.input {
+            TaskOutputInput::Single(input) => self.handle_input(input, memory).await,
+            TaskOutputInput::Multiple(inputs) => {
+                let mut results = Vec::new();
+                for input in inputs {
+                    results.push(self.handle_input(input, memory).await);
+                }
+                MemoryReturnType::Multiple(results)
+            }
+        };
         let mut return_string = return_value.to_string().clone();
 
         if rv.to_json.is_some() && rv.to_json.unwrap() {

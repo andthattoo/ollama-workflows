@@ -33,8 +33,14 @@ macro_rules! workflow_test {
             let workflow = Workflow::new_from_json($workflow).unwrap();
             let mut memory = ProgramMemory::new();
             let input = Entry::try_value_or_str($input);
-            if let Err(e) = exe.execute(Some(&input), &workflow, &mut memory).await {
-                log::error!("Execution failed: {}", e);
+            match exe.execute(Some(&input), &workflow, &mut memory).await {
+                Ok(result) => {
+                    log::info!("Execution completed successfully");
+                    log::info!("Result: {:?}", result);
+                }
+                Err(e) => {
+                    log::error!("Execution failed: {}", e);
+                }
             };
         }
     };
@@ -68,8 +74,7 @@ mod simple_workflow_tests {
     workflow_test!(
         gemini_simple_workflow,
         Model::Gemini15Flash,
-        SIMPLE_WORKFLOW_PATH,
-        "How does reiki work?"
+        SIMPLE_WORKFLOW_PATH
     );
 
     workflow_test!(simple_coder, Model::Qwen2_5Coder1_5B, CODER_PATH);

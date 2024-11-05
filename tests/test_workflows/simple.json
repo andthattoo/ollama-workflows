@@ -36,22 +36,19 @@
     "steps":[
         {
             "source":"A",
-            "target":"end",
-            "condition": {
-                "input":{
-                    "type":"read",
-                    "key": "poem"
-                },
-                "expression": "Equal",
-                "expected": "Yes",
-                "target_if_not": "A"
-            }
+            "target":"end"
         }
     ],
-    "return_value":{
-        "input":{
+    "return_value":
+    {
+        "input":[{
+            "type": "read",
+            "key": "poem"
+        },
+        {
             "type": "read",
             "key": "poem"
         }
+        ]
     }
 }
