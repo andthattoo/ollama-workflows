@@ -16,8 +16,6 @@ use std::sync::Arc;
 use std::time::Instant;
 
 use colored::*;
-use langchain_rust::language_models::llm::LLM;
-use langchain_rust::llm::OpenAI;
 
 use base64::prelude::*;
 use log::{debug, error, info, warn};
@@ -515,12 +513,10 @@ impl Executor {
                 }
             }
             ModelProvider::OpenAI => {
-                let llm: OpenAI<langchain_rust::llm::OpenAIConfig> =
-                    OpenAI::default().with_model(self.model.to_string());
+                let api_key = std::env::var("OPENAI_API_KEY").expect("$OPENAI_API_KEY is not set");
 
-                llm.invoke(prompt)
-                    .await
-                    .map_err(|e| OllamaError::from(format!("Could not generate text: {:?}", e)))?
+                let openai_executor = OpenAIExecutor::new(self.model.to_string(), api_key.clone());
+                openai_executor.generate_text(prompt, schema).await?
             }
             ModelProvider::Gemini => {
                 let api_key = std::env::var("GEMINI_API_KEY").expect("$GEMINI_API_KEY is not set");
@@ -578,7 +574,6 @@ impl Executor {
             }
             ModelProvider::OpenAI => {
                 let api_key = std::env::var("OPENAI_API_KEY").expect("$OPENAI_API_KEY is not set");
-                //let client = Client::new(api_key.clone());
 
                 let openai_executor = OpenAIExecutor::new(self.model.to_string(), api_key.clone());
                 openai_executor

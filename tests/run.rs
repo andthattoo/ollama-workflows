@@ -80,7 +80,7 @@ mod simple_workflow_tests {
 
     workflow_test!(simple_coder, Model::Qwen2_5Coder1_5B, CODER_PATH);
 
-    workflow_test!(simple_o1, Model::O1Mini, SIMPLE_WORKFLOW_PATH);
+    workflow_test!(o1_simple, Model::O1Mini, SIMPLE_WORKFLOW_PATH);
 }
 
 mod insert_workflow_tests {
@@ -145,7 +145,7 @@ mod all_tools_workflow_tests {
     );
 
     workflow_test!(
-        all_tools_workflow,
+        openai_all_tools_workflow,
         Model::GPT4oMini,
         ALL_TOOLS_WORKFLOW_PATH,
         "What's the weather like in New York and how does it affect the stock market?"
@@ -211,7 +211,7 @@ mod custom_tool_tests {
     );
 
     workflow_test!(
-        custom_tool_workflow,
+        gpt_custom_tool_workflow,
         Model::GPT4o,
         CUSTOM_TOOL_WORKFLOW_PATH
     );

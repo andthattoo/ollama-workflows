@@ -20,6 +20,68 @@ impl OpenAIExecutor {
         }
     }
 
+    pub async fn generate_text(
+        &self,
+        prompt: &str,
+        schema: &Option<String>,
+    ) -> Result<String, OllamaError> {
+        let messages = vec![ChatMessage::User {
+            content: ChatMessageContent::Text(prompt.to_string()),
+            name: None,
+        }];
+
+        let parameters = if let Some(schema_str) = schema {
+            // Parse the schema string into a Value
+            let mut schema_json: Value = serde_json::from_str(schema_str)
+                .map_err(|e| OllamaError::from(format!("Invalid schema JSON: {:?}", e)))?;
+
+            if let Value::Object(ref mut map) = schema_json {
+                map.insert("additionalProperties".to_string(), Value::Bool(false));
+            }
+
+            ChatCompletionParametersBuilder::default()
+                .model(self.model.clone())
+                .messages(messages)
+                .response_format(ChatCompletionResponseFormat::JsonSchema(
+                    JsonSchemaBuilder::default()
+                        .name("structured_output")
+                        .schema(schema_json)
+                        .strict(true)
+                        .build()
+                        .map_err(|e| {
+                            OllamaError::from(format!("Could not build JSON schema: {:?}", e))
+                        })?,
+                ))
+                .build()
+        } else {
+            ChatCompletionParametersBuilder::default()
+                .model(self.model.clone())
+                .messages(messages)
+                .response_format(ChatCompletionResponseFormat::Text)
+                .build()
+        }
+        .map_err(|e| OllamaError::from(format!("Could not build message parameters: {:?}", e)))?;
+
+        let result = self.client.chat().create(parameters).await.map_err(|e| {
+            OllamaError::from(format!("Failed to parse OpenAI API response: {:?}", e))
+        })?;
+
+        let message = match &result.choices[0].message {
+            ChatMessage::Assistant { content, .. } => {
+                if let Some(ChatMessageContent::Text(text)) = content {
+                    text.clone()
+                } else {
+                    return Err(OllamaError::from(
+                        "Unexpected message content format".to_string(),
+                    ));
+                }
+            }
+            _ => return Err(OllamaError::from("Unexpected message type".to_string())),
+        };
+
+        Ok(message)
+    }
+
     pub async fn function_call(
         &self,
         prompt: &str,
@@ -39,10 +101,10 @@ impl OpenAIExecutor {
             })
             .collect();
 
-        let messages = vec![ChatMessageBuilder::default()
-            .content(ChatMessageContent::Text(prompt.to_string()))
-            .build()
-            .map_err(|e| OllamaError::from(format!("Could not build chat message: {:?}", e)))?];
+        let messages = vec![ChatMessage::User {
+            content: ChatMessageContent::Text(prompt.to_string()),
+            name: None,
+        }];
 
         let parameters = ChatCompletionParametersBuilder::default()
             .model(self.model.clone())
@@ -67,7 +129,12 @@ impl OpenAIExecutor {
 
     fn handle_raw_mode(&self, message: ChatMessage) -> Result<String, OllamaError> {
         let mut raw_calls = Vec::new();
-        if let Some(tool_calls) = message.tool_calls {
+
+        if let ChatMessage::Assistant {
+            tool_calls: Some(tool_calls),
+            ..
+        } = message
+        {
             for tool_call in tool_calls {
                 let call_json = json!({
                     "name": tool_call.function.name,
@@ -76,6 +143,7 @@ impl OpenAIExecutor {
                 raw_calls.push(serde_json::to_string(&call_json)?);
             }
         }
+
         Ok(raw_calls.join("\n\n"))
     }
 
@@ -86,7 +154,12 @@ impl OpenAIExecutor {
         oai_parser: Arc<OpenAIFunctionCall>,
     ) -> Result<String, OllamaError> {
         let mut results = Vec::<String>::new();
-        if let Some(tool_calls) = message.tool_calls {
+
+        if let ChatMessage::Assistant {
+            tool_calls: Some(tool_calls),
+            ..
+        } = message
+        {
             for tool_call in tool_calls {
                 for tool in &tools {
                     if tool.name().to_lowercase().replace(' ', "_") == tool_call.function.name {
@@ -112,6 +185,7 @@ impl OpenAIExecutor {
                 }
             }
         }
+
         Ok(results.join("\n"))
     }
 }
