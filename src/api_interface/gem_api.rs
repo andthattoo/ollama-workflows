@@ -24,6 +24,7 @@ impl GeminiExecutor {
         }
     }
 
+    // now supports structured output
     pub async fn generate_text(
         &self,
         prompt: &str,
