@@ -93,6 +93,8 @@ pub struct Task {
     pub operator: Operator,
     #[serde(default)]
     pub outputs: Vec<Output>,
+    /// Schema
+    pub schema: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

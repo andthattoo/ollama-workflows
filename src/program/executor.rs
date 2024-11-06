@@ -19,6 +19,7 @@ use colored::*;
 use langchain_rust::language_models::llm::LLM;
 use langchain_rust::llm::OpenAI;
 
+use base64::prelude::*;
 use log::{debug, error, info, warn};
 use rand::seq::SliceRandom;
 
@@ -33,6 +34,7 @@ use ollama_rs::{
         DDGSearcher, FunctionCallRequest, LlamaFunctionCall, OpenAIFunctionCall, Scraper,
     },
     generation::options::GenerationOptions,
+    generation::parameters::FormatType,
     Ollama,
 };
 
@@ -270,7 +272,8 @@ impl Executor {
         match task.operator {
             Operator::Generation => {
                 let prompt = self.fill_prompt(&task.prompt, &input_map);
-                let result = self.generate_text(&prompt, config).await;
+
+                let result = self.generate_text(&prompt, &task.schema, config).await;
                 if result.is_err() {
                     error!("Error generating text");
                     return Err(ExecutionError::GenerationFailed(format!(
@@ -453,7 +456,14 @@ impl Executor {
         }
     }
 
-    async fn generate_text(&self, prompt: &str, config: &Config) -> Result<String, OllamaError> {
+    async fn generate_text(
+        &self,
+        prompt: &str,
+        schema: &Option<String>,
+        config: &Config,
+    ) -> Result<String, OllamaError> {
+        //let json= ChatMessage::assistant(format!("{regex}"));
+
         let user_message = ChatMessage::user(prompt.to_string());
 
         let response = match self.model.clone().into() {
@@ -474,8 +484,26 @@ impl Executor {
                         Ok(result.response)
                     }
                     _ => {
-                        let mut msg =
-                            ChatMessageRequest::new(self.model.to_string(), vec![user_message]);
+                        let mut messages = Vec::new();
+                        let mut msg = if let Some(schema) = schema {
+                            let decoded_schema = match BASE64_STANDARD.decode(schema.as_bytes()) {
+                                Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
+                                Err(e) => {
+                                    warn!("Failed to decode base64 schema: {}", e);
+                                    return Err(OllamaError::from(
+                                        "Schema format invalid".to_string(),
+                                    ));
+                                }
+                            };
+                            messages.push(ChatMessage::assistant(decoded_schema.to_string()));
+                            messages.push(user_message);
+                            ChatMessageRequest::new(self.model.to_string(), messages)
+                                .format(FormatType::Json)
+                        } else {
+                            messages.push(user_message);
+                            ChatMessageRequest::new(self.model.to_string(), messages)
+                        };
+
                         let mut ops = GenerationOptions::default();
                         ops = ops.num_predict(config.max_tokens.unwrap_or(250));
                         msg = msg.options(ops);
