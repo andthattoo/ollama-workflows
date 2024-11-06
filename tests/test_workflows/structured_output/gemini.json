@@ -1,0 +1,51 @@
+{
+    "name": "Simple",
+    "description": "This is a simple workflow",
+    "config":{
+        "max_steps": 5,
+        "max_time": 50,
+        "max_tokens":500,
+        "tools": []
+    },
+    "tasks":[
+        {
+            "id": "A",
+            "name": "Sky",
+            "description": "",
+            "prompt": "Why is sky blue?",
+            "schema": "{\"type\": \"OBJECT\", \"properties\": {\"question\": {\"type\": \"STRING\"}, \"answer\": {\"type\": \"STRING\"}, \"keywords\": {\"type\": \"ARRAY\", \"items\": {\"type\": \"STRING\"}}}}",
+            "inputs":[],
+            "operator": "generation",
+            "outputs":[
+                {
+                    "type": "write",
+                    "key": "answer",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "__end",
+            "name": "end",
+            "description": "End of the task",
+            "prompt": "End of the task",
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
+        }
+    ],
+    "steps":[
+        {
+            "source":"A",
+            "target":"end"
+        }
+    ],
+    "return_value":
+    {
+        "input":[{
+            "type": "read",
+            "key": "answer"
+        }
+        ]
+    }
+}

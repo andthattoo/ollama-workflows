@@ -1,10 +1,11 @@
+use log::warn;
 use ollama_rs::{
     error::OllamaError, generation::functions::tools::Tool,
     generation::functions::OpenAIFunctionCall,
 };
 use reqwest::Client;
 use serde_json::{json, Value};
-use std::{error::Error, sync::Arc};
+use std::sync::Arc;
 
 pub struct GeminiExecutor {
     model: String,
@@ -23,11 +24,38 @@ impl GeminiExecutor {
         }
     }
 
-    pub async fn generate_text(&self, prompt: &str) -> Result<String, OllamaError> {
+    pub async fn generate_text(
+        &self,
+        prompt: &str,
+        schema: &Option<String>,
+    ) -> Result<String, OllamaError> {
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",
             self.model, self.api_key
         );
+
+        let mut generation_config = json!({
+            "temperature": 1.0,
+            "maxOutputTokens": self.max_tokens,
+            "topP": 0.8,
+            "topK": 10
+        });
+
+        // If schema is provided, add structured output configuration
+        if let Some(schema_str) = schema {
+            let schema_json: Value = serde_json::from_str(schema_str)
+                .map_err(|e| OllamaError::from(format!("Invalid schema JSON: {:?}", e)))?;
+
+            generation_config.as_object_mut().unwrap().extend(
+                json!({
+                    "response_mime_type": "application/json",
+                    "response_schema": schema_json
+                })
+                .as_object()
+                .unwrap()
+                .clone(),
+            );
+        }
 
         let body = json!({
             "contents": [{
@@ -41,12 +69,7 @@ impl GeminiExecutor {
                     "threshold": "BLOCK_ONLY_HIGH"
                 }
             ],
-            "generationConfig": {
-                "temperature": 1.0,
-                "maxOutputTokens": self.max_tokens,
-                "topP": 0.8,
-                "topK": 10
-            }
+            "generationConfig": generation_config
         });
 
         let response = self
@@ -57,17 +80,25 @@ impl GeminiExecutor {
             .send()
             .await
             .map_err(|e| {
-                OllamaError::from(format!("Gemini API request failed: {:?}", e.source()))
+                OllamaError::from(format!("Gemini API request failed: {}", e))
             })?;
 
         let response_body: Value = response.json().await.map_err(|e| {
-            OllamaError::from(format!("Failed to parse Gemini API response: {:?}", e))
+            OllamaError::from(format!(
+                "Failed to parse Gemini API response: {}",
+                e
+            ))
         })?;
 
         self.extract_generated_text(response_body)
     }
 
     fn extract_generated_text(&self, response: Value) -> Result<String, OllamaError> {
+        warn!(
+            "Full Gemini Response: {}",
+            serde_json::to_string_pretty(&response).unwrap()
+        );
+
         response["candidates"][0]["content"]["parts"][0]["text"]
             .as_str()
             .map(|s| s.to_string())

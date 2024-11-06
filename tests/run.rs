@@ -16,7 +16,9 @@ const CUSTOM_TOOL_HTTP_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tool
 const CUSTOM_TOOL_WORKFLOW_PATH: &str = "./tests/test_workflows/custom_tool.json";
 const CODER_PATH: &str = "./tests/test_workflows/coding.json";
 const BASE_PATH: &str = "./tests/test_workflows/base.json";
-const STRUCTURED_PATH: &str = "./tests/test_workflows/structured_output.json";
+const GEMINI_STRUCTURED_PATH: &str = "./tests/test_workflows/structured_output/gemini.json";
+const OPENAI_STRUCTURED_PATH: &str = "./tests/test_workflows/structured_output/openai.json";
+const LLAMA_STRUCTURED_PATH: &str = "./tests/test_workflows/structured_output/llama.json";
 
 async fn setup_test(model: Model) -> Executor {
     dotenv().ok();
@@ -223,10 +225,24 @@ mod base_workflow_tests {
     workflow_test!(base_workflow, Model::Llama3_1_8BTextQ4KM, BASE_PATH);
 }
 
-mod base_structured_output_tests {
+mod structured_output_tests {
     use super::*;
 
-    workflow_test!(llama_structured_output, Model::Llama3_1_8B, STRUCTURED_PATH);
+    workflow_test!(
+        llama_structured_output,
+        Model::Llama3_1_8B,
+        LLAMA_STRUCTURED_PATH
+    );
 
-    workflow_test!(openai_structured_output, Model::GPT4o, STRUCTURED_PATH);
+    workflow_test!(
+        openai_structured_output,
+        Model::GPT4o,
+        OPENAI_STRUCTURED_PATH
+    );
+
+    workflow_test!(
+        gemini_structured_output,
+        Model::Gemini15Pro,
+        GEMINI_STRUCTURED_PATH
+    );
 }

@@ -522,7 +522,7 @@ impl Executor {
                 let api_key = std::env::var("GEMINI_API_KEY").expect("$GEMINI_API_KEY is not set");
                 let max_tokens = config.max_tokens.unwrap_or(800);
                 let executor = GeminiExecutor::new(self.model.to_string(), api_key, max_tokens);
-                executor.generate_text(prompt).await?
+                executor.generate_text(prompt, schema).await?
             }
         };
 
