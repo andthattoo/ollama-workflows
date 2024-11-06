@@ -79,15 +79,10 @@ impl GeminiExecutor {
             .json(&body)
             .send()
             .await
-            .map_err(|e| {
-                OllamaError::from(format!("Gemini API request failed: {}", e))
-            })?;
+            .map_err(|e| OllamaError::from(format!("Gemini API request failed: {}", e)))?;
 
         let response_body: Value = response.json().await.map_err(|e| {
-            OllamaError::from(format!(
-                "Failed to parse Gemini API response: {}",
-                e
-            ))
+            OllamaError::from(format!("Failed to parse Gemini API response: {}", e))
         })?;
 
         self.extract_generated_text(response_body)
