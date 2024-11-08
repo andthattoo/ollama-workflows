@@ -191,15 +191,6 @@ impl GeminiExecutor {
             )));
         }
 
-        // check status
-        if let Err(e) = response.error_for_status_ref() {
-            return Err(OllamaError::from(format!(
-                "Gemini API request failed with status {}: {:?}",
-                response.status(),
-                e.source()
-            )));
-        }
-
         let response_body: Value = response.json().await.map_err(|e| {
             OllamaError::from(format!("Failed to parse Gemini API response: {:?}", e))
         })?;
