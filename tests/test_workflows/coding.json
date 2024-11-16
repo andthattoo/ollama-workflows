@@ -12,7 +12,7 @@
         "id": "fibonacci",
         "name": "Task",
         "description": "Task Description",
-        "prompt": "Write fibonnaci sequence method with memoization in rust",
+        "messages": [{"role": "user", "content":"Write fibonnaci sequence method with memoization in rust"}],
         "inputs": [],
         "operator": "generation",
         "outputs": [

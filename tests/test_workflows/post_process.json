@@ -11,7 +11,7 @@
             "id": "A",
             "name": "Random Poem",
             "description": "Writes a poem about Kapadokya.",
-            "prompt": "Please write a poem about Kapadokya.",
+            "messages": [{"role": "user", "content":"Please write a poem about Kapadokya."}],
             "inputs":[],
             "operator": "generation",
             "outputs":[

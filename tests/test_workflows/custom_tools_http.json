@@ -21,7 +21,7 @@
             "id": "get_prices",
             "name": "Task",
             "description": "Task Description",
-            "prompt": "What is the current BTC/USDT parity?",
+            "messages": [{"role": "user", "content":"What is the current BTC/USDT parity?"}],
             "inputs": [],
             "operator": "function_calling",
             "outputs": [

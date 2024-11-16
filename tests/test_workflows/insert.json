@@ -11,7 +11,7 @@
             "id": "A",
             "name": "Random Facts about Kapadokya",
             "description": "Write down facts about Kapadokya. ",
-            "prompt": "Please write a facts about Kapadokya. Refrain from generating previously generated facts.\n\n ###History:{history}",
+            "messages": [{"role": "user", "content":"Please write a facts about Kapadokya. Refrain from generating previously generated facts.\n\n ###History:{history}"}],
             "inputs":[
                 {
                     "name": "history",
@@ -40,7 +40,7 @@
             "id": "B",
             "name": "Search",
             "description": "Perform search on kapadokya",
-            "prompt": "What are the unique geographic features of Kapadokya?",
+            "messages": [{"role": "user", "content":"What are the unique geographic features of Kapadokya?"}],
             "inputs":[],
             "operator": "search",
             "outputs":[

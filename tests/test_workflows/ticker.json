@@ -11,7 +11,7 @@
             "id": "A",
             "name": "APPL",
             "description": "Fetches the current value of $APPL",
-            "prompt": "What is the current value of $APPL?",
+            "messages": [{"role": "user", "content":"What is the current value of $APPL?"}],
             "inputs":[],
             "operator": "function_calling",
             "outputs":[

@@ -12,7 +12,7 @@
             "id": "A",
             "name": "Random Poem",
             "description": "Completes text",
-            "prompt": "So who am I to",
+            "messages": [{"role": "user", "content":"So who am I to"}],
             "inputs":[],
             "operator": "generation",
             "outputs":[

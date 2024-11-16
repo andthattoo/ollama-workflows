@@ -33,7 +33,7 @@
       "id": "sum",
       "name": "Task",
       "description": "Task Description",
-      "prompt": "What is 10932 + 20934?",
+      "messages": [{"role": "user", "content":"What is 10932 + 20934?"}],
       "inputs": [],
       "operator": "function_calling_raw",
       "outputs": [

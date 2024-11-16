@@ -35,7 +35,7 @@
             "id": "A",
             "name": "PickVar",
             "description": "",
-            "prompt": "{random_var}",
+            "messages": [{"role": "user", "content":"{random_var}"}],
             "inputs":[
                 {
                     "name": "random_var",
@@ -59,7 +59,7 @@
             "id": "B",
             "name": "Generate Review",
             "description": "Validates random variables w.r.t. task at hand",
-            "prompt": "You are a synthetic user. Write a review for the airline you traveled with. The review should be based on your experience and should be a minimum of 10 words. <persona>{persona}</persona> ###Ouput:",
+            "messages": [{"role": "user", "content":"You are a synthetic user. Write a review for the airline you traveled with. The review should be based on your experience and should be a minimum of 10 words. <persona>{persona}</persona> ###Ouput:"}],
             "inputs":[
                 {
                     "name":"persona",

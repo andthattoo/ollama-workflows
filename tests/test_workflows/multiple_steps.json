@@ -11,7 +11,7 @@
             "id": "A",
             "name": "Random Poem",
             "description": "Writes a poem about Kapadokya.",
-            "prompt": "Here are the previous lines of the poem: {poem}. Please write the next line. If there are no previous lines, write the first line. Only output your poem sentence",
+            "messages": [{"role": "user", "content":"Here are the previous lines of the poem: {poem}. Please write the next line. If there are no previous lines, write the first line. Only output your poem sentence"}],
             "inputs":[
                 {
                     "name": "poem",

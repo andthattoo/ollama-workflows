@@ -123,13 +123,13 @@ mod function_call_tests {
         "What is the most famous street in Istanbul?"
     );
     workflow_test!(
-        function_calling_openai,
+        openai_function_calling,
         Model::GPT4o,
         SEARCH_WORKFLOW_PATH,
         "How many Hoodoo's are in Kapadokya?"
     );
     workflow_test!(
-        function_calling_llama3_1,
+        llama3_1_function_calling,
         Model::Llama3_1_8B,
         SEARCH_WORKFLOW_PATH,
         "How many fairy chimneys are there in Cappadocia?"

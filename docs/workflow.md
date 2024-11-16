@@ -108,7 +108,7 @@ Here's an example of a task in the `tasks` field. This task generates a web quer
             "id": "A",
             "name": "Web Search Query",
             "description": "Write a web search query to collect useful information for the given question",
-            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions, keep it concise and clear. \n###Query: {query} \n\n ###Previous Questions: {history} \n\n ###Search Query:",
+            "messages": [{"role": "user", "content":"Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions, keep it concise and clear. \n###Query: {query} \n\n ###Previous Questions: {history} \n\n ###Search Query:"}],
             "inputs": [
                 {
                     "name": "query",
@@ -202,7 +202,7 @@ Here's an example of a simple workflow JSON:
             "id": "A",
             "name": "Random Poem",
             "description": "Writes a poem about Cappadocia.",
-            "prompt": "Please write a poem about Cappadocia.",
+            "messages": [{"role": "user", "content":"Please write a poem about Cappadocia."}],
             "inputs":[],
             "operator": "generation",
             "outputs":[]
@@ -211,7 +211,7 @@ Here's an example of a simple workflow JSON:
             "id": "__end",
             "name": "end",
             "description": "End of the task",
-            "prompt": "",
+            "messages": [{"role": "user", "content":""}],
             "inputs": [],
             "operator": "end",
             "outputs": []
@@ -262,7 +262,7 @@ Memory operations are divided by I/O
 Input operations help fill variables in prompts using memory operations.
 
 ```json
-            "prompt": "Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions, keep it concise and clear. \n\nQuery: {query} \n\n Previous Questions: {history} \n\n Search Query:",
+            "messages": [{"role": "user", "content":"Write down a single search query to collect useful information to answer to given question. Be creative. Avoid asking previously asked questions, keep it concise and clear. \n\nQuery: {query} \n\n Previous Questions: {history} \n\n Search Query:"}],
             "inputs": [
                 {
                     "name": "query",
