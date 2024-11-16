@@ -1,4 +1,4 @@
-use log::warn;
+use crate::program::atomics::MessageInput;
 use ollama_rs::{
     error::OllamaError, generation::functions::tools::Tool,
     generation::functions::OpenAIFunctionCall,
@@ -27,7 +27,7 @@ impl GeminiExecutor {
     // now supports structured output
     pub async fn generate_text(
         &self,
-        prompt: &str,
+        input: Vec<MessageInput>,
         schema: &Option<String>,
     ) -> Result<String, OllamaError> {
         let url = format!(
@@ -41,6 +41,21 @@ impl GeminiExecutor {
             "topP": 0.8,
             "topK": 10
         });
+
+        let contents: Vec<Value> = input
+            .iter()
+            .map(|msg| {
+                json!({
+                    "role": match msg.role.as_str() {
+                        "assistant" => "model",
+                        role => role
+                    },
+                    "parts": [{
+                        "text": msg.content
+                    }]
+                })
+            })
+            .collect();
 
         // If schema is provided, add structured output configuration
         if let Some(schema_str) = schema {
@@ -59,11 +74,7 @@ impl GeminiExecutor {
         }
 
         let body = json!({
-            "contents": [{
-                "parts": [
-                    {"text": prompt}
-                ]
-            }],
+            "contents": contents,
             "safetySettings": [
                 {
                     "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
@@ -90,11 +101,6 @@ impl GeminiExecutor {
     }
 
     fn extract_generated_text(&self, response: Value) -> Result<String, OllamaError> {
-        warn!(
-            "Full Gemini Response: {}",
-            serde_json::to_string_pretty(&response).unwrap()
-        );
-
         response["candidates"][0]["content"]["parts"][0]["text"]
             .as_str()
             .map(|s| s.to_string())

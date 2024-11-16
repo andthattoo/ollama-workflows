@@ -12,7 +12,7 @@
             "id": "A",
             "name": "Sky",
             "description": "",
-            "prompt": "Why is sky blue?",
+            "messages": [{"role": "user", "content": "Why is sky blue?"}],
             "schema": "{\"properties\": {\"my_question\": {\"title\": \"My Question\", \"type\": \"string\"}, \"my_answer\": {\"title\": \"My Answer\", \"type\": \"string\"}, \"keywords\": {\"items\": {\"type\": \"string\"}, \"title\": \"Keywords\", \"type\": \"array\"}}, \"required\": [\"my_question\", \"my_answer\", \"keywords\"], \"title\": \"QuestionAnswer\", \"type\": \"object\"}",
             "inputs":[],
             "operator": "generation",
@@ -28,7 +28,7 @@
             "id": "__end",
             "name": "end",
             "description": "End of the task",
-            "prompt": "End of the task",
+            "messages": [{"role": "user", "content": "End of the task"}],
             "inputs": [],
             "operator": "end",
             "outputs": []

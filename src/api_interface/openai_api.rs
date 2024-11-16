@@ -1,3 +1,4 @@
+use crate::program::atomics::MessageInput;
 use ollama_rs::{
     error::OllamaError, generation::functions::tools::Tool,
     generation::functions::OpenAIFunctionCall,
@@ -22,13 +23,33 @@ impl OpenAIExecutor {
 
     pub async fn generate_text(
         &self,
-        prompt: &str,
+        input: Vec<MessageInput>,
         schema: &Option<String>,
     ) -> Result<String, OllamaError> {
-        let messages = vec![ChatMessage::User {
-            content: ChatMessageContent::Text(prompt.to_string()),
-            name: None,
-        }];
+        let messages: Vec<ChatMessage> = input
+            .into_iter()
+            .map(|msg| match msg.role.as_str() {
+                "user" => ChatMessage::User {
+                    content: ChatMessageContent::Text(msg.content),
+                    name: None,
+                },
+                "assistant" => ChatMessage::Assistant {
+                    content: Some(ChatMessageContent::Text(msg.content)),
+                    tool_calls: None,
+                    name: None,
+                    refusal: None, // Add this line
+                },
+                "system" => ChatMessage::System {
+                    content: ChatMessageContent::Text(msg.content),
+                    name: None,
+                },
+                _ => ChatMessage::User {
+                    // Default to user if role is unknown
+                    content: ChatMessageContent::Text(msg.content),
+                    name: None,
+                },
+            })
+            .collect();
 
         let parameters = if let Some(schema_str) = schema {
             // Parse the schema string into a Value

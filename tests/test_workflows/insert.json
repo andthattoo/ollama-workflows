@@ -55,7 +55,7 @@
             "id": "__end",
             "name": "end",
             "description": "End of the task",
-            "prompt": "End of the task",
+            "messages": [{"role": "user", "content": "End of the task"}],
             "inputs": [],
             "operator": "end",
             "outputs": []

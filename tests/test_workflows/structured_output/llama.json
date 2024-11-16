@@ -12,7 +12,7 @@
             "id": "A",
             "name": "Sky",
             "description": "",
-            "prompt": "Why is sky blue?",
+            "messages": [{"role": "user", "content": "Why is sky blue?"}],
             "schema": "XHtbIF0/Im15X3F1ZXN0aW9uIlsgXT86WyBdPyIoW14iXFxceDAwLVx4MUZceDdGLVx4OUZdfFxcWyJcXF0pKiJbIF0/LFsgXT8ibXlfYW5zd2VyIlsgXT86WyBdPyIoW14iXFxceDAwLVx4MUZceDdGLVx4OUZdfFxcWyJcXF0pKiJbIF0/LFsgXT8ia2V5d29yZHMiWyBdPzpbIF0/XFtbIF0/KCgiKFteIlxcXHgwMC1ceDFGXHg3Ri1ceDlGXXxcXFsiXFxdKSoiKSgsWyBdPygiKFteIlxcXHgwMC1ceDFGXHg3Ri1ceDlGXXxcXFsiXFxdKSoiKSl7MCx9KT9bIF0/XF1bIF0/XH0=",
             "inputs":[],
             "operator": "generation",
@@ -28,7 +28,7 @@
             "id": "__end",
             "name": "end",
             "description": "End of the task",
-            "prompt": "End of the task",
+            "messages": [{"role": "user", "content": "End of the task"}],
             "inputs": [],
             "operator": "end",
             "outputs": []

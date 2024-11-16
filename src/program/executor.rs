@@ -6,6 +6,7 @@ use crate::api_interface::gem_api::GeminiExecutor;
 use crate::api_interface::openai_api::OpenAIExecutor;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
+use crate::program::atomics::MessageInput;
 use crate::program::errors::{ExecutionError, ToolError};
 use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
 
@@ -269,9 +270,9 @@ impl Executor {
 
         match task.operator {
             Operator::Generation => {
-                let prompt = self.fill_prompt(&task.prompt, &input_map);
+                let prompt = self.fill_prompt(&task.messages, &input_map);
 
-                let result = self.generate_text(&prompt, &task.schema, config).await;
+                let result = self.generate_text(prompt, &task.schema, config).await;
                 if result.is_err() {
                     error!("Error generating text");
                     return Err(ExecutionError::GenerationFailed(format!(
@@ -286,10 +287,10 @@ impl Executor {
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::FunctionCalling | Operator::FunctionCallingRaw => {
-                let prompt = self.fill_prompt(&task.prompt, &input_map);
+                let prompt = self.fill_prompt(&task.messages, &input_map);
 
                 let raw_mode = matches!(task.operator, Operator::FunctionCallingRaw);
-                let result = self.function_call(&prompt, config, raw_mode).await;
+                let result = self.function_call(prompt, config, raw_mode).await;
                 if result.is_err() {
                     error!("Error function calling");
                     return Err(ExecutionError::FunctionCallFailed(format!(
@@ -297,7 +298,7 @@ impl Executor {
                         result.err().unwrap()
                     )));
                 }
-                debug!("Prompt: {}", &prompt);
+
                 log_colored(
                     format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
                 );
@@ -305,7 +306,12 @@ impl Executor {
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::Search => {
-                let prompt = self.fill_prompt(&task.prompt, &input_map);
+                let inp = self.fill_prompt(&task.messages, &input_map);
+                let prompt = inp
+                    .last()
+                    .map(|msg| msg.content.as_str())
+                    .unwrap_or_default()
+                    .to_owned();
                 let result = memory.search(&Entry::try_value_or_str(&prompt)).await;
                 if result.is_none() {
                     error!("Error searching: {:?}", "No results found");
@@ -325,7 +331,13 @@ impl Executor {
                 // fill prompts with values
                 // write to memory
 
-                let mut prompt = self.fill_prompt(&task.prompt, &input_map);
+                let inp = self.fill_prompt(&task.messages, &input_map);
+                let mut prompt = inp
+                    .last()
+                    .map(|msg| msg.content.as_str())
+                    .unwrap_or_default()
+                    .to_owned();
+
                 for (key, value) in &input_map {
                     let v = Vec::<Entry>::from(value.clone());
                     if !v.is_empty() {
@@ -342,7 +354,6 @@ impl Executor {
                         prompt.push_str(&format!(": {}", sample));
                     }
                 }
-                info!("Sampled: {}", &prompt);
                 self.handle_output(task, Entry::try_value_or_str(&prompt), memory)
                     .await;
             }
@@ -354,15 +365,23 @@ impl Executor {
 
     fn fill_prompt(
         &self,
-        prompt: &str,
+        prompt: &[MessageInput],
         input_values: &HashMap<String, MemoryReturnType>,
-    ) -> String {
-        let mut filled_prompt = prompt.to_string();
-        for (key, value) in input_values {
-            filled_prompt =
-                filled_prompt.replace(&format!("{{{}}}", key), value.to_string().as_str());
-        }
-        filled_prompt
+    ) -> Vec<MessageInput> {
+        prompt
+            .iter()
+            .map(|message| {
+                let mut filled_content = message.content.clone();
+                for (key, value) in input_values {
+                    filled_content =
+                        filled_content.replace(&format!("{{{}}}", key), value.to_string().as_str());
+                }
+                MessageInput {
+                    role: message.role.clone(),
+                    content: filled_content,
+                }
+            })
+            .collect()
     }
 
     fn get_tools(
@@ -456,13 +475,22 @@ impl Executor {
 
     async fn generate_text(
         &self,
-        prompt: &str,
+        input: Vec<MessageInput>,
         schema: &Option<String>,
         config: &Config,
     ) -> Result<String, OllamaError> {
         //let json= ChatMessage::assistant(format!("{regex}"));
 
-        let user_message = ChatMessage::user(prompt.to_string());
+        let mut messages: Vec<ChatMessage> = input
+            .iter()
+            .map(|msg| {
+                match msg.role.as_str() {
+                    "user" => ChatMessage::user(msg.content.clone()),
+                    "assistant" => ChatMessage::assistant(msg.content.clone()),
+                    _ => ChatMessage::user(msg.content.clone()), // fallback to user
+                }
+            })
+            .collect();
 
         let response = match self.model.clone().into() {
             ModelProvider::Ollama => {
@@ -471,6 +499,10 @@ impl Executor {
                     | Model::Llama3_1_8BTextQ8
                     | Model::Llama3_1_70BTextQ4KM
                     | Model::Llama3_2_1BTextQ4KM => {
+                        let prompt = input
+                            .last()
+                            .map(|msg| msg.content.as_str())
+                            .unwrap_or_default();
                         let mut msg =
                             GenerationRequest::new(self.model.to_string(), prompt.to_string());
                         let mut ops = GenerationOptions::default();
@@ -482,7 +514,6 @@ impl Executor {
                         Ok(result.response)
                     }
                     _ => {
-                        let mut messages = Vec::new();
                         let mut msg = if let Some(schema) = schema {
                             let decoded_schema = match BASE64_STANDARD.decode(schema.as_bytes()) {
                                 Ok(bytes) => String::from_utf8_lossy(&bytes).to_string(),
@@ -493,12 +524,10 @@ impl Executor {
                                     ));
                                 }
                             };
-                            messages.push(ChatMessage::assistant(decoded_schema.to_string()));
-                            messages.push(user_message);
+                            messages.insert(0, ChatMessage::assistant(decoded_schema.to_string()));
                             ChatMessageRequest::new(self.model.to_string(), messages)
                                 .format(FormatType::Json)
                         } else {
-                            messages.push(user_message);
                             ChatMessageRequest::new(self.model.to_string(), messages)
                         };
 
@@ -516,13 +545,13 @@ impl Executor {
                 let api_key = std::env::var("OPENAI_API_KEY").expect("$OPENAI_API_KEY is not set");
 
                 let openai_executor = OpenAIExecutor::new(self.model.to_string(), api_key.clone());
-                openai_executor.generate_text(prompt, schema).await?
+                openai_executor.generate_text(input, schema).await?
             }
             ModelProvider::Gemini => {
                 let api_key = std::env::var("GEMINI_API_KEY").expect("$GEMINI_API_KEY is not set");
                 let max_tokens = config.max_tokens.unwrap_or(800);
                 let executor = GeminiExecutor::new(self.model.to_string(), api_key, max_tokens);
-                executor.generate_text(prompt, schema).await?
+                executor.generate_text(input, schema).await?
             }
         };
 
@@ -531,7 +560,7 @@ impl Executor {
 
     async fn function_call(
         &self,
-        prompt: &str,
+        input: Vec<MessageInput>,
         config: &Config,
         raw_mode: bool,
     ) -> Result<String, OllamaError> {
@@ -540,6 +569,11 @@ impl Executor {
         let tools = self
             .get_tools(config.tools.clone(), config.custom_tools.clone())
             .unwrap();
+
+        let prompt = input
+            .last()
+            .map(|msg| msg.content.as_str())
+            .unwrap_or_default();
 
         let result = match self.model.clone().into() {
             ModelProvider::Ollama => {

@@ -11,7 +11,7 @@
             "id": "A",
             "name": "Random Query",
             "description": "Writes a random question about Kapadokya.",
-            "prompt": "Please write a random question about Kapadokya.",
+            "messages": [{"role": "user", "content": "Please write a random question about Kapadokya."}],
             "inputs":[],
             "operator": "generation",
             "outputs":[
@@ -26,7 +26,7 @@
             "id": "B",
             "name": "Search",
             "description": "Searches query.",
-            "prompt": "Find useful information about the query: {query}",
+            "messages": [{"role": "user", "content": "Find useful information about the query: {query}"}],
             "inputs":[
                 {
                     "name": "query",
@@ -50,7 +50,7 @@
             "id": "__end",
             "name": "end",
             "description": "End of the task",
-            "prompt": "End of the task",
+            "messages": [{"role": "user", "content": "End of the task"}],
             "inputs": [],
             "operator": "end",
             "outputs": []

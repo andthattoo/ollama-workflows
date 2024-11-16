@@ -77,6 +77,12 @@ pub enum Operator {
     End,
 }
 
+#[derive(Clone, Debug, Deserialize)]
+pub struct MessageInput {
+    pub role: String,
+    pub content: String,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Task {
     /// A unique identifier for the task
@@ -86,7 +92,7 @@ pub struct Task {
     /// A description of the task
     pub description: String,
     /// Prompt of the task. Can have placeholders for inputs e.g. {query}.
-    pub prompt: String,
+    pub messages: Vec<MessageInput>,
     #[serde(default)]
     pub inputs: Vec<Input>,
     /// The operator to be used for the task
