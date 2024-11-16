@@ -5,7 +5,7 @@ use ollama_rs::{
 };
 use reqwest::Client;
 use serde_json::{json, Value};
-use std::sync::Arc;
+use std::{error::Error, sync::Arc};
 
 pub struct GeminiExecutor {
     model: String,
@@ -91,7 +91,18 @@ impl GeminiExecutor {
             .json(&body)
             .send()
             .await
-            .map_err(|e| OllamaError::from(format!("Gemini API request failed: {}", e)))?;
+            .map_err(|e| {
+                OllamaError::from(format!("Gemini API request failed: {:?}", e.source()))
+            })?;
+
+        // check status
+        if let Err(e) = response.error_for_status_ref() {
+            return Err(OllamaError::from(format!(
+                "Gemini API request failed with status {}: {:?}",
+                response.status(),
+                e.source()
+            )));
+        }
 
         let response_body: Value = response.json().await.map_err(|e| {
             OllamaError::from(format!("Failed to parse Gemini API response: {}", e))
@@ -173,7 +184,18 @@ impl GeminiExecutor {
             .json(&body)
             .send()
             .await
-            .map_err(|e| OllamaError::from(format!("Gemini API request failed: {:?}", e)))?;
+            .map_err(|e| {
+                OllamaError::from(format!("Gemini API request failed: {:?}", e.source()))
+            })?;
+
+        // check status
+        if let Err(e) = response.error_for_status_ref() {
+            return Err(OllamaError::from(format!(
+                "Gemini API request failed with status {}: {:?}",
+                response.status(),
+                e.source()
+            )));
+        }
 
         let response_body: Value = response.json().await.map_err(|e| {
             OllamaError::from(format!("Failed to parse Gemini API response: {:?}", e))
