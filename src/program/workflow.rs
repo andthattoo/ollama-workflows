@@ -101,8 +101,8 @@ impl Workflow {
         &self.tasks
     }
     /// Returns a mutable reference to the tasks of the workflow.
-    pub fn get_tasks_mut(&mut self) -> &Vec<Task> {
-        &self.tasks
+    pub fn get_tasks_mut(&mut self) -> &mut Vec<Task> {
+        &mut self.tasks
     }
     /// Returns a reference to the steps of the workflow.
     pub fn get_workflow(&self) -> &Vec<Edge> {
