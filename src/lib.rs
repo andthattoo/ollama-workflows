@@ -36,3 +36,5 @@ pub use program::{
     models::{Model, ModelProvider},
     workflow::Workflow,
 };
+
+pub use program::atomics::{MessageInput, Task};
