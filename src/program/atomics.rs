@@ -1,6 +1,6 @@
 use crate::program::io::{Input, InputValue, Output};
 use crate::ProgramMemory;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 
@@ -77,9 +77,12 @@ pub enum Operator {
     End,
 }
 
-#[derive(Clone, Debug, Deserialize)]
+/// A message entry.
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct MessageInput {
+    /// Role, usually `user`, `assistant` or `system`.
     pub role: String,
+    /// Message content.
     pub content: String,
 }
 
@@ -101,6 +104,24 @@ pub struct Task {
     pub outputs: Vec<Output>,
     /// Schema
     pub schema: Option<String>,
+}
+
+impl Task {
+    /// Creates a new chat history entry with the given content for `assistant` role.
+    pub fn append_assistant_message(&mut self, content: impl Into<String>) {
+        self.messages.push(MessageInput {
+            role: "assistant".to_string(),
+            content: content.into(),
+        });
+    }
+
+    /// Creates a new chat history entry with the given content for `user` role.
+    pub fn append_user_message(&mut self, content: impl Into<String>) {
+        self.messages.push(MessageInput {
+            role: "user".to_string(),
+            content: content.into(),
+        });
+    }
 }
 
 #[derive(Debug, Deserialize)]

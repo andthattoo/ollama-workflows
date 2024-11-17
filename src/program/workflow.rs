@@ -100,6 +100,10 @@ impl Workflow {
     pub fn get_tasks(&self) -> &Vec<Task> {
         &self.tasks
     }
+    /// Returns a mutable reference to the tasks of the workflow.
+    pub fn get_tasks_mut(&mut self) -> &Vec<Task> {
+        &self.tasks
+    }
     /// Returns a reference to the steps of the workflow.
     pub fn get_workflow(&self) -> &Vec<Edge> {
         &self.steps
@@ -109,8 +113,8 @@ impl Workflow {
         &self.return_value
     }
     /// Returns a reference to the task at the specified index.
-    pub fn get_step(&self, index: u32) -> Option<&Edge> {
-        self.steps.get(index as usize)
+    pub fn get_step(&self, index: usize) -> Option<&Edge> {
+        self.steps.get(index)
     }
     /// Returns a reference to the step for specified task_id.
     pub fn get_step_by_id(&self, task_id: &str) -> Option<&Edge> {
@@ -119,5 +123,9 @@ impl Workflow {
     /// Returns a reference to the task at the specified task_id.
     pub fn get_tasks_by_id(&self, task_id: &str) -> Option<&Task> {
         self.tasks.iter().find(|task| task.id == task_id)
+    }
+    /// Returns a mutable reference to the task at the specified task_id.
+    pub fn get_tasks_by_id_mut(&mut self, task_id: &str) -> Option<&mut Task> {
+        self.tasks.iter_mut().find(|task| task.id == task_id)
     }
 }
