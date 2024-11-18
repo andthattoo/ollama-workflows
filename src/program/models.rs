@@ -330,7 +330,7 @@ impl fmt::Display for ModelProvider {
 mod tests {
     use super::*;
 
-    const MODEL_NAME: &str = "phi3:3.8b";
+    const MODEL_NAME: &str = "phi3.5:3.8b";
     const PROVIDER_NAME: &str = "openai";
     #[test]
     fn test_model_string_conversion() {
