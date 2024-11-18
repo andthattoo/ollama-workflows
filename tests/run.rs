@@ -270,7 +270,6 @@ mod openrouter_tests {
         ALL_TOOLS_WORKFLOW_PATH
     );
 
-
     workflow_test!(
         qwen_custom_tool_openrouter,
         Model::ORQwen2_5_72B,
