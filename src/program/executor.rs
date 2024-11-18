@@ -3,6 +3,7 @@ use super::io::*;
 use super::models::*;
 use super::workflow::Workflow;
 use crate::api_interface::gem_api::GeminiExecutor;
+use crate::api_interface::open_router::OpenRouterExecutor;
 use crate::api_interface::openai_api::OpenAIExecutor;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
@@ -553,6 +554,14 @@ impl Executor {
                 let executor = GeminiExecutor::new(self.model.to_string(), api_key, max_tokens);
                 executor.generate_text(input, schema).await?
             }
+            ModelProvider::OpenRouter => {
+                let api_key =
+                    std::env::var("OPENROUTER_API_KEY").expect("$OPENROUTER_API_KEY is not set");
+
+                let openai_executor =
+                    OpenRouterExecutor::new(self.model.to_string(), api_key.clone());
+                openai_executor.generate_text(input, schema).await?
+            }
         };
 
         Ok(response)
@@ -626,6 +635,16 @@ impl Executor {
                     }
                     _ => return Err(OllamaError::from(format!("Gemini doesn't support function calling for {}. Try using either: Gemini15Flash or Gemini15Pro", self.model)))
                 }
+            }
+            ModelProvider::OpenRouter => {
+                let api_key =
+                    std::env::var("OPENROUTER_API_KEY").expect("$OPENROUTER_API_KEY is not set");
+
+                let openai_executor =
+                    OpenRouterExecutor::new(self.model.to_string(), api_key.clone());
+                openai_executor
+                    .function_call(prompt, tools, raw_mode, oai_parser)
+                    .await?
             }
         };
 

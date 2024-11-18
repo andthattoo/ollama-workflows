@@ -246,3 +246,40 @@ mod structured_output_tests {
         GEMINI_STRUCTURED_PATH
     );
 }
+
+mod openrouter_tests {
+    use super::*;
+
+    workflow_test!(openrouter_sonnet, Model::OR3_5Sonnet, SIMPLE_WORKFLOW_PATH);
+
+    workflow_test!(
+        openrouter_llama,
+        Model::ORLlama3_1_70B,
+        SIMPLE_WORKFLOW_PATH
+    );
+
+    workflow_test!(
+        custom_tool_openrouter_llama,
+        Model::ORLlama3_1_70B,
+        CUSTOM_TOOL_WORKFLOW_PATH
+    );
+
+    workflow_test!(
+        custom_tool_openrouter_sonnet,
+        Model::OR3_5Sonnet,
+        ALL_TOOLS_WORKFLOW_PATH
+    );
+
+
+    workflow_test!(
+        qwen_custom_tool_openrouter,
+        Model::ORQwen2_5_72B,
+        ALL_TOOLS_WORKFLOW_PATH
+    );
+
+    workflow_test!(
+        nous_custom_tool_openrouter,
+        Model::ORNousHermes405B,
+        QUESTIONS_WORKFLOW_PATH
+    );
+}

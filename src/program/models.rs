@@ -138,6 +138,48 @@ pub enum Model {
     /// Gemma 2 27B IT model
     #[serde(rename = "gemma-2-27b-it")]
     Gemma2_27bIt,
+
+    /// OpenRouter Models
+    ///
+
+    #[serde(rename = "meta-llama/llama-3.1-8b-instruct")]
+    ORLlama3_1_8B,
+
+    #[serde(rename = "meta-llama/llama-3.1-70b-instruct")]
+    ORLlama3_1_70B,
+
+    #[serde(rename = "meta-llama/llama-3.1-405b-instruct")]
+    ORLlama3_1_405B,
+
+    #[serde(rename = "meta-llama/llama-3.1-70b-instruct:free")]
+    ORLlama3_1_70BFree,
+
+    #[serde(rename = "anthropic/claude-3.5-sonnet:beta")]
+    OR3_5Sonnet,
+
+    #[serde(rename = "anthropic/claude-3-5-haiku-20241022:beta")]
+    OR3_5Haiku,
+
+    #[serde(rename = "qwen/qwen-2.5-72b-instruct")]
+    ORQwen2_5_72B,
+
+    #[serde(rename = "qwen/qwen-2.5-7b-instruct")]
+    ORQwen2_5_7B,
+
+    #[serde(rename = "qwen/qwen-2.5-coder-32b-instruct")]
+    ORQwen2_5Coder32B,
+
+    #[serde(rename = "eva-unit-01/eva-qwen-2.5-32b")]
+    ORQwen2_5Eva32B,
+
+    #[serde(rename = "deepseek/deepseek-chat")]
+    ORDeepSeek2_5,
+
+    #[serde(rename = "nousresearch/hermes-3-llama-3.1-405b")]
+    ORNousHermes405B,
+
+    #[serde(rename = "nvidia/llama-3.1-nemotron-70b-instruct")]
+    ORNemotron70B,
 }
 
 impl Model {
@@ -202,6 +244,8 @@ pub enum ModelProvider {
     OpenAI,
     #[serde(rename = "gemini")]
     Gemini,
+    #[serde(rename = "openrouter")]
+    OpenRouter,
 }
 
 impl From<Model> for ModelProvider {
@@ -246,6 +290,19 @@ impl From<Model> for ModelProvider {
             Model::Gemma2_2bIt => ModelProvider::Gemini,
             Model::Gemma2_9bIt => ModelProvider::Gemini,
             Model::Gemma2_27bIt => ModelProvider::Gemini,
+            Model::OR3_5Sonnet => ModelProvider::OpenRouter,
+            Model::OR3_5Haiku => ModelProvider::OpenRouter,
+            Model::ORDeepSeek2_5 => ModelProvider::OpenRouter,
+            Model::ORLlama3_1_8B => ModelProvider::OpenRouter,
+            Model::ORLlama3_1_70B => ModelProvider::OpenRouter,
+            Model::ORLlama3_1_405B => ModelProvider::OpenRouter,
+            Model::ORLlama3_1_70BFree => ModelProvider::OpenRouter,
+            Model::ORQwen2_5Coder32B => ModelProvider::OpenRouter,
+            Model::ORQwen2_5_7B => ModelProvider::OpenRouter,
+            Model::ORQwen2_5_72B => ModelProvider::OpenRouter,
+            Model::ORQwen2_5Eva32B => ModelProvider::OpenRouter,
+            Model::ORNemotron70B => ModelProvider::OpenRouter,
+            Model::ORNousHermes405B => ModelProvider::OpenRouter,
         }
     }
 }
