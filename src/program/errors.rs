@@ -41,6 +41,7 @@ pub enum ExecutionError {
     InvalidInput,
     GenerationFailed(String),
     FunctionCallFailed(String),
+    WebSearchFailed(String),
     VectorSearchFailed,
     StringCheckFailed,
     SamplingError,
@@ -105,6 +106,9 @@ impl fmt::Display for ExecutionError {
             }
             ExecutionError::FunctionCallFailed(detail) => {
                 write!(f, "Function call failed {}", detail)
+            }
+            ExecutionError::WebSearchFailed(detail) => {
+                write!(f, "Web search failed {}", detail)
             }
             ExecutionError::VectorSearchFailed => write!(f, "Vector search failed"),
             ExecutionError::StringCheckFailed => write!(f, "Vector search failed"),

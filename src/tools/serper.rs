@@ -295,3 +295,53 @@ impl Tool for SearchTool {
         Ok(formatted_results.join("\n"))
     }
 }
+
+pub struct RawSearchTool;
+
+impl RawSearchTool {
+    pub async fn search(
+        &self,
+        query: &str,
+        search_type: Option<&str>,
+        lang: Option<&str>,
+        n_results: Option<u64>,
+    ) -> Result<String, Box<dyn Error>> {
+        let stype = search_type.unwrap_or("search");
+        let lang = lang.unwrap_or("en");
+        let n_result = n_results.unwrap_or(5);
+
+        assert!(
+            ["search", "scholar", "news"].contains(&stype),
+            "Invalid search type"
+        );
+
+        let url = format!("https://google.serper.dev/{}", stype);
+        let gl = if lang != "en" { lang } else { "us" };
+        let n_results = std::cmp::min(n_result, 10);
+        let mut payload = json!({
+            "q": query,
+            "gl": gl,
+            "hl": lang,
+            "page": 1,
+            "num": n_results
+        });
+
+        if stype == "scholar" {
+            payload.as_object_mut().unwrap().remove("num");
+        }
+
+        let client = Client::new();
+        let api_key = env::var("SERPER_API_KEY")?;
+        let response = client
+            .post(&url)
+            .header("X-API-KEY", api_key)
+            .header("Content-Type", "application/json")
+            .json(&payload)
+            .send()
+            .await?
+            .json::<Value>()
+            .await?;
+
+        Ok(serde_json::to_string(&response)?)
+    }
+}

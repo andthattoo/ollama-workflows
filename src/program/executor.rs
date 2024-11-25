@@ -9,9 +9,10 @@ use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::atomics::MessageInput;
 use crate::program::errors::{ExecutionError, ToolError};
-use crate::tools::{Browserless, CustomTool, Jina, SearchTool};
+use crate::tools::{Browserless, CustomTool, Jina, RawDDGSearcher, RawSearchTool, SearchTool};
 
 use rand::Rng;
+use serde_json::{json, Value};
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -313,17 +314,39 @@ impl Executor {
                     .map(|msg| msg.content.as_str())
                     .unwrap_or_default()
                     .to_owned();
-                let result = memory.search(&Entry::try_value_or_str(&prompt)).await;
-                if result.is_none() {
-                    error!("Error searching: {:?}", "No results found");
-                    return Err(ExecutionError::VectorSearchFailed);
-                }
+
+                let search_tool = RawSearchTool {};
+                let search_params: Value = serde_json::from_str(&prompt).unwrap_or(json!({}));
+
+                let query = search_params["query"].as_str().map(|s| s.to_string());
+                let query = query.ok_or_else(|| {
+                    ExecutionError::WebSearchFailed("Query parameter is required".to_string())
+                })?;
+
+                let search_type = search_params["search_type"].as_str().map(|s| s.to_string());
+                let lang = search_params["lang"].as_str().map(|s| s.to_string());
+                let n_results = search_params["n_results"].as_u64();
+
+                let result = if let Ok(serper_key) = std::env::var("SERPER_API_KEY") {
+                    if !serper_key.is_empty() {
+                        search_tool
+                            .search(&query, search_type.as_deref(), lang.as_deref(), n_results)
+                            .await
+                    } else {
+                        let ddg_tool = RawDDGSearcher::new();
+                        ddg_tool.search(&query, n_results.map(|n| n as usize)).await
+                    }
+                } else {
+                    let ddg_tool = RawDDGSearcher::new();
+                    ddg_tool.search(&query, n_results.map(|n| n as usize)).await
+                };
+
+                let result = result.map_err(|e| ExecutionError::WebSearchFailed(e.to_string()))?;
+
                 log_colored(
                     format!("Operator: {:?}. Output: {:?}", &task.operator, &result).as_str(),
                 );
-
-                let ent_str = MemoryReturnType::EntryVec(result).to_string();
-                let result_entry = Entry::try_value_or_str(&ent_str);
+                let result_entry = Entry::try_value_or_str(&result);
                 self.handle_output(task, result_entry, memory).await;
             }
             Operator::Sample => {
