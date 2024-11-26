@@ -1,50 +1,62 @@
 {
-  "name": "Search",
-  "description": "This is a search workflow",
-  "config":{
-      "max_steps": 100,
-      "max_time": 600,
-      "max_tokens":250,
-      "tools": ["ALL"]
-  },
-  "tasks":[
-      {
-          "id": "A",
-          "name": "Random Poem",
-          "description": "Search a poem about Kapadokya.",
-          "messages": [{"role":"user", "content":"{\"query\": \"Kapadokya şiirleri\", \"search_type\": \"search\", \"lang\": \"tr\", \"n_results\": 2}"}],
-          "inputs":[],
-          "operator": "search",
-          "outputs":[
-              {
-                  "type": "write",
-                  "key": "poem",
-                  "value": "__result"
-              }
-          ]
-      },
-      {
-          "id": "__end",
-          "name": "end",
-          "description": "End of the task",
-          "messages": [{"role": "user", "content": "End of the task"}],
-          "inputs": [],
-          "operator": "end",
-          "outputs": []
-      }
-  ],
-  "steps":[
-      {
-          "source":"A",
-          "target":"end"
-      }
-  ],
-  "return_value":
-  {
-      "input":[{
-          "type": "read",
-          "key": "poem"
-      }
-      ]
-  }
+    "config": {
+        "max_steps": 50,
+        "max_time": 200,
+        "tools": [
+            "ALL"
+        ],
+        "max_tokens": 1000
+    },
+    "external_memory": {
+        "query": "Most expensive cities in the world"
+    },
+    "tasks": [
+        {
+            "id": "0",
+            "name": "Task",
+            "description": "Task Description",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "{\"query\": \"Most expensive cities in the world\", \"search_type\": \"search\", \"lang\": \"en\", \"n_results\": 5}"
+                }
+            ],
+            "inputs": [],
+            "operator": "search",
+            "outputs": [
+                {
+                    "type": "write",
+                    "key": "search_result",
+                    "value": "__result"
+                }
+            ]
+        },
+        {
+            "id": "_end",
+            "name": "Task",
+            "description": "Task Description",
+            "messages": [
+                {
+                    "role": "user",
+                    "content": ""
+                }
+            ],
+            "inputs": [],
+            "operator": "end",
+            "outputs": []
+        }
+    ],
+    "steps": [
+        {
+            "source": "0",
+            "target": "_end"
+        }
+    ],
+    "return_value": {
+        "input": {
+            "type": "read",
+            "key": "search_result"
+        },
+        "to_json": false
+    }
 }

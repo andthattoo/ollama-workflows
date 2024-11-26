@@ -281,4 +281,10 @@ mod openrouter_tests {
         Model::ORNousHermes405B,
         QUESTIONS_WORKFLOW_PATH
     );
+
+    workflow_test!(
+        qwen_coder_custom_tool_openrouter,
+        Model::ORQwen2_5Coder32B,
+        CODER_PATH
+    );
 }
