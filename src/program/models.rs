@@ -88,6 +88,9 @@ pub enum Model {
     /// [AliBaba's Qwen2.5 7b 16bit]
     #[serde(rename = "qwen2.5-coder:7b-instruct-fp16")]
     Qwen2_5coder7Bf16,
+    /// [AliBaba's QwenQwq]
+    #[serde(rename = "qwq")]
+    QwenQwq,
     /// [DeepSeek Coding models]
     #[serde(rename = "deepseek-coder:6.7b")]
     DeepSeekCoder6_7B,
@@ -141,7 +144,6 @@ pub enum Model {
 
     /// OpenRouter Models
     ///
-
     #[serde(rename = "meta-llama/llama-3.1-8b-instruct")]
     ORLlama3_1_8B,
 
@@ -171,6 +173,9 @@ pub enum Model {
 
     #[serde(rename = "eva-unit-01/eva-qwen-2.5-32b")]
     ORQwen2_5Eva32B,
+
+    #[serde(rename = "qwen/qwq-32b-preview")]
+    ORQwenQwq,
 
     #[serde(rename = "deepseek/deepseek-chat")]
     ORDeepSeek2_5,
@@ -276,6 +281,7 @@ impl From<Model> for ModelProvider {
             Model::Qwen2_5coder7B => ModelProvider::Ollama,
             Model::Qwen2_5oder7Bq8 => ModelProvider::Ollama,
             Model::Qwen2_5coder7Bf16 => ModelProvider::Ollama,
+            Model::QwenQwq => ModelProvider::Ollama,
             Model::DeepSeekCoder6_7B => ModelProvider::Ollama,
             Model::Mixtral8_7b => ModelProvider::Ollama,
             Model::GPT4Turbo => ModelProvider::OpenAI,
@@ -301,6 +307,7 @@ impl From<Model> for ModelProvider {
             Model::ORQwen2_5_7B => ModelProvider::OpenRouter,
             Model::ORQwen2_5_72B => ModelProvider::OpenRouter,
             Model::ORQwen2_5Eva32B => ModelProvider::OpenRouter,
+            Model::ORQwenQwq => ModelProvider::OpenRouter,
             Model::ORNemotron70B => ModelProvider::OpenRouter,
             Model::ORNousHermes405B => ModelProvider::OpenRouter,
         }
