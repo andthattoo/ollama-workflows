@@ -144,7 +144,6 @@ pub enum Model {
 
     /// OpenRouter Models
     ///
-
     #[serde(rename = "meta-llama/llama-3.1-8b-instruct")]
     ORLlama3_1_8B,
 
