@@ -156,6 +156,9 @@ pub enum Model {
     #[serde(rename = "meta-llama/llama-3.1-70b-instruct:free")]
     ORLlama3_1_70BFree,
 
+    #[serde(rename = "meta-llama/llama-3.3-70b-instruct")]
+    ORLlama3_3_70B,
+
     #[serde(rename = "anthropic/claude-3.5-sonnet:beta")]
     OR3_5Sonnet,
 
@@ -303,6 +306,7 @@ impl From<Model> for ModelProvider {
             Model::ORLlama3_1_70B => ModelProvider::OpenRouter,
             Model::ORLlama3_1_405B => ModelProvider::OpenRouter,
             Model::ORLlama3_1_70BFree => ModelProvider::OpenRouter,
+            Model::ORLlama3_3_70B => ModelProvider::OpenRouter,
             Model::ORQwen2_5Coder32B => ModelProvider::OpenRouter,
             Model::ORQwen2_5_7B => ModelProvider::OpenRouter,
             Model::ORQwen2_5_72B => ModelProvider::OpenRouter,
