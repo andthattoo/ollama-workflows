@@ -86,23 +86,45 @@ pub struct MessageInput {
     pub content: String,
 }
 
+impl MessageInput {
+    /// Creates a new message with the given content for `assistant` role.
+    pub fn new_assistant_message(content: impl Into<String>) -> Self {
+        Self {
+            role: "assistant".to_string(),
+            content: content.into(),
+        }
+    }
+
+    /// Creates a new message with the given content for `user` role.
+    pub fn new_user_message(content: impl Into<String>) -> Self {
+        Self {
+            role: "user".to_string(),
+            content: content.into(),
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Task {
     /// A unique identifier for the task
     pub id: String,
     /// A human-readable name for the task
+    #[serde(default)]
     pub name: String,
     /// A description of the task
+    #[serde(default)]
     pub description: String,
     /// Prompt of the task. Can have placeholders for inputs e.g. {query}.
     pub messages: Vec<MessageInput>,
-    #[serde(default)]
-    pub inputs: Vec<Input>,
     /// The operator to be used for the task
     pub operator: Operator,
+    /// Inputs of the task, defaults to empty list if omitted (i.e. no inputs).
+    #[serde(default)]
+    pub inputs: Vec<Input>,
+    /// Outputs of the task, defaults to empty list if omitted (i.e. no outputs).
     #[serde(default)]
     pub outputs: Vec<Output>,
-    /// Schema
+    /// Schema for structured outputs.
     pub schema: Option<String>,
 }
 

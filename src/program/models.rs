@@ -100,39 +100,41 @@ pub enum Model {
     /// [Mistral's MoE Models]
     #[serde(rename = "mixtral:8x7b")]
     Mixtral8_7b,
+
     // OpenAI models
-    /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models/gpt-4-turbo-and-gpt-4)
+    /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]
     GPT4Turbo,
-    /// [OpenAI's GPT-4o model](https://platform.openai.com/docs/models/gpt-4o)
+    /// [OpenAI's GPT-4o model](https://platform.openai.com/docs/models#gpt-4o)
     #[serde(rename = "gpt-4o")]
     GPT4o,
-    /// [OpenAI's GPT-4o mini model](https://platform.openai.com/docs/models/gpt-4o-mini)
+    /// [OpenAI's GPT-4o mini model](https://platform.openai.com/docs/models#gpt-4o-mini)
     #[serde(rename = "gpt-4o-mini")]
     GPT4oMini,
-    /// [OpenAI's o1 mini model](https://platform.openai.com/docs/models/o1)
+
+    /// [OpenAI's o1 mini model](https://platform.openai.com/docs/models#o1)
     #[serde(rename = "o1-mini")]
     O1Mini,
-    /// [OpenAI's o1 preview model](https://platform.openai.com/docs/models/o1)
+    /// [OpenAI's o1 preview model](https://platform.openai.com/docs/models#o1)
     #[serde(rename = "o1-preview")]
     O1Preview,
+    /// [OpenAI's o1 model](https://platform.openai.com/docs/models#o1)
+    #[serde(rename = "o1")]
+    O1,
 
-    /// Gemini 1.5 Pro model
-    #[serde(rename = "gemini-1.5-pro-exp-0827")]
-    Gemini15ProExp0827,
-
-    /// Gemini 1.5 Pro model
-    #[serde(rename = "gemini-1.5-pro")]
-    Gemini15Pro,
-
+    // Gemini models
     /// Gemini 2.0 Flash exp model
     #[serde(rename = "gemini-2.0-flash-exp")]
     Gemini20FlashExp,
-
+    /// Gemini 1.5 Pro model
+    #[serde(rename = "gemini-1.5-pro-exp-0827")]
+    Gemini15ProExp0827,
+    /// Gemini 1.5 Pro model
+    #[serde(rename = "gemini-1.5-pro")]
+    Gemini15Pro,
     /// Gemini 1.5 Flash model
     #[serde(rename = "gemini-1.5-flash")]
     Gemini15Flash,
-
     /// Gemini 1.0 Pro model
     #[serde(rename = "gemini-1.0-pro")]
     Gemini10Pro,
@@ -140,17 +142,14 @@ pub enum Model {
     /// Gemma 2 2B IT model
     #[serde(rename = "gemma-2-2b-it")]
     Gemma2_2bIt,
-
     /// Gemma 2 9B IT model
     #[serde(rename = "gemma-2-9b-it")]
     Gemma2_9bIt,
-
     /// Gemma 2 27B IT model
     #[serde(rename = "gemma-2-27b-it")]
     Gemma2_27bIt,
 
     /// OpenRouter Models
-    ///
     #[serde(rename = "meta-llama/llama-3.1-8b-instruct")]
     ORLlama3_1_8B,
 
@@ -198,6 +197,7 @@ pub enum Model {
 }
 
 impl Model {
+    #[deprecated]
     pub fn supports_tool_calling(&self) -> bool {
         match self {
             // OpenAI models that support tool calling
@@ -295,11 +295,14 @@ impl From<Model> for ModelProvider {
             Model::QwenQwq => ModelProvider::Ollama,
             Model::DeepSeekCoder6_7B => ModelProvider::Ollama,
             Model::Mixtral8_7b => ModelProvider::Ollama,
+            // openai
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
             Model::GPT4oMini => ModelProvider::OpenAI,
             Model::O1Mini => ModelProvider::OpenAI,
             Model::O1Preview => ModelProvider::OpenAI,
+            Model::O1 => ModelProvider::OpenAI,
+            // gemini
             Model::Gemini10Pro => ModelProvider::Gemini,
             Model::Gemini20FlashExp => ModelProvider::Gemini,
             Model::Gemini15Flash => ModelProvider::Gemini,
@@ -308,6 +311,7 @@ impl From<Model> for ModelProvider {
             Model::Gemma2_2bIt => ModelProvider::Gemini,
             Model::Gemma2_9bIt => ModelProvider::Gemini,
             Model::Gemma2_27bIt => ModelProvider::Gemini,
+            // openrouter
             Model::OR3_5Sonnet => ModelProvider::OpenRouter,
             Model::OR3_5Haiku => ModelProvider::OpenRouter,
             Model::ORDeepSeek2_5 => ModelProvider::OpenRouter,
