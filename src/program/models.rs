@@ -196,7 +196,7 @@ pub enum Model {
     ORNemotron70B,
 
     #[serde(rename = "openai/o1")]
-    OROpenAI_O1,
+    OROpenAIO1,
 }
 
 impl Model {
@@ -330,7 +330,7 @@ impl From<Model> for ModelProvider {
             Model::ORQwenQwq => ModelProvider::OpenRouter,
             Model::ORNemotron70B => ModelProvider::OpenRouter,
             Model::ORNousHermes405B => ModelProvider::OpenRouter,
-            Model::OROpenAI_O1 => ModelProvider::OpenRouter,
+            Model::OROpenAIO1 => ModelProvider::OpenRouter,
         }
     }
 }
