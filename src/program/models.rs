@@ -194,6 +194,9 @@ pub enum Model {
 
     #[serde(rename = "nvidia/llama-3.1-nemotron-70b-instruct")]
     ORNemotron70B,
+
+    #[serde(rename = "openai/o1")]
+    OROpenAI_O1,
 }
 
 impl Model {
@@ -327,6 +330,7 @@ impl From<Model> for ModelProvider {
             Model::ORQwenQwq => ModelProvider::OpenRouter,
             Model::ORNemotron70B => ModelProvider::OpenRouter,
             Model::ORNousHermes405B => ModelProvider::OpenRouter,
+            Model::OROpenAI_O1 => ModelProvider::OpenRouter,
         }
     }
 }
