@@ -574,7 +574,10 @@ impl Executor {
             ModelProvider::Gemini => {
                 let api_key = std::env::var("GEMINI_API_KEY").expect("$GEMINI_API_KEY is not set");
                 let max_tokens = config.max_tokens.unwrap_or(800);
-                let executor = GeminiExecutor::new(self.model.to_string(), api_key, max_tokens);
+                let temperature = config.temperature.unwrap_or(1.0);  // Default value for temperature
+                let top_k = config.top_k.unwrap_or(10);                // Default value for top_k
+                let logits = config.logits.unwrap_or(false);           // Default value for logits
+                let executor = GeminiExecutor::new(self.model.to_string(), api_key, max_tokens, temperature, top_k, logits);
                 executor.generate_text(input, schema).await?
             }
             ModelProvider::OpenRouter => {
@@ -649,10 +652,13 @@ impl Executor {
             ModelProvider::Gemini => {
                 let api_key = std::env::var("GEMINI_API_KEY").expect("$GEMINI_API_KEY is not set");
                 let max_tokens = config.max_tokens.unwrap_or(800);
+                let temperature = config.temperature.unwrap_or(1.0);  // Default value for temperature
+                let top_k = config.top_k.unwrap_or(10);                // Default value for top_k
+                let logits = config.logits.unwrap_or(false);           // Default value for logits
                 match self.model{
                     Model::Gemini15Flash | Model::Gemini15Pro => {
-                        let executor = GeminiExecutor::new(self.model.to_string(), api_key, max_tokens);
-                        executor
+                        let executor = GeminiExecutor::new(self.model.to_string(), api_key, max_tokens, temperature, top_k, logits);
+                                                executor
                             .function_call(prompt, tools, raw_mode, oai_parser)
                             .await?
                     }
@@ -711,7 +717,6 @@ impl Executor {
         entries[index].clone()
     }
 }
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -727,5 +732,26 @@ mod tests {
         println!("{:?}", locals);
 
         executor.pull_model().await.expect("should pull model");
+    }
+
+    #[tokio::test]
+    async fn test_generate_text_with_config() {
+        let config = Config {
+            max_steps: 10,
+            max_time: 60,
+            tools: vec![],
+            custom_tools: None,
+            max_tokens: Some(800),
+            temperature: Some(0.7),
+            top_k: Some(50),
+            logits: Some(true),
+        };
+
+        let executor = Executor::new(Model::Gemini15Flash);
+        let input = vec![MessageInput::new_user_message("Hello, world!")];
+        let schema = None;
+
+        let result = executor.generate_text(input, &schema, &config).await;
+        assert!(result.is_ok());
     }
 }
