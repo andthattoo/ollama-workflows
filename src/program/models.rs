@@ -197,6 +197,9 @@ pub enum Model {
 
     #[serde(rename = "openai/o1")]
     OROpenAIO1,
+
+    #[serde(rename = "Qwen/Qwen2.5-1.5B-Instruct")]
+    Qwen25Vllm
 }
 
 impl Model {
@@ -264,6 +267,8 @@ pub enum ModelProvider {
     Gemini,
     #[serde(rename = "openrouter")]
     OpenRouter,
+    #[serde(rename = "VLLM")]
+    VLLM,
 }
 
 impl From<Model> for ModelProvider {
@@ -331,6 +336,8 @@ impl From<Model> for ModelProvider {
             Model::ORNemotron70B => ModelProvider::OpenRouter,
             Model::ORNousHermes405B => ModelProvider::OpenRouter,
             Model::OROpenAIO1 => ModelProvider::OpenRouter,
+            //vllm
+            Model::Qwen25Vllm => ModelProvider::VLLM
         }
     }
 }

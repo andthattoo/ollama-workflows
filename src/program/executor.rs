@@ -5,6 +5,7 @@ use super::workflow::Workflow;
 use crate::api_interface::gem_api::GeminiExecutor;
 use crate::api_interface::open_router::OpenRouterExecutor;
 use crate::api_interface::openai_api::OpenAIExecutor;
+use crate::api_interface::vllm::VLLMExecutor;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::atomics::MessageInput;
@@ -24,20 +25,9 @@ use base64::prelude::*;
 use log::{debug, error, info, warn};
 use rand::seq::SliceRandom;
 
-use ollama_rs::{
-    error::OllamaError,
-    generation::chat::request::ChatMessageRequest,
-    generation::chat::ChatMessage,
-    generation::completion::request::GenerationRequest,
-    generation::functions::tools::StockScraper,
-    generation::functions::tools::Tool,
-    generation::functions::{
-        DDGSearcher, FunctionCallRequest, LlamaFunctionCall, OpenAIFunctionCall, Scraper,
-    },
-    generation::options::GenerationOptions,
-    generation::parameters::FormatType,
-    Ollama,
-};
+use ollama_rs::{error::OllamaError, generation::chat::request::ChatMessageRequest, generation::chat::ChatMessage, generation::completion::request::GenerationRequest, generation::functions::tools::StockScraper, generation::functions::tools::Tool, generation::functions::{
+    DDGSearcher, FunctionCallRequest, LlamaFunctionCall, OpenAIFunctionCall, Scraper,
+}, generation::options::GenerationOptions, generation::parameters::FormatType, Ollama};
 
 fn log_colored(msg: &str) {
     let colors = ["red", "green", "yellow", "blue", "magenta", "cyan"];
@@ -585,6 +575,10 @@ impl Executor {
                     OpenRouterExecutor::new(self.model.to_string(), api_key.clone());
                 openai_executor.generate_text(input, schema).await?
             }
+            ModelProvider::VLLM => {
+                let executor = VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
+                executor.generate_text(input, schema).await?
+            }
         };
 
         Ok(response)
@@ -668,6 +662,10 @@ impl Executor {
                 openai_executor
                     .function_call(prompt, tools, raw_mode, oai_parser)
                     .await?
+            }
+            ModelProvider::VLLM => {
+                let executor = VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
+                executor.function_call(prompt, tools, raw_mode, oai_parser).await?
             }
         };
 
