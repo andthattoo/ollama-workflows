@@ -5,6 +5,7 @@ use super::workflow::Workflow;
 use crate::api_interface::gem_api::GeminiExecutor;
 use crate::api_interface::open_router::OpenRouterExecutor;
 use crate::api_interface::openai_api::OpenAIExecutor;
+use crate::api_interface::vllm::VLLMExecutor;
 use crate::memory::types::Entry;
 use crate::memory::{MemoryReturnType, ProgramMemory};
 use crate::program::atomics::MessageInput;
@@ -585,6 +586,11 @@ impl Executor {
                     OpenRouterExecutor::new(self.model.to_string(), api_key.clone());
                 openai_executor.generate_text(input, schema).await?
             }
+            ModelProvider::VLLM => {
+                let executor =
+                    VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
+                executor.generate_text(input, schema).await?
+            }
         };
 
         Ok(response)
@@ -666,6 +672,13 @@ impl Executor {
                 let openai_executor =
                     OpenRouterExecutor::new(self.model.to_string(), api_key.clone());
                 openai_executor
+                    .function_call(prompt, tools, raw_mode, oai_parser)
+                    .await?
+            }
+            ModelProvider::VLLM => {
+                let executor =
+                    VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
+                executor
                     .function_call(prompt, tools, raw_mode, oai_parser)
                     .await?
             }
