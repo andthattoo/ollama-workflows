@@ -25,9 +25,20 @@ use base64::prelude::*;
 use log::{debug, error, info, warn};
 use rand::seq::SliceRandom;
 
-use ollama_rs::{error::OllamaError, generation::chat::request::ChatMessageRequest, generation::chat::ChatMessage, generation::completion::request::GenerationRequest, generation::functions::tools::StockScraper, generation::functions::tools::Tool, generation::functions::{
-    DDGSearcher, FunctionCallRequest, LlamaFunctionCall, OpenAIFunctionCall, Scraper,
-}, generation::options::GenerationOptions, generation::parameters::FormatType, Ollama};
+use ollama_rs::{
+    error::OllamaError,
+    generation::chat::request::ChatMessageRequest,
+    generation::chat::ChatMessage,
+    generation::completion::request::GenerationRequest,
+    generation::functions::tools::StockScraper,
+    generation::functions::tools::Tool,
+    generation::functions::{
+        DDGSearcher, FunctionCallRequest, LlamaFunctionCall, OpenAIFunctionCall, Scraper,
+    },
+    generation::options::GenerationOptions,
+    generation::parameters::FormatType,
+    Ollama,
+};
 
 fn log_colored(msg: &str) {
     let colors = ["red", "green", "yellow", "blue", "magenta", "cyan"];
@@ -576,7 +587,8 @@ impl Executor {
                 openai_executor.generate_text(input, schema).await?
             }
             ModelProvider::VLLM => {
-                let executor = VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
+                let executor =
+                    VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
                 executor.generate_text(input, schema).await?
             }
         };
@@ -664,8 +676,11 @@ impl Executor {
                     .await?
             }
             ModelProvider::VLLM => {
-                let executor = VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
-                executor.function_call(prompt, tools, raw_mode, oai_parser).await?
+                let executor =
+                    VLLMExecutor::new(self.model.to_string(), "http://localhost:8000".to_string());
+                executor
+                    .function_call(prompt, tools, raw_mode, oai_parser)
+                    .await?
             }
         };
 

@@ -199,7 +199,7 @@ pub enum Model {
     OROpenAIO1,
 
     #[serde(rename = "Qwen/Qwen2.5-1.5B-Instruct")]
-    Qwen25Vllm
+    Qwen25Vllm,
 }
 
 impl Model {
@@ -337,7 +337,7 @@ impl From<Model> for ModelProvider {
             Model::ORNousHermes405B => ModelProvider::OpenRouter,
             Model::OROpenAIO1 => ModelProvider::OpenRouter,
             //vllm
-            Model::Qwen25Vllm => ModelProvider::VLLM
+            Model::Qwen25Vllm => ModelProvider::VLLM,
         }
     }
 }

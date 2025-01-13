@@ -1,5 +1,8 @@
 use crate::program::atomics::MessageInput;
-use ollama_rs::{error::OllamaError, generation::functions::tools::Tool, generation::functions::OpenAIFunctionCall, IntoUrlSealed};
+use ollama_rs::{
+    error::OllamaError, generation::functions::tools::Tool,
+    generation::functions::OpenAIFunctionCall,
+};
 use openai_dive::v1::api::Client;
 use openai_dive::v1::resources::chat::*;
 use serde_json::{json, Value};
@@ -7,7 +10,6 @@ use std::sync::Arc;
 
 pub struct VLLMExecutor {
     model: String,
-    base_url: String,
     client: Client,
 }
 
@@ -15,7 +17,6 @@ impl VLLMExecutor {
     pub fn new(model: String, base_url: String) -> Self {
         Self {
             model,
-            base_url: base_url.clone(),
             client: Client::new_with_base(base_url.as_str(), "".to_string()),
         }
     }
@@ -78,7 +79,7 @@ impl VLLMExecutor {
                 .response_format(ChatCompletionResponseFormat::Text)
                 .build()
         }
-            .map_err(|e| OllamaError::from(format!("Could not build message parameters: {:?}", e)))?;
+        .map_err(|e| OllamaError::from(format!("Could not build message parameters: {:?}", e)))?;
 
         let result = self.client.chat().create(parameters).await.map_err(|e| {
             OllamaError::from(format!("Failed to parse VLLM API response: {:?}", e))
