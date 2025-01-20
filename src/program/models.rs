@@ -100,7 +100,15 @@ pub enum Model {
     /// [Mistral's MoE Models]
     #[serde(rename = "mixtral:8x7b")]
     Mixtral8_7b,
-
+    /// [R1-GGUF's Models]
+    #[serde(rename = "hf.co/unsloth/DeepSeek-R1-Distill-Qwen-1.5B-GGUF:Q5_K_M")]
+    R1_1_5b,
+    #[serde(rename = "hf.co/unsloth/DeepSeek-R1-Distill-Qwen-7B-GGUF:F16")]
+    R1_7b,
+    #[serde(rename = "hf.co/unsloth/DeepSeek-R1-Distill-Qwen-14B-GGUF:F16")]
+    R1_14b,
+    #[serde(rename = "hf.co/unsloth/DeepSeek-R1-Distill-Llama-70B-GGUF:Q4_K_M")]
+    R1_70b,
     // OpenAI models
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]
@@ -303,6 +311,10 @@ impl From<Model> for ModelProvider {
             Model::QwenQwq => ModelProvider::Ollama,
             Model::DeepSeekCoder6_7B => ModelProvider::Ollama,
             Model::Mixtral8_7b => ModelProvider::Ollama,
+            Model::R1_1_5b => ModelProvider::Ollama,
+            Model::R1_7b => ModelProvider::Ollama,
+            Model::R1_14b => ModelProvider::Ollama,
+            Model::R1_70b => ModelProvider::Ollama,
             // openai
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
