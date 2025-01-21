@@ -100,7 +100,19 @@ pub enum Model {
     /// [Mistral's MoE Models]
     #[serde(rename = "mixtral:8x7b")]
     Mixtral8_7b,
-
+    /// [R1 Models]
+    #[serde(rename = "deepseek-r1:1.5b")]
+    R1_1_5b,
+    #[serde(rename = "deepseek-r1:7b")]
+    R1_7b,
+    #[serde(rename = "deepseek-r1:8b")]
+    R1_8b,
+    #[serde(rename = "deepseek-r1:14b")]
+    R1_14b,
+    #[serde(rename = "deepseek-r1:32b")]
+    R1_32b,
+    #[serde(rename = "deepseek-r1:70b")]
+    R1_70b,
     // OpenAI models
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]
@@ -303,6 +315,12 @@ impl From<Model> for ModelProvider {
             Model::QwenQwq => ModelProvider::Ollama,
             Model::DeepSeekCoder6_7B => ModelProvider::Ollama,
             Model::Mixtral8_7b => ModelProvider::Ollama,
+            Model::R1_1_5b => ModelProvider::Ollama,
+            Model::R1_7b => ModelProvider::Ollama,
+            Model::R1_8b => ModelProvider::Ollama,
+            Model::R1_14b => ModelProvider::Ollama,
+            Model::R1_32b => ModelProvider::Ollama,
+            Model::R1_70b => ModelProvider::Ollama,
             // openai
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
