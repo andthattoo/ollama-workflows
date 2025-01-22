@@ -12,15 +12,21 @@ pub struct GeminiExecutor {
     api_key: String,
     client: Client,
     max_tokens: i32,
+    temperature: f64,    // Add temperature parameter
+    top_k: i32,          // Add top_k parameter
+    logits: bool,        // Add logits parameter
 }
 
 impl GeminiExecutor {
-    pub fn new(model: String, api_key: String, max_tokens: i32) -> Self {
+    pub fn new(model: String, api_key: String, max_tokens: i32, temperature: f64, top_k: i32, logits: bool) -> Self {
         Self {
             model,
             api_key,
             client: Client::new(),
             max_tokens,
+            temperature,    // Initialize temperature
+            top_k,          // Initialize top_k
+            logits,         // Initialize logits
         }
     }
 
@@ -36,10 +42,10 @@ impl GeminiExecutor {
         );
 
         let mut generation_config = json!({
-            "temperature": 1.0,
+            "temperature": self.temperature,     // Use parameter
             "maxOutputTokens": self.max_tokens,
-            "topP": 0.8,
-            "topK": 10
+            "topP": if self.logits { 0.9 } else { 0.8 },  // Conditional based on logits
+            "topK": self.top_k                   // Use parameter
         });
 
         let contents: Vec<Value> = input

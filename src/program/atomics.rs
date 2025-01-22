@@ -64,6 +64,9 @@ pub struct Config {
     pub custom_tools: Option<Vec<CustomToolTemplate>>,
     /// Maximum number of tokens for LLMs to generate per run.
     pub max_tokens: Option<i32>,
+    pub temperature: Option<f64>,   // Add temperature field
+    pub top_k: Option<i32>,         // Add top_k field
+    pub logits: Option<bool>,       // Add logits field
 }
 
 #[derive(Debug, Deserialize)]
