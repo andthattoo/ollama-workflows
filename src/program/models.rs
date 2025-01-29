@@ -10,7 +10,7 @@ use std::fmt;
 /// ```
 /// These models are selected based on their performance and size.
 /// You can add models by creating a pull request.
-#[derive(Default, Debug, Clone, PartialEq, Deserialize, Serialize, Sequence)]
+#[derive(Default, Debug, Clone, PartialEq, Eq, Hash, Deserialize, Serialize, Sequence)]
 pub enum Model {
     // Ollama models
     /// [Nous's Hermes-2-Theta model](https://ollama.com/finalend/hermes-3-llama-3.1:8b-q8_0), q8_0 quantized
