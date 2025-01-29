@@ -1,3 +1,4 @@
+use enum_iterator::Sequence;
 use ollama_rs::models::LocalModel;
 use serde::{Deserialize, Serialize};
 use std::fmt;
@@ -9,7 +10,7 @@ use std::fmt;
 /// ```
 /// These models are selected based on their performance and size.
 /// You can add models by creating a pull request.
-#[derive(Default, Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, PartialEq, Deserialize, Serialize, Sequence)]
 pub enum Model {
     // Ollama models
     /// [Nous's Hermes-2-Theta model](https://ollama.com/finalend/hermes-3-llama-3.1:8b-q8_0), q8_0 quantized
@@ -228,10 +229,23 @@ impl Model {
             | Model::Phi3Medium128k
             | Model::Gemma2_9BFp16
             | Model::Qwen2_5_7B
-            | Model::Qwen2_5_7Bf16 => true,
-            Model::Qwen2_5_32Bf16 => true,
+            | Model::Qwen2_5_7Bf16
+            | Model::Qwen2_5_32Bf16 => true,
+            // others do not, by default
             _ => false,
         }
+    }
+
+    /// Returns an iterator over all models.
+    #[inline(always)]
+    pub fn all() -> impl Iterator<Item = Model> {
+        enum_iterator::all::<Model>()
+    }
+
+    /// Returns an iterator over all models that belong to a given provider.
+    #[inline(always)]
+    pub fn all_with_provider(provider: ModelProvider) -> impl Iterator<Item = Model> {
+        enum_iterator::all::<Model>().filter(move |m| ModelProvider::from(m) == provider)
     }
 }
 
@@ -261,6 +275,13 @@ impl TryFrom<LocalModel> for Model {
 impl TryFrom<String> for Model {
     type Error = String;
     fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::try_from(value.as_str())
+    }
+}
+
+impl TryFrom<&str> for Model {
+    type Error = String;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         // serde requires quotes (for JSON)
         serde_json::from_str::<Self>(&format!("\"{}\"", value))
             .map_err(|e| format!("Model {} invalid: {}", value, e))
@@ -269,7 +290,7 @@ impl TryFrom<String> for Model {
 
 /// A model provider is a service that hosts the chosen Model.
 /// It can be derived from the model name, e.g. GPT4o is hosted by OpenAI (via API), or Phi3 is hosted by Ollama (locally).
-#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize, Sequence)]
 pub enum ModelProvider {
     #[serde(rename = "ollama")]
     Ollama,
@@ -283,8 +304,22 @@ pub enum ModelProvider {
     VLLM,
 }
 
+impl ModelProvider {
+    /// Returns an iterator over all model providers.
+    #[inline(always)]
+    pub fn all() -> impl Iterator<Item = ModelProvider> {
+        enum_iterator::all::<ModelProvider>()
+    }
+}
+
 impl From<Model> for ModelProvider {
-    fn from(model: Model) -> Self {
+    fn from(value: Model) -> Self {
+        Self::from(&value)
+    }
+}
+
+impl From<&Model> for ModelProvider {
+    fn from(model: &Model) -> Self {
         match model {
             Model::NousTheta => ModelProvider::Ollama,
             Model::Phi3Medium => ModelProvider::Ollama,
@@ -354,7 +389,7 @@ impl From<Model> for ModelProvider {
             Model::ORNemotron70B => ModelProvider::OpenRouter,
             Model::ORNousHermes405B => ModelProvider::OpenRouter,
             Model::OROpenAIO1 => ModelProvider::OpenRouter,
-            //vllm
+            // vLLM
             Model::Qwen25Vllm => ModelProvider::VLLM,
         }
     }
@@ -363,6 +398,13 @@ impl From<Model> for ModelProvider {
 impl TryFrom<String> for ModelProvider {
     type Error = String;
     fn try_from(value: String) -> Result<Self, Self::Error> {
+        ModelProvider::try_from(value.as_str())
+    }
+}
+
+impl TryFrom<&str> for ModelProvider {
+    type Error = String;
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
         // serde requires quotes (for JSON)
         serde_json::from_str::<Self>(&format!("\"{}\"", value))
             .map_err(|e| format!("Model provider {} invalid: {}", value, e))
@@ -373,7 +415,6 @@ impl fmt::Display for ModelProvider {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         // guaranteed not to fail because this is enum to string serialization
         let self_str = serde_json::to_string(&self).unwrap_or_default();
-
         // remove quotes from JSON
         write!(f, "{}", self_str.trim_matches('"'))
     }
@@ -383,15 +424,13 @@ impl fmt::Display for ModelProvider {
 mod tests {
     use super::*;
 
-    const MODEL_NAME: &str = "phi3.5:3.8b";
-    const PROVIDER_NAME: &str = "openai";
     #[test]
     fn test_model_string_conversion() {
         let model = Model::Phi3_5Mini;
 
         // convert to string
         let model_str: String = model.clone().into();
-        assert_eq!(model_str, MODEL_NAME);
+        assert_eq!(model_str, "phi3.5:3.8b");
 
         // (try) convert from string
         let model_from = Model::try_from(model_str).expect("should convert");
@@ -408,7 +447,7 @@ mod tests {
 
         // serialize to string via serde
         let model_str = serde_json::to_string(&model).expect("should serialize");
-        assert_eq!(model_str, format!("\"{}\"", MODEL_NAME));
+        assert_eq!(model_str, "\"phi3.5:3.8b\"");
 
         // deserialize from string via serde
         let model_from: Model = serde_json::from_str(&model_str).expect("should deserialize");
@@ -425,7 +464,7 @@ mod tests {
 
         // serialize to string via serde
         let provider_str = serde_json::to_string(&provider).expect("should serialize");
-        assert_eq!(provider_str, format!("\"{}\"", PROVIDER_NAME));
+        assert_eq!(provider_str, "\"openai\"");
 
         // deserialize from string via serde
         let provider_from: ModelProvider =
@@ -436,5 +475,17 @@ mod tests {
         let bad_provider =
             serde_json::from_str::<ModelProvider>("\"this-provider-does-not-will-not-exist\"");
         assert!(bad_provider.is_err());
+    }
+
+    #[test]
+    fn test_model_iterator() {
+        let models = Model::all().collect::<Vec<_>>();
+        assert!(models.len() > 20); // 20 is arbitrary but large enough
+    }
+
+    #[test]
+    fn test_model_provider_iterator() {
+        let models_providers = ModelProvider::all().collect::<Vec<_>>();
+        assert!(models_providers.len() > 4); // 4 is arbitrary but large enough
     }
 }
