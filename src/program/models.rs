@@ -134,6 +134,9 @@ pub enum Model {
     /// [OpenAI's o1 model](https://platform.openai.com/docs/models#o1)
     #[serde(rename = "o1")]
     O1,
+    /// [OpenAI's o3 model](https://platform.openai.com/docs/models#o3-mini)
+    #[serde(rename = "o3-mini")]
+    O3Mini,
 
     // Gemini models
     /// Gemini 2.0 Flash exp model
