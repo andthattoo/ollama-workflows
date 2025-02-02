@@ -366,6 +366,7 @@ impl From<&Model> for ModelProvider {
             Model::O1Mini => ModelProvider::OpenAI,
             Model::O1Preview => ModelProvider::OpenAI,
             Model::O1 => ModelProvider::OpenAI,
+            Model::O3Mini => ModelProvider::OpenAI,
             // gemini
             Model::Gemini10Pro => ModelProvider::Gemini,
             Model::Gemini20FlashExp => ModelProvider::Gemini,
