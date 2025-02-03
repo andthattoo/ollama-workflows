@@ -134,6 +134,9 @@ pub enum Model {
     /// [OpenAI's o1 model](https://platform.openai.com/docs/models#o1)
     #[serde(rename = "o1")]
     O1,
+    /// [OpenAI's o3 model](https://platform.openai.com/docs/models#o3-mini)
+    #[serde(rename = "o3-mini")]
+    O3Mini,
 
     // Gemini models
     /// Gemini 2.0 Flash exp model
@@ -363,6 +366,7 @@ impl From<&Model> for ModelProvider {
             Model::O1Mini => ModelProvider::OpenAI,
             Model::O1Preview => ModelProvider::OpenAI,
             Model::O1 => ModelProvider::OpenAI,
+            Model::O3Mini => ModelProvider::OpenAI,
             // gemini
             Model::Gemini10Pro => ModelProvider::Gemini,
             Model::Gemini20FlashExp => ModelProvider::Gemini,
