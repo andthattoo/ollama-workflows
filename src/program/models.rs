@@ -114,6 +114,12 @@ pub enum Model {
     R1_32b,
     #[serde(rename = "deepseek-r1:70b")]
     R1_70b,
+    #[serde(rename = "driaforall/tiny-agent-a:0.5b")]
+    TinyAgent05,
+    #[serde(rename = "driaforall/tiny-agent-a:1.5b")]
+    TinyAgent15,
+    #[serde(rename = "driaforall/tiny-agent-a:3b")]
+    TinyAgent3,
     // OpenAI models
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]
@@ -362,6 +368,9 @@ impl From<&Model> for ModelProvider {
             Model::R1_14b => ModelProvider::Ollama,
             Model::R1_32b => ModelProvider::Ollama,
             Model::R1_70b => ModelProvider::Ollama,
+            Model::TinyAgent05 => ModelProvider::Ollama,
+            Model::TinyAgent15 => ModelProvider::Ollama,
+            Model::TinyAgent3 => ModelProvider::Ollama,
             // openai
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
