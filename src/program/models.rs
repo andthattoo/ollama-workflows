@@ -114,6 +114,12 @@ pub enum Model {
     R1_32b,
     #[serde(rename = "deepseek-r1:70b")]
     R1_70b,
+    #[serde(rename = "driaforall/tiny-agent-a:0.5b")]
+    TinyAgent05,
+    #[serde(rename = "driaforall/tiny-agent-a:1.5b")]
+    TinyAgent15,
+    #[serde(rename = "driaforall/tiny-agent-a:3b")]
+    TinyAgent3,
     // OpenAI models
     /// [OpenAI's GPT-4 Turbo model](https://platform.openai.com/docs/models#gpt-4-turbo-and-gpt-4)
     #[serde(rename = "gpt-4-turbo")]
@@ -139,9 +145,12 @@ pub enum Model {
     O3Mini,
 
     // Gemini models
+    /// Gemini 2.0 Pro exp model
+    #[serde(rename = "gemini-2.0-pro-exp-02-05")]
+    Gemini20Pro,
     /// Gemini 2.0 Flash exp model
-    #[serde(rename = "gemini-2.0-flash-exp")]
-    Gemini20FlashExp,
+    #[serde(rename = "gemini-2.0-flash")]
+    Gemini20Flash,
     /// Gemini 1.5 Pro model
     #[serde(rename = "gemini-1.5-pro-exp-0827")]
     Gemini15ProExp0827,
@@ -359,6 +368,9 @@ impl From<&Model> for ModelProvider {
             Model::R1_14b => ModelProvider::Ollama,
             Model::R1_32b => ModelProvider::Ollama,
             Model::R1_70b => ModelProvider::Ollama,
+            Model::TinyAgent05 => ModelProvider::Ollama,
+            Model::TinyAgent15 => ModelProvider::Ollama,
+            Model::TinyAgent3 => ModelProvider::Ollama,
             // openai
             Model::GPT4Turbo => ModelProvider::OpenAI,
             Model::GPT4o => ModelProvider::OpenAI,
@@ -369,7 +381,8 @@ impl From<&Model> for ModelProvider {
             Model::O3Mini => ModelProvider::OpenAI,
             // gemini
             Model::Gemini10Pro => ModelProvider::Gemini,
-            Model::Gemini20FlashExp => ModelProvider::Gemini,
+            Model::Gemini20Flash => ModelProvider::Gemini,
+            Model::Gemini20Pro => ModelProvider::Gemini,
             Model::Gemini15Flash => ModelProvider::Gemini,
             Model::Gemini15Pro => ModelProvider::Gemini,
             Model::Gemini15ProExp0827 => ModelProvider::Gemini,
