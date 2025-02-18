@@ -114,6 +114,8 @@ pub enum Model {
     R1_32b,
     #[serde(rename = "deepseek-r1:70b")]
     R1_70b,
+    #[serde(rename = "deepseek-r1")]
+    R1,
     #[serde(rename = "driaforall/tiny-agent-a:0.5b")]
     TinyAgent05,
     #[serde(rename = "driaforall/tiny-agent-a:1.5b")]
@@ -222,6 +224,12 @@ pub enum Model {
 
     #[serde(rename = "openai/o1")]
     OROpenAIO1,
+
+    #[serde(rename = "deepseek/deepseek-r1-distill-llama-70b")]
+    ORR1_70B,
+
+    #[serde(rename = "deepseek/deepseek-r1")]
+    ORR1,
 
     #[serde(rename = "Qwen/Qwen2.5-1.5B-Instruct")]
     Qwen25Vllm,
@@ -368,6 +376,7 @@ impl From<&Model> for ModelProvider {
             Model::R1_14b => ModelProvider::Ollama,
             Model::R1_32b => ModelProvider::Ollama,
             Model::R1_70b => ModelProvider::Ollama,
+            Model::R1 => ModelProvider::Ollama,
             Model::TinyAgent05 => ModelProvider::Ollama,
             Model::TinyAgent15 => ModelProvider::Ollama,
             Model::TinyAgent3 => ModelProvider::Ollama,
@@ -406,6 +415,8 @@ impl From<&Model> for ModelProvider {
             Model::ORNemotron70B => ModelProvider::OpenRouter,
             Model::ORNousHermes405B => ModelProvider::OpenRouter,
             Model::OROpenAIO1 => ModelProvider::OpenRouter,
+            Model::ORR1_70B => ModelProvider::OpenRouter,
+            Model::ORR1 => ModelProvider::OpenRouter,
             // vLLM
             Model::Qwen25Vllm => ModelProvider::VLLM,
         }
