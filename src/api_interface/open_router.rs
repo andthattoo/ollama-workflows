@@ -7,12 +7,27 @@ use reqwest::{header, Client};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+/// [Reasoning](https://openrouter.ai/docs/use-cases/reasoning-tokens) setting for [`OpenRouterRequest`].
+#[derive(Debug, Serialize)]
+struct OpenRouterReasoning {
+    /// Maximum number of tokens to use for reasoning, Anthropic style.
+    max_tokens: u64,
+}
+
+impl Default for OpenRouterReasoning {
+    fn default() -> Self {
+        Self { max_tokens: 2000 }
+    }
+}
+
 #[derive(Debug, Serialize)]
 struct OpenRouterRequest {
     model: String,
     messages: Vec<OpenRouterMessage>,
-    #[serde(skip_serializing_if = "Option::is_none")] // Add this attribute
+    #[serde(skip_serializing_if = "Option::is_none")]
     tools: Option<Vec<OpenRouterTool>>,
+    /// If `Some`, the model will return reasoning data.
+    reasoning: Option<OpenRouterReasoning>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -31,8 +46,9 @@ struct OpenRouterFunction {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct OpenRouterMessage {
     role: String,
-    content: Option<String>, // Changed to Option since it can be null
-    refusal: Option<String>, // Added this field
+    content: Option<String>,   // `Option` since it can be null
+    reasoning: Option<String>, // returned with reasoning models like DeepSeek-R1
+    refusal: Option<String>,
     tool_calls: Option<Vec<OpenRouterToolCall>>,
 }
 
@@ -96,13 +112,15 @@ impl OpenRouterExecutor {
     pub async fn generate_text(
         &self,
         input: Vec<MessageInput>,
-        _schema: &Option<String>,
+        _schema: Option<&String>,
+        with_reasoning: bool,
     ) -> Result<String, OllamaError> {
         let messages: Vec<OpenRouterMessage> = input
             .into_iter()
             .map(|msg| OpenRouterMessage {
                 role: msg.role,
                 content: Some(msg.content),
+                reasoning: None,
                 refusal: None,
                 tool_calls: None,
             })
@@ -112,6 +130,11 @@ impl OpenRouterExecutor {
             model: self.model.clone(),
             messages,
             tools: None,
+            reasoning: if with_reasoning {
+                Some(OpenRouterReasoning::default())
+            } else {
+                None
+            },
         };
 
         let mut headers = header::HeaderMap::new();
@@ -140,12 +163,19 @@ impl OpenRouterExecutor {
             .map_err(|e| OllamaError::from(format!("Failed to parse response: {}", e)))?;
 
         if let Some(choice) = response_body.choices.first() {
-            choice
+            let content = choice
                 .message
                 .content
                 .as_ref()
                 .ok_or_else(|| OllamaError::from("No content in response".to_string()))
-                .map(|s| s.to_string())
+                .map(|s| s.to_string())?;
+
+            match choice.message.reasoning.as_ref().map(|s| s.to_string()) {
+                // if there is a reasoning, return it with the `think` tags, followed by the content
+                Some(reasoning) => Ok(format!("<think>\n{}\n</think>\n\n{}", reasoning, content)),
+                // otherwise just return the content
+                None => Ok(content),
+            }
         } else {
             Err(OllamaError::from("No response generated".to_string()))
         }
@@ -174,6 +204,7 @@ impl OpenRouterExecutor {
             role: "user".to_string(),
             content: Some(prompt.to_string()),
             refusal: None,
+            reasoning: None, // we dont make use of returned reasoning data
             tool_calls: None,
         }];
 
@@ -181,6 +212,7 @@ impl OpenRouterExecutor {
             model: self.model.clone(),
             messages,
             tools: Some(openai_tools),
+            reasoning: None,
         };
 
         let mut headers = header::HeaderMap::new();
@@ -276,5 +308,41 @@ impl OpenRouterExecutor {
         }
 
         Ok(results.join("\n"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Model, ModelProvider};
+
+    use super::*;
+
+    /// Run with:
+    ///
+    /// ```sh
+    /// OPENROUTER_API_KEY=$API_KEY_HERE cargo test --package ollama-workflows --lib -- api_interface::open_router::tests::test_reasoning --exact --show-output --ignored
+    /// ```
+    #[tokio::test]
+    #[ignore = "requires OpenRouter key"]
+    async fn test_reasoning() {
+        let api_key = std::env::var("OPENROUTER_API_KEY").expect("OPENROUTER_API_KEY not set");
+
+        let model = Model::ORR1;
+        assert_eq!(model.provider(), ModelProvider::OpenRouter);
+        assert!(model.has_reasoning());
+
+        let executor = OpenRouterExecutor::new(model.to_string(), api_key);
+
+        let result = executor
+            .generate_text(
+                vec![MessageInput::new_user_message("Hi!")],
+                None,
+                model.has_reasoning(),
+            )
+            .await
+            .unwrap();
+
+        println!("{}", result);
+        assert!(result.contains("<think>") && result.contains("</think>"));
     }
 }
