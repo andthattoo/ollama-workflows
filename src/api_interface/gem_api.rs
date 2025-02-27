@@ -28,7 +28,7 @@ impl GeminiExecutor {
     pub async fn generate_text(
         &self,
         input: Vec<MessageInput>,
-        schema: &Option<String>,
+        schema: Option<&String>,
     ) -> Result<String, OllamaError> {
         let url = format!(
             "https://generativelanguage.googleapis.com/v1beta/models/{}:generateContent?key={}",

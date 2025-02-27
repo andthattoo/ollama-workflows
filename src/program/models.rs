@@ -179,31 +179,24 @@ pub enum Model {
     /// OpenRouter Models
     #[serde(rename = "meta-llama/llama-3.1-8b-instruct")]
     ORLlama3_1_8B,
-
     #[serde(rename = "meta-llama/llama-3.1-70b-instruct")]
     ORLlama3_1_70B,
-
     #[serde(rename = "meta-llama/llama-3.1-405b-instruct")]
     ORLlama3_1_405B,
-
     #[serde(rename = "meta-llama/llama-3.1-70b-instruct:free")]
     ORLlama3_1_70BFree,
-
     #[serde(rename = "meta-llama/llama-3.3-70b-instruct")]
     ORLlama3_3_70B,
 
     #[serde(rename = "anthropic/claude-3.5-sonnet:beta")]
     OR3_5Sonnet,
-
     #[serde(rename = "anthropic/claude-3-5-haiku-20241022:beta")]
     OR3_5Haiku,
 
     #[serde(rename = "qwen/qwen-2.5-72b-instruct")]
     ORQwen2_5_72B,
-
     #[serde(rename = "qwen/qwen-2.5-7b-instruct")]
     ORQwen2_5_7B,
-
     #[serde(rename = "qwen/qwen-2.5-coder-32b-instruct")]
     ORQwen2_5Coder32B,
 
@@ -227,15 +220,16 @@ pub enum Model {
 
     #[serde(rename = "deepseek/deepseek-r1-distill-llama-70b")]
     ORR1_70B,
-
     #[serde(rename = "deepseek/deepseek-r1")]
     ORR1,
 
+    // VLLM models
     #[serde(rename = "Qwen/Qwen2.5-1.5B-Instruct")]
     Qwen25Vllm,
 }
 
 impl Model {
+    /// Returns whether the model supports tool calling.
     #[deprecated]
     pub fn supports_tool_calling(&self) -> bool {
         match self {
@@ -256,6 +250,18 @@ impl Model {
         }
     }
 
+    /// Returns whether the model supports reasoning.
+    pub fn has_reasoning(&self) -> bool {
+        match self {
+            // OpenAI models that support reasoning
+            Model::O1Preview | Model::O1Mini | Model::O1 | Model::O3Mini => true,
+            // OpenRouter models that support reasoning
+            Model::OROpenAIO1 | Model::ORR1_70B | Model::ORR1 => true,
+            // others do not, by default
+            _ => false,
+        }
+    }
+
     /// Returns an iterator over all models.
     #[inline(always)]
     pub fn all() -> impl Iterator<Item = Model> {
@@ -264,8 +270,14 @@ impl Model {
 
     /// Returns an iterator over all models that belong to a given provider.
     #[inline(always)]
-    pub fn all_with_provider(provider: ModelProvider) -> impl Iterator<Item = Model> {
-        enum_iterator::all::<Model>().filter(move |m| ModelProvider::from(m) == provider)
+    pub fn all_with_provider(provider: &ModelProvider) -> impl Iterator<Item = Model> + '_ {
+        enum_iterator::all::<Model>().filter(move |m| m.provider() == *provider)
+    }
+
+    /// Returns the provider that hosts the model.
+    #[inline]
+    pub fn provider(&self) -> ModelProvider {
+        ModelProvider::from(self)
     }
 }
 
@@ -329,6 +341,12 @@ impl ModelProvider {
     #[inline(always)]
     pub fn all() -> impl Iterator<Item = ModelProvider> {
         enum_iterator::all::<ModelProvider>()
+    }
+
+    /// Returns all models that belong to the provider.
+    #[inline]
+    pub fn models(&self) -> impl Iterator<Item = Model> + '_ {
+        Model::all_with_provider(self)
     }
 }
 

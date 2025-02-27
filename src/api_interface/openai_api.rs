@@ -24,7 +24,7 @@ impl OpenAIExecutor {
     pub async fn generate_text(
         &self,
         input: Vec<MessageInput>,
-        schema: &Option<String>,
+        schema: Option<&String>,
     ) -> Result<String, OllamaError> {
         let messages: Vec<ChatMessage> = input
             .into_iter()
